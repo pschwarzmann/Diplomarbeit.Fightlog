@@ -152,6 +152,8 @@ const demoData = {
             email: "admin@fightlog.com",
             role: "admin",
             name: "Admin Trainer",
+            firstName: "Admin",
+            lastName: "Trainer",
             school: "Kampfsport Akademie Berlin",
             beltLevel: "Schwarzgurt 5. Dan - Meister",
             permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"],
@@ -165,6 +167,8 @@ const demoData = {
             email: "trainer@fightlog.com",
             role: "trainer",
             name: "Tom Trainer",
+            firstName: "Tom",
+            lastName: "Trainer",
             school: "Kampfsport Akademie Berlin",
             beltLevel: "Schwarzgurt 2. Dan",
             permissions: ["manage_certificates", "manage_exams", "edit_training_history"],
@@ -178,11 +182,88 @@ const demoData = {
             email: "schueler@fightlog.com",
             role: "schueler",
             name: "Sam Schüler",
+            firstName: "Sam",
+            lastName: "Schüler",
             school: "Kampfsport Akademie Berlin",
             beltLevel: "Gelbgurt",
             permissions: [],
             verifiedTrainer: false,
             phone: "+49 30 3456789",
+            passkeys: []
+        },
+        {
+            id: 4,
+            username: "paul",
+            email: "paul.schwarzmann@fightlog.com",
+            role: "schueler",
+            name: "Paul Schwarzmann",
+            firstName: "Paul",
+            lastName: "Schwarzmann",
+            school: "Kampfsport Akademie Berlin",
+            beltLevel: "Weißgurt",
+            permissions: [],
+            verifiedTrainer: false,
+            phone: "+49 30 0000001",
+            passkeys: []
+        },
+        {
+            id: 5,
+            username: "paula",
+            email: "paula.meier@fightlog.com",
+            role: "schueler",
+            name: "Paula Meier",
+            firstName: "Paula",
+            lastName: "Meier",
+            school: "Kampfsport Akademie Berlin",
+            beltLevel: "Gelbgurt",
+            permissions: [],
+            verifiedTrainer: false,
+            phone: "+49 30 0000002",
+            passkeys: []
+        },
+        {
+            id: 6,
+            username: "patrick",
+            email: "patrick.mueller@fightlog.com",
+            role: "schueler",
+            name: "Patrick Müller",
+            firstName: "Patrick",
+            lastName: "Müller",
+            school: "Kampfsport Akademie Berlin",
+            beltLevel: "Orangegurt",
+            permissions: [],
+            verifiedTrainer: false,
+            phone: "+49 30 0000003",
+            passkeys: []
+        },
+        {
+            id: 7,
+            username: "peter",
+            email: "peter.schmidt@fightlog.com",
+            role: "schueler",
+            name: "Peter Schmidt",
+            firstName: "Peter",
+            lastName: "Schmidt",
+            school: "Kampfsport Akademie Berlin",
+            beltLevel: "Grüngurt",
+            permissions: [],
+            verifiedTrainer: false,
+            phone: "+49 30 0000004",
+            passkeys: []
+        },
+        {
+            id: 8,
+            username: "sophia",
+            email: "sophia.schneider@fightlog.com",
+            role: "schueler",
+            name: "Sophia Schneider",
+            firstName: "Sophia",
+            lastName: "Schneider",
+            school: "Kampfsport Akademie Berlin",
+            beltLevel: "Blaugurt",
+            permissions: [],
+            verifiedTrainer: false,
+            phone: "+49 30 0000005",
             passkeys: []
         }
     ],
@@ -593,6 +674,29 @@ const app = createApp({
                                     >
                                 </div>
                                 
+                                <div v-if="showRegister" class="form-row">
+                                    <div class="form-group">
+                                        <label for="firstName">Vorname</label>
+                                        <input 
+                                            type="text" 
+                                            id="firstName" 
+                                            v-model="authForm.firstName" 
+                                            class="form-control" 
+                                            required
+                                        >
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastName">Nachname</label>
+                                        <input 
+                                            type="text" 
+                                            id="lastName" 
+                                            v-model="authForm.lastName" 
+                                            class="form-control" 
+                                            required
+                                        >
+                                    </div>
+                                </div>
+
                                 <div v-if="showRegister" class="form-group">
                                     <label for="email">{{ t('email') }}</label>
                                     <input 
@@ -702,7 +806,7 @@ const app = createApp({
                                     <p>Kurse verwalten/sehen</p>
                                 </div>
 
-                                <div v-if="currentUser && currentUser.role === 'admin'" class="nav-card" @click="navigateTo('presets')">
+                                <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="nav-card" @click="navigateTo('presets')">
                                     <i class="fas fa-sliders-h"></i>
                                     <h3>Presets</h3>
                                     <p>Vorlagen für Urkunden, Prüfungen, Kurse</p>
@@ -779,31 +883,19 @@ const app = createApp({
                                         </div>
                                         
                                         <div class="form-group">
-                                            <label>{{ t('uploadFile') }}</label>
-                                            <div 
-                                                class="upload-area" 
-                                                @click="triggerFileInput"
-                                                @dragover.prevent="handleDragOver"
-                                                @dragleave.prevent="handleDragLeave"
-                                                @drop.prevent="handleDrop"
-                                                :class="{ dragover: isDragOver }"
-                                            >
-                                                <div class="upload-icon">
-                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                            <label>Schüler zuordnen</label>
+                                            <div style="position:relative;">
+                                                <input type="text" v-model="certificateForm.studentQuery" class="form-control" placeholder="Schüler suchen (Tippe z. B. 'p' oder 'pa')">
+                                                <div v-if="certificateForm.studentQuery && studentMatches(certificateForm.studentQuery).length" class="form-container" style="position:absolute; left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; z-index:1000; max-height:220px; overflow:auto;">
+                                                    <div v-for="u in studentMatches(certificateForm.studentQuery)" :key="u.id" style="padding:.4rem 1rem; cursor:pointer;" @click="selectStudentForCertificate(u)">
+                                                        {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                    </div>
                                                 </div>
-                                                <p>{{ t('dragDropText') }}</p>
-                                                <p style="font-size: 0.9rem; color: #6b7280;">
-                                                    {{ t('supportedFormats') }}
-                                                </p>
                                             </div>
-                                            <input 
-                                                type="file" 
-                                                ref="fileInput" 
-                                                @change="handleFileSelect" 
-                                                accept=".pdf,.jpg,.jpeg,.png"
-                                                style="display: none;"
-                                            >
+                                            <div v-if="certificateForm.studentSelectedName" style="margin-top:.25rem; color:#64748b; font-size:.9rem;">Ausgewählt: {{ certificateForm.studentSelectedName }}</div>
                                         </div>
+                                        
+                                        <!-- Datei-Upload entfernt (Bewertung durch verifizierte Trainer) -->
                                         
                                         <button type="submit" class="btn btn-primary">
                                             {{ t('uploadCertificate') }}
@@ -820,6 +912,26 @@ const app = createApp({
                                         </div>
                                         <div class="form-group" style="align-self: end;">
                                             <button class="btn btn-secondary" @click="clearCertificateSearch">{{ t('clearFilter') }}</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Schüler zuordnen</label>
+                                        <div style="position:relative;">
+                                            <input type="text" v-model="certificateForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent>
+                                            <div v-if="certificateForm.studentQuery" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
+                                                <div v-for="g in groupMatches(certificateForm.studentQuery)" :key="'g_'+g.id" style="padding:.4rem 0; cursor:pointer; font-weight:600;" @click="applyGroupObjectTo('cert', g)">
+                                                    {{ g.name }} <span style="color:#64748b; font-weight:500;">(Gruppe)</span>
+                                                </div>
+                                                <div v-for="u in studentMatches(certificateForm.studentQuery)" :key="u.id" style="padding:.3rem 0; cursor:pointer;" @click="tapSelectStudent('cert', u)">
+                                                    {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="certificateForm.userIds.length" style="margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.35rem;">
+                                            <span v-for="sid in certificateForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;">
+                                                {{ displayUserName(sid) }}
+                                                <button type="button" class="btn btn-danger btn-sm" style="margin-left:.35rem;" @click="removeSelected('cert', sid)"><i class="fas fa-times"></i></button>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="certificates-grid">
@@ -906,6 +1018,7 @@ const app = createApp({
                                         </div>
                                     </div>
                                     
+                                    
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>{{ t('examCategory') }}</label>
@@ -921,6 +1034,26 @@ const app = createApp({
                                         <div class="form-group">
                                             <label>{{ t('examScore') }}</label>
                                             <input type="number" v-model="examForm.score" class="form-control" min="0" max="100" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Schüler zuordnen</label>
+                                        <div style="position:relative;">
+                                            <input type="text" v-model="examForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent>
+                                            <div v-if="examForm.studentQuery" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
+                                                <div v-for="g in groupMatches(examForm.studentQuery)" :key="'g_'+g.id" style="padding:.4rem 0; cursor:pointer; font-weight:600;" @click="applyGroupObjectTo('exam', g)">
+                                                    {{ g.name }} <span style="color:#64748b; font-weight:500;">(Gruppe)</span>
+                                                </div>
+                                                <div v-for="u in studentMatches(examForm.studentQuery)" :key="u.id" style="padding:.3rem 0; cursor:pointer;" @click="tapSelectStudent('exam', u)">
+                                                    {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="examForm.userIds.length" style="margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.35rem;">
+                                            <span v-for="sid in examForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;">
+                                                {{ displayUserName(sid) }}
+                                                <button type="button" class="btn btn-danger btn-sm" style="margin-left:.35rem;" @click="removeSelected('exam', sid)"><i class="fas fa-times"></i></button>
+                                            </span>
                                         </div>
                                     </div>
                                     
@@ -1069,7 +1202,7 @@ const app = createApp({
                 </div>
 
                 <!-- Presets (nur Admin) -->
-                <div v-else-if="currentPage === 'presets' && currentUser && currentUser.role === 'admin'">
+                <div v-else-if="currentPage === 'presets' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
                     <div style="padding: 2rem 0;">
                         <div class="container">
                             <div class="page-header">
@@ -1108,6 +1241,15 @@ const app = createApp({
                                     aria-controls="tab-courses" 
                                     @click="setPresetsTab('courses')"
                                 >Kurse</button>
+                                
+                                <button 
+                                    class="tab-btn" 
+                                    :class="{ active: currentPresetsTab === 'groups' }" 
+                                    role="tab" 
+                                    :aria-selected="(currentPresetsTab === 'groups').toString()" 
+                                    aria-controls="tab-groups" 
+                                    @click="setPresetsTab('groups')"
+                                >Gruppen</button>
                             </div>
 
                             <div v-show="currentPresetsTab === 'certificates'" id="tab-certificates" class="form-container" role="tabpanel">
@@ -1234,6 +1376,41 @@ const app = createApp({
                                 </div>
                             </div>
 
+                            <div v-show="currentPresetsTab === 'groups'" id="tab-groups" class="form-container" role="tabpanel">
+                                <h2>Gruppen verwalten</h2>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Gruppenname</label>
+                                        <input type="text" v-model="groupForm.name" class="form-control" placeholder="z. B. Prüfungsgruppe Mai">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Schüler suchen</label>
+                                        <input type="text" v-model="groupForm.query" class="form-control" placeholder="Namen tippen, um vorzuschlagen">
+                                    </div>
+                                </div>
+                                <div class="form-container" style="padding:.35rem .75rem; max-height:220px; overflow:auto;">
+                                    <div v-for="u in studentMatches(groupForm.query)" :key="u.id" style="display:flex; align-items:center; gap:.5rem; padding:.25rem 0;">
+                                        <input type="checkbox" :id="'grp_'+u.id" :checked="groupForm.userIds.includes(u.id)" @change="toggleGroupStudent(u)">
+                                        <label :for="'grp_'+u.id" style="cursor:pointer; flex:1 1 auto;">{{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span></label>
+                                    </div>
+                                </div>
+                                <div style="margin-top:.5rem; display:flex; gap:.5rem;">
+                                    <button class="btn btn-primary" @click="addStudentGroup()">Gruppe hinzufügen</button>
+                                </div>
+                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); margin-top:1rem;">
+                                    <div v-for="g in studentGroups" :key="g.id" class="nav-card preset-card" style="text-align:left;">
+                                        <h4>{{ g.name }}</h4>
+                                        <p style="color:#64748b;">{{ g.userIds.length }} Mitglieder</p>
+                                        <div style="margin-top:.5rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('cert')">Für Urkunden anwenden</button>
+                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('exam')">Für Prüfungen anwenden</button>
+                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('course')">Für Kurse anwenden</button>
+                                            <button class="btn btn-danger btn-sm" @click="removeGroup(g)"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -1280,6 +1457,26 @@ const app = createApp({
                                         <div class="form-group">
                                             <label>{{ t('courseDescription') }}</label>
                                             <textarea v-model="courseForm.description" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Schüler zuordnen</label>
+                                            <div style="position:relative;">
+                                                <input type="text" v-model="courseForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent>
+                                                <div v-if="courseForm.studentQuery" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
+                                                    <div v-for="g in groupMatches(courseForm.studentQuery)" :key="'g_'+g.id" style="padding:.4rem 0; cursor:pointer; font-weight:600;" @click="applyGroupObjectTo('course', g)">
+                                                        {{ g.name }} <span style="color:#64748b; font-weight:500;">(Gruppe)</span>
+                                                    </div>
+                                                    <div v-for="u in studentMatches(courseForm.studentQuery)" :key="u.id" style="padding:.3rem 0; cursor:pointer;" @click="tapSelectStudent('course', u)">
+                                                        {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="courseForm.userIds.length" style="margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.35rem;">
+                                                <span v-for="sid in courseForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;">
+                                                    {{ displayUserName(sid) }}
+                                                    <button type="button" class="btn btn-danger btn-sm" style="margin-left:.35rem;" @click="removeSelected('course', sid)"><i class="fas fa-times"></i></button>
+                                                </span>
+                                            </div>
                                         </div>
                                         <button type="submit" class="btn btn-primary">{{ t('addCourse') }}</button>
                                     </form>
@@ -1411,7 +1608,9 @@ const app = createApp({
                 password: '',
                 role: 'schueler',
                 stayLoggedIn: false,
-                phone: ''
+                phone: '',
+                firstName: '',
+                lastName: ''
             },
             
             certificateForm: {
@@ -1420,7 +1619,11 @@ const app = createApp({
                 date: '',
                 level: '',
                 instructor: '',
-                file: null
+                file: null,
+                userId: null, // rückwärtskompatibel
+                userIds: [],
+                studentQuery: '',
+                selectedStudents: []
             },
             
             examForm: {
@@ -1429,7 +1632,11 @@ const app = createApp({
                 category: '',
                 score: '',
                 instructor: '',
-                comments: ''
+                comments: '',
+                userId: null,
+                userIds: [],
+                studentQuery: '',
+                selectedStudents: []
             },
             
             goalForm: {
@@ -1438,9 +1645,6 @@ const app = createApp({
                 category: '',
                 progress: 0
             },
-            
-            // Upload
-            isDragOver: false,
             
             // Daten
             certificates: [],
@@ -1471,7 +1675,10 @@ const app = createApp({
                 instructor: '',
                 description: '',
                 status: 'approved',
-                userId: null
+                userId: null,
+                userIds: [],
+                studentQuery: '',
+                selectedStudents: []
             },
             courseSearch: '',
             // Validierung
@@ -1485,7 +1692,10 @@ const app = createApp({
             coursePresets: [],
             certificatePresetForm: { title: '', type: '', level: '', instructor: '' },
             examPresetForm: { level: '', category: '', instructor: '' },
-            coursePresetForm: { title: '', instructor: '', status: 'approved' }
+            coursePresetForm: { title: '', instructor: '', status: 'approved' },
+            // Gruppen (Presets)
+            studentGroups: [],
+            groupForm: { name: '', userIds: [], query: '' }
         }
     },
     
@@ -1512,13 +1722,31 @@ const app = createApp({
             if (!status) return this.coursePresets;
             return this.coursePresets.filter(p => (p.status || '') === status);
         },
+        // --- Schülerauswahl: All-Selected-Status je Formular ---
+        allCertStudentsChecked() {
+            const list = this.studentMatches(this.certificateForm.studentQuery || '');
+            if (!list.length) return false;
+            return list.every(u => this.certificateForm.userIds.includes(u.id));
+        },
+        allExamStudentsChecked() {
+            const list = this.studentMatches(this.examForm.studentQuery || '');
+            if (!list.length) return false;
+            return list.every(u => this.examForm.userIds.includes(u.id));
+        },
+        allCourseStudentsChecked() {
+            const list = this.studentMatches(this.courseForm.studentQuery || '');
+            if (!list.length) return false;
+            return list.every(u => this.courseForm.userIds.includes(u.id));
+        },
         adminFilteredUsers() {
             const q = (this.adminSearch || '').toLowerCase().trim();
             if (!q) return this.adminUserList;
             return this.adminUserList.filter(u =>
                 (u.username || '').toLowerCase().includes(q) ||
                 (u.email || '').toLowerCase().includes(q) ||
-                (u.name || '').toLowerCase().includes(q)
+                (u.name || '').toLowerCase().includes(q) ||
+                (u.firstName || '').toLowerCase().includes(q) ||
+                (u.lastName || '').toLowerCase().includes(q)
             );
         },
         filteredCertificates() {
@@ -1531,8 +1759,8 @@ const app = createApp({
             );
         },
         ownCertificates() {
-            // Platzhalter: Filter auf eigene; aktuell keine user_id an Zertifikaten in Demo
-            return this.certificates;
+            if (!this.currentUser) return [];
+            return this.certificates.filter(c => String(c.userId || c.user_id) === String(this.currentUser.id));
         },
         filteredExams() {
             const q = (this.examSearch || '').toLowerCase().trim();
@@ -1544,8 +1772,8 @@ const app = createApp({
             );
         },
         ownExams() {
-            // Platzhalter: Filter auf eigene; aktuell keine user_id an Prüfungen in Demo
-            return this.exams;
+            if (!this.currentUser) return [];
+            return this.exams.filter(e => String(e.userId || e.user_id) === String(this.currentUser.id));
         },
         filteredCourses() {
             const q = (this.courseSearch || '').toLowerCase().trim();
@@ -1557,12 +1785,119 @@ const app = createApp({
             );
         },
         studentApprovedCourses() {
-            // Nur freigegebene eigene Kurse (Platzhalter: userId = currentUser.id, wenn vorhanden)
-            return this.courses.filter(c => c.status === 'approved');
+            if (!this.currentUser) return [];
+            return this.courses.filter(c => c.status === 'approved' && String(c.userId || c.user_id) === String(this.currentUser.id));
         }
     },
     
     methods: {
+        groupMatches(query) {
+            const q = (query || '').toLowerCase().trim();
+            if (!q) return [];
+            return this.studentGroups.filter(g => (g.name || '').toLowerCase().includes(q)).slice(0, 20);
+        },
+        displayUserName(userId) {
+            const u = this.adminUserList.find(x => x.id === userId);
+            return u ? (u.name || u.username || ('#'+userId)) : ('#'+userId);
+        },
+        tapSelectStudent(target, user) {
+            if (target === 'cert') {
+                if (!this.certificateForm.userIds.includes(user.id)) this.certificateForm.userIds.push(user.id);
+                this.certificateForm.studentQuery = '';
+            } else if (target === 'exam') {
+                if (!this.examForm.userIds.includes(user.id)) this.examForm.userIds.push(user.id);
+                this.examForm.studentQuery = '';
+            } else if (target === 'course') {
+                if (!this.courseForm.userIds.includes(user.id)) this.courseForm.userIds.push(user.id);
+                this.courseForm.studentQuery = '';
+            }
+        },
+        removeSelected(target, userId) {
+            if (target === 'cert') this.certificateForm.userIds = this.certificateForm.userIds.filter(id => id !== userId);
+            if (target === 'exam') this.examForm.userIds = this.examForm.userIds.filter(id => id !== userId);
+            if (target === 'course') this.courseForm.userIds = this.courseForm.userIds.filter(id => id !== userId);
+        },
+        applyGroupObjectTo(target, group) {
+            const setIds = new Set(target === 'cert' ? this.certificateForm.userIds : target === 'exam' ? this.examForm.userIds : this.courseForm.userIds);
+            for (const id of group.userIds) setIds.add(id);
+            if (target === 'cert') {
+                this.certificateForm.userIds = Array.from(setIds);
+                this.certificateForm.studentQuery = '';
+            } else if (target === 'exam') {
+                this.examForm.userIds = Array.from(setIds);
+                this.examForm.studentQuery = '';
+            } else {
+                this.courseForm.userIds = Array.from(setIds);
+                this.courseForm.studentQuery = '';
+            }
+        },
+        studentMatches(query) {
+            const qRaw = (query || '').toLowerCase();
+            const q = qRaw.trim();
+            const students = this.adminUserList.filter(u => (u.role === 'schueler'));
+            if (!q) return [];
+            return students.filter(u => {
+                const first = (u.firstName || (u.name || '').split(' ')[0] || '').toLowerCase();
+                const last = (u.lastName || (u.name || '').split(' ')[1] || '').toLowerCase();
+                const full = (u.name || `${u.firstName || ''} ${u.lastName || ''}`).toLowerCase();
+                const compact = (first + last).replace(/\s+/g, '');
+                const qCompact = q.replace(/\s+/g, '');
+                return first.startsWith(q) || last.startsWith(q) || full.startsWith(q) || compact.startsWith(qCompact);
+            }).slice(0, 50);
+        },
+        toggleCertStudent(user) {
+            const exists = this.certificateForm.userIds.includes(user.id);
+            if (exists) {
+                this.certificateForm.userIds = this.certificateForm.userIds.filter(id => id !== user.id);
+            } else {
+                this.certificateForm.userIds = [...this.certificateForm.userIds, user.id];
+            }
+        },
+        toggleAllCertStudents(evt) {
+            const list = this.studentMatches(this.certificateForm.studentQuery || ' ');
+            if (evt.target.checked) {
+                const ids = new Set(this.certificateForm.userIds);
+                for (const u of list) ids.add(u.id);
+                this.certificateForm.userIds = Array.from(ids);
+            } else {
+                const ids = new Set(list.map(u => u.id));
+                this.certificateForm.userIds = this.certificateForm.userIds.filter(id => !ids.has(id));
+            }
+        },
+        toggleExamStudent(user) {
+            const exists = this.examForm.userIds.includes(user.id);
+            this.examForm.userIds = exists
+                ? this.examForm.userIds.filter(id => id !== user.id)
+                : [...this.examForm.userIds, user.id];
+        },
+        toggleAllExamStudents(evt) {
+            const list = this.studentMatches(this.examForm.studentQuery || ' ');
+            if (evt.target.checked) {
+                const ids = new Set(this.examForm.userIds);
+                for (const u of list) ids.add(u.id);
+                this.examForm.userIds = Array.from(ids);
+            } else {
+                const ids = new Set(list.map(u => u.id));
+                this.examForm.userIds = this.examForm.userIds.filter(id => !ids.has(id));
+            }
+        },
+        toggleCourseStudent(user) {
+            const exists = this.courseForm.userIds.includes(user.id);
+            this.courseForm.userIds = exists
+                ? this.courseForm.userIds.filter(id => id !== user.id)
+                : [...this.courseForm.userIds, user.id];
+        },
+        toggleAllCourseStudents(evt) {
+            const list = this.studentMatches(this.courseForm.studentQuery || ' ');
+            if (evt.target.checked) {
+                const ids = new Set(this.courseForm.userIds);
+                for (const u of list) ids.add(u.id);
+                this.courseForm.userIds = Array.from(ids);
+            } else {
+                const ids = new Set(list.map(u => u.id));
+                this.courseForm.userIds = this.courseForm.userIds.filter(id => !ids.has(id));
+            }
+        },
         roleEmoji(role) {
             if (role === 'admin') return '🛡️';
             if (role === 'trainer') return '👨‍🏫';
@@ -1628,7 +1963,9 @@ const app = createApp({
                         password: '',
                         role: 'schueler',
                         stayLoggedIn: false,
-                        phone: ''
+                        phone: '',
+                        firstName: '',
+                        lastName: ''
                     };
                 }
             } catch (error) {
@@ -1654,32 +1991,20 @@ const app = createApp({
              localStorage.setItem('fightlog_language', 'de');
          },
         
-        // Upload
-        triggerFileInput() {
-            this.$refs.fileInput.click();
-        },
-        
-        handleFileSelect(event) {
-            this.certificateForm.file = event.target.files[0];
-        },
-        
-        handleDragOver() {
-            this.isDragOver = true;
-        },
-        
-        handleDragLeave() {
-            this.isDragOver = false;
-        },
-        
-        handleDrop(event) {
-            this.isDragOver = false;
-            this.certificateForm.file = event.dataTransfer.files[0];
-        },
+        // Datei-Upload entfernt
         
         // Urkunden
         async uploadCertificate() {
             try {
-                const response = await apiService.uploadCertificate(this.certificateForm);
+                const targetIds = (this.certificateForm.userIds && this.certificateForm.userIds.length)
+                    ? this.certificateForm.userIds
+                    : (this.certificateForm.userId ? [this.certificateForm.userId] : []);
+                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
+                // Demo: je Schüler eine Urkunde anlegen
+                for (const uid of targetIds) {
+                    await apiService.uploadCertificate({ ...this.certificateForm, userId: uid });
+                }
+                const response = { success: true };
                 if (response.success) {
                     alert('Urkunde erfolgreich hochgeladen!');
                     this.certificateForm = {
@@ -1688,7 +2013,11 @@ const app = createApp({
                         date: '',
                         level: '',
                         instructor: '',
-                        file: null
+                        file: null,
+                        userId: null,
+                        userIds: [],
+                        studentQuery: '',
+                        selectedStudents: []
                     };
                     this.loadCertificates();
                 }
@@ -1709,7 +2038,14 @@ const app = createApp({
         // Prüfungen
         async addExam() {
             try {
-                const response = await apiService.addExam(this.examForm);
+                const targetIds = (this.examForm.userIds && this.examForm.userIds.length)
+                    ? this.examForm.userIds
+                    : (this.examForm.userId ? [this.examForm.userId] : []);
+                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
+                for (const uid of targetIds) {
+                    await apiService.addExam({ ...this.examForm, userId: uid });
+                }
+                const response = { success: true };
                 if (response.success) {
                     alert('Prüfung erfolgreich eingetragen!');
                     this.examForm = {
@@ -1718,7 +2054,11 @@ const app = createApp({
                         category: '',
                         score: '',
                         instructor: '',
-                        comments: ''
+                        comments: '',
+                        userId: null,
+                        userIds: [],
+                        studentQuery: '',
+                        selectedStudents: []
                     };
                     this.loadExams();
                 }
@@ -1855,9 +2195,11 @@ const app = createApp({
             switch (this.currentPage) {
                 case 'certificates':
                     await this.loadCertificates();
+                    await this.loadUsers();
                     break;
                 case 'exams':
                     await this.loadExams();
+                    await this.loadUsers();
                     break;
                 case 'goals':
                     await this.loadGoals();
@@ -1878,6 +2220,7 @@ const app = createApp({
                     break;
                 case 'courses':
                     await this.loadCourses();
+                    await this.loadUsers();
                     break;
                 case 'admin':
                     await this.loadUsers();
@@ -1900,9 +2243,11 @@ const app = createApp({
                 const cp = JSON.parse(localStorage.getItem('fightlog_certificatePresets') || '[]');
                 const ep = JSON.parse(localStorage.getItem('fightlog_examPresets') || '[]');
                 const kp = JSON.parse(localStorage.getItem('fightlog_coursePresets') || '[]');
+                const sg = JSON.parse(localStorage.getItem('fightlog_studentGroups') || '[]');
                 this.certificatePresets = Array.isArray(cp) ? cp : [];
                 this.examPresets = Array.isArray(ep) ? ep : [];
                 this.coursePresets = Array.isArray(kp) ? kp : [];
+                this.studentGroups = Array.isArray(sg) ? sg : [];
 
                 // Seed mit realistischen Dummy-Daten, falls leer
                 if (!this.certificatePresets.length) {
@@ -1937,6 +2282,42 @@ const app = createApp({
             localStorage.setItem('fightlog_certificatePresets', JSON.stringify(this.certificatePresets));
             localStorage.setItem('fightlog_examPresets', JSON.stringify(this.examPresets));
             localStorage.setItem('fightlog_coursePresets', JSON.stringify(this.coursePresets));
+            localStorage.setItem('fightlog_studentGroups', JSON.stringify(this.studentGroups));
+        },
+        // Gruppen
+        addStudentGroup() {
+            const name = (this.groupForm.name || '').trim();
+            const ids = Array.from(new Set(this.groupForm.userIds));
+            if (!name) return alert('Bitte einen Gruppennamen angeben.');
+            if (!ids.length) return alert('Mindestens einen Schüler auswählen.');
+            const grp = { id: Date.now(), name, userIds: ids };
+            this.studentGroups.unshift(grp);
+            this.groupForm = { name: '', userIds: [], query: '' };
+            this.savePresets();
+        },
+        toggleGroupStudent(user) {
+            const exists = this.groupForm.userIds.includes(user.id);
+            this.groupForm.userIds = exists
+                ? this.groupForm.userIds.filter(id => id !== user.id)
+                : [...this.groupForm.userIds, user.id];
+        },
+        removeGroup(grp) {
+            if (!confirm('Gruppe löschen?')) return;
+            this.studentGroups = this.studentGroups.filter(g => g.id !== grp.id);
+            this.savePresets();
+        },
+        applyGroupTo(target) {
+            // target: 'cert' | 'exam' | 'course'
+            const arr = target === 'cert' ? this.certificateForm.userIds : target === 'exam' ? this.examForm.userIds : this.courseForm.userIds;
+            const select = prompt('Gruppenname eingeben, der angewendet werden soll:');
+            if (!select) return;
+            const grp = this.studentGroups.find(g => g.name.toLowerCase() === select.toLowerCase());
+            if (!grp) return alert('Gruppe nicht gefunden.');
+            const setIds = new Set(arr);
+            for (const id of grp.userIds) setIds.add(id);
+            if (target === 'cert') this.certificateForm.userIds = Array.from(setIds);
+            if (target === 'exam') this.examForm.userIds = Array.from(setIds);
+            if (target === 'course') this.courseForm.userIds = Array.from(setIds);
         },
         // Certificate Presets
         addCertificatePreset() {
@@ -2020,11 +2401,16 @@ const app = createApp({
         },
         async submitCourse() {
             try {
-                const payload = { ...this.courseForm, userId: this.currentUser?.id || null };
-                const res = await apiService.addCourse(payload);
-                if (res.success) {
+                const targetIds = (this.courseForm.userIds && this.courseForm.userIds.length)
+                    ? this.courseForm.userIds
+                    : (this.courseForm.userId ? [this.courseForm.userId] : []);
+                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
+                for (const uid of targetIds) {
+                    await apiService.addCourse({ ...this.courseForm, userId: uid });
+                }
+                {
                     alert('Kurs eingetragen.');
-                    this.courseForm = { title: '', date: '', instructor: '', description: '', status: 'approved', userId: null };
+                    this.courseForm = { title: '', date: '', instructor: '', description: '', status: 'approved', userId: null, userIds: [], studentQuery: '', selectedStudents: [] };
                     await this.loadCourses();
                 }
             } catch (e) {

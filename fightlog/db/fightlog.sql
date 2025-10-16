@@ -13,6 +13,8 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('schueler', 'trainer', 'admin') NOT NULL DEFAULT 'schueler',
     name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NULL,
+    last_name VARCHAR(100) NULL,
     school VARCHAR(100),
     belt_level VARCHAR(50),
     verified_trainer TINYINT(1) DEFAULT 0,
@@ -144,12 +146,19 @@ CREATE INDEX idx_training_date ON training_history(date);
 CREATE INDEX idx_goals_user_id ON goals(user_id);
 CREATE INDEX idx_sessions_token ON sessions(token);
 CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_users_first_name ON users(first_name);
+CREATE INDEX idx_users_last_name ON users(last_name);
 
 -- Beispiel-Daten (optional)
-INSERT INTO users (username, email, password_hash, role, name, school, belt_level, verified_trainer) VALUES
-('admin', 'admin@fightlog.com', '$2y$10$dummyhash', 'admin', 'Admin Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 5. Dan - Meister', 1),
-('trainer', 'trainer@fightlog.com', '$2y$10$dummyhash', 'trainer', 'Tom Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 2. Dan', 1),
-('schueler', 'schueler@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Sam Schüler', 'Kampfsport Akademie Berlin', 'Gelbgurt', 0);
+INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, school, belt_level, verified_trainer) VALUES
+('admin', 'admin@fightlog.com', '$2y$10$dummyhash', 'admin', 'Admin Trainer', 'Admin', 'Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 5. Dan - Meister', 1),
+('trainer', 'trainer@fightlog.com', '$2y$10$dummyhash', 'trainer', 'Tom Trainer', 'Tom', 'Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 2. Dan', 1),
+('schueler', 'schueler@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Sam Schüler', 'Sam', 'Schüler', 'Kampfsport Akademie Berlin', 'Gelbgurt', 0),
+('paul', 'paul.schwarzmann@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Paul Schwarzmann', 'Paul', 'Schwarzmann', 'Kampfsport Akademie Berlin', 'Weißgurt', 0),
+('paula', 'paula.meier@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Paula Meier', 'Paula', 'Meier', 'Kampfsport Akademie Berlin', 'Gelbgurt', 0),
+('patrick', 'patrick.mueller@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Patrick Müller', 'Patrick', 'Müller', 'Kampfsport Akademie Berlin', 'Orangegurt', 0),
+('peter', 'peter.schmidt@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Peter Schmidt', 'Peter', 'Schmidt', 'Kampfsport Akademie Berlin', 'Grüngurt', 0),
+('sophia', 'sophia.schneider@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Sophia Schneider', 'Sophia', 'Schneider', 'Kampfsport Akademie Berlin', 'Blaugurt', 0);
 
 -- Basisrechte
 INSERT INTO permissions (`key`, label) VALUES

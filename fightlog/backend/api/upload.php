@@ -33,6 +33,7 @@ $response = [
     'success' => true,
     'certificate' => [
         'id' => time(),
+        'user_id' => $input['userId'] ?? null,
         'title' => $input['title'],
         'type' => $input['type'],
         'date' => $input['date'],
