@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightLog - Kampfsporterfolge digital erfassen</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./styles/main.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .simple-login {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            color: #1e3a8a;
+        }
+        .login-card h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1e3a8a;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .demo-info {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="simple-login">
+        <div class="login-card">
+            <h1>🥋 FightLog</h1>
+            <p style="text-align: center; margin-bottom: 2rem; color: #6b7280;">
+                Kampfsporterfolge digital erfassen
+            </p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Benutzername</label>
+                    <input type="text" id="username" name="username" value="admin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Passwort</label>
+                    <input type="password" id="password" name="password" value="admin123" required>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-sign-in-alt"></i> Anmelden
+                </button>
+            </form>
+            
+            <div class="demo-info">
+                <p><strong>Test-Logins:</strong></p>
+                <p><strong>Admin</strong> — Benutzername: <code>admin</code> — Passwort: <code>admin123</code></p>
+                <p><strong>Trainer</strong> — Benutzername: <code>trainer</code> — Passwort: <code>trainer123</code></p>
+                <p><strong>Schüler</strong> — Benutzername: <code>schueler</code> — Passwort: <code>schueler123</code></p>
+                <p style="margin-top:.5rem;">Die App verhält sich je nach Rolle unterschiedlich (Admin-Reiter sichtbar nur für Admin).</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                alert('Login erfolgreich! Admin-Trainer angemeldet. Die vollständige Anwendung wird geladen...');
+                // Hier würde normalerweise zur Hauptanwendung weitergeleitet
+                window.location.href = 'index.html';
+            } else {
+                alert('Falsche Anmeldedaten! Verwende: admin / admin123');
+            }
+        });
+    </script>
+</body>
+</html> 

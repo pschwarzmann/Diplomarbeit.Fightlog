@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightLog - Kampfsporterfolge digital erfassen</title>
+    
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        // Fallback für Vue.js
+        if (typeof Vue === 'undefined') {
+            console.error('Vue.js konnte nicht geladen werden');
+            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>FightLog</h1><p>Vue.js konnte nicht geladen werden. Bitte überprüfe deine Internetverbindung.</p></div>';
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./styles/main.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Hauptanwendung wird hier gerendert -->
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="./main.js"></script>
+</body>
+</html> 
