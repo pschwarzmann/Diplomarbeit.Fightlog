@@ -646,6 +646,9 @@ const app = createApp({
                         
                                                  <div class="user-info">
                              <span>Angemeldet als {{ currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'trainer' ? 'Trainer' : 'Schüler' }}</span>
+                             <button @click="showPasskeyManagement" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; margin-right: 0.5rem; background-color: #8b5cf6;">
+                                 <i class="fas fa-key"></i> Passkey verwalten
+                             </button>
                              <button @click="logout" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">
                                  {{ t('logout') }}
                              </button>
@@ -1584,6 +1587,47 @@ const app = createApp({
                     </div>
                 </div>
             </main>
+            
+            <!-- Passkey-Verwaltungsmodal -->
+            <div v-if="showPasskeyModal" class="modal-overlay" @click="closePasskeyModal">
+                <div class="modal-content" @click.stop>
+                    <div class="modal-header">
+                        <h2><i class="fas fa-key"></i> Passkey-Verwaltung</h2>
+                        <button @click="closePasskeyModal" class="close-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div class="passkey-section">
+                            <h3>Neuen Passkey registrieren</h3>
+                            <p>Registrieren Sie einen neuen Passkey für schnelle und sichere Anmeldung.</p>
+                            <button @click="registerPasskey" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Passkey hinzufügen
+                            </button>
+                        </div>
+                        
+                        <div class="passkey-section" v-if="getAvailablePasskeys().length > 0">
+                            <h3>Registrierte Passkeys</h3>
+                            <div class="passkey-list">
+                                <div v-for="passkey in getAvailablePasskeys()" :key="passkey" class="passkey-item">
+                                    <div class="passkey-info">
+                                        <i class="fas fa-key"></i>
+                                        <span>{{ passkey }}</span>
+                                    </div>
+                                    <button @click="removePasskey(passkey)" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="passkey-section" v-else>
+                            <p class="text-muted">Noch keine Passkeys registriert.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     `,
     
@@ -1594,6 +1638,7 @@ const app = createApp({
             currentUser: null,
             showRegister: false,
             showPassword: false,
+            showPasskeyModal: false,
             
             // Navigation
             currentPage: 'dashboard',
@@ -1979,6 +2024,64 @@ const app = createApp({
             this.currentUser = null;
             this.currentPage = 'dashboard';
             localStorage.removeItem('fightlog_username');
+            localStorage.removeItem('fightlog_authenticated');
+            localStorage.removeItem('fightlog_user');
+            // Weiterleitung zur Anmeldeseite
+            window.location.href = 'simple.html';
+        },
+        
+        // Passkey-Verwaltung anzeigen
+        showPasskeyManagement() {
+            this.showPasskeyModal = true;
+        },
+        
+        // Passkey-Modal schließen
+        closePasskeyModal() {
+            this.showPasskeyModal = false;
+        },
+        
+        // Passkey registrieren
+        async registerPasskey() {
+            if (!window.passkeyManager) {
+                alert('PasskeyManager nicht verfügbar. Bitte laden Sie die Seite neu.');
+                return;
+            }
+            
+            try {
+                const username = this.currentUser.username;
+                const result = await window.passkeyManager.registerPasskey(username);
+                
+                if (result.success) {
+                    alert('Passkey erfolgreich registriert!');
+                    this.closePasskeyModal();
+                } else {
+                    throw new Error('Passkey-Registrierung fehlgeschlagen');
+                }
+                
+            } catch (error) {
+                console.error('Passkey-Registrierung fehlgeschlagen:', error);
+                alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
+            }
+        },
+        
+        // Passkey entfernen
+        removePasskey(passkeyId) {
+            if (!confirm('Passkey wirklich entfernen?')) return;
+            
+            try {
+                const username = this.currentUser.username;
+                window.passkeyManager.removePasskey(username);
+                alert('Passkey erfolgreich entfernt!');
+            } catch (error) {
+                console.error('Passkey-Entfernung fehlgeschlagen:', error);
+                alert('Passkey-Entfernung fehlgeschlagen: ' + error.message);
+            }
+        },
+        
+        // Verfügbare Passkeys abrufen
+        getAvailablePasskeys() {
+            if (!window.passkeyManager) return [];
+            return window.passkeyManager.listPasskeys();
         },
         
         togglePassword() {
@@ -2453,11 +2556,47 @@ const app = createApp({
          this.currentLanguage = 'de';
          localStorage.setItem('fightlog_language', 'de');
         
-        const savedUsername = localStorage.getItem('fightlog_username');
-        if (savedUsername) {
-            // Demo: Auto-Login wenn Benutzername gespeichert
-            this.isLoggedIn = true;
-            this.currentUser = demoData.user;
+        // Prüfe neue Authentifizierungsdaten
+        const isAuthenticated = localStorage.getItem('fightlog_authenticated');
+        const userData = localStorage.getItem('fightlog_user');
+        
+        if (isAuthenticated && userData) {
+            try {
+                const user = JSON.parse(userData);
+                this.isLoggedIn = true;
+                
+                // Setze Benutzer basierend auf Authentifizierungsmethode
+                if (user.authMethod === 'passkey') {
+                    // Für Passkey-Benutzer: Admin-Rechte
+                    this.currentUser = {
+                        ...demoData.user,
+                        username: user.username,
+                        role: 'admin'
+                    };
+                } else {
+                    // Für normale Anmeldung: Rolle aus Login-Daten
+                    this.currentUser = {
+                        ...demoData.user,
+                        username: user.username,
+                        role: user.role
+                    };
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Benutzerdaten:', error);
+                // Fallback zu altem System
+                const savedUsername = localStorage.getItem('fightlog_username');
+                if (savedUsername) {
+                    this.isLoggedIn = true;
+                    this.currentUser = demoData.user;
+                }
+            }
+        } else {
+            // Fallback zu altem System
+            const savedUsername = localStorage.getItem('fightlog_username');
+            if (savedUsername) {
+                this.isLoggedIn = true;
+                this.currentUser = demoData.user;
+            }
         }
     }
 });

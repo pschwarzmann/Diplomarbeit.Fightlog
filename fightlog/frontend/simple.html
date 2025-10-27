@@ -16,68 +16,291 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Passkey Manager -->
+    <script src="./passkey.js"></script>
+    
     <style>
+        /* Apple-ähnliches Design */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+        }
+        
         .simple-login {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 20px;
+            background: #f5f5f7;
         }
+        
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 48px 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
-            color: #1e3a8a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
         .login-card h1 {
             text-align: center;
-            margin-bottom: 2rem;
-            color: #1e3a8a;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.003em;
         }
+        
+        .login-subtitle {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #86868b;
+            font-size: 17px;
+            font-weight: 400;
+        }
+        
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
+        
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #1d1d1f;
+            font-size: 17px;
         }
+        
         .form-group input {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+            padding: 16px 20px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 400;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
+        
         .form-group input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            background: rgba(255, 255, 255, 0.95);
         }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #86868b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .password-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1d1d1f;
+        }
+        
         .btn {
             width: 100%;
-            padding: 0.75rem;
-            background: #3b82f6;
+            padding: 16px 24px;
+            background: #007aff;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 400;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            margin-bottom: 12px;
         }
+        
         .btn:hover {
-            background: #2563eb;
+            background: #0056b3;
+            transform: translateY(-1px);
         }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.04);
+            color: #1d1d1f;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+        }
+        
+        .btn-danger:hover {
+            background: #d70015;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: #34c759;
+        }
+        
+        .btn-success:hover {
+            background: #248a3d;
+            transform: translateY(-1px);
+        }
+        
+        .btn-purple {
+            background: #af52de;
+        }
+        
+        .btn-purple:hover {
+            background: #8e44ad;
+            transform: translateY(-1px);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .button-group .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
         .demo-info {
             text-align: center;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: #6b7280;
+            margin-top: 32px;
+            font-size: 15px;
+            color: #86868b;
+            line-height: 1.4;
+        }
+        
+        .demo-info code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #86868b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1d1d1f;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 32px 24px;
+                margin: 16px;
+            }
+            
+            .login-card h1 {
+                font-size: 28px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 16px;
+            }
         }
     </style>
 </head>
@@ -85,9 +308,7 @@
     <div class="simple-login">
         <div class="login-card">
             <h1>🥋 FightLog</h1>
-            <p style="text-align: center; margin-bottom: 2rem; color: #6b7280;">
-                Kampfsporterfolge digital erfassen
-            </p>
+            <p class="login-subtitle">Kampfsporterfolge digital erfassen</p>
             
             <form id="loginForm">
                 <div class="form-group">
@@ -97,11 +318,30 @@
                 
                 <div class="form-group">
                     <label for="password">Passwort</label>
-                    <input type="password" id="password" name="password" value="admin123" required>
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" value="admin123" required>
+                        <button type="button" onclick="togglePasswordVisibility()" class="password-toggle">
+                            <i id="passwordToggleIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn">
-                    <i class="fas fa-sign-in-alt"></i> Anmelden
+                    Anmelden
+                </button>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" onclick="showForgotPassword()">
+                        Passwort vergessen
+                    </button>
+                    
+                    <button type="button" class="btn btn-success" onclick="showRegisterForm()">
+                        Registrieren
+                    </button>
+                </div>
+                
+                <button type="button" class="btn btn-purple" id="passkeyRegisterBtn" onclick="registerPasskey()" style="display: none;">
+                    Passkey registrieren
                 </button>
             </form>
             
@@ -110,26 +350,415 @@
                 <p><strong>Admin</strong> — Benutzername: <code>admin</code> — Passwort: <code>admin123</code></p>
                 <p><strong>Trainer</strong> — Benutzername: <code>trainer</code> — Passwort: <code>trainer123</code></p>
                 <p><strong>Schüler</strong> — Benutzername: <code>schueler</code> — Passwort: <code>schueler123</code></p>
-                <p style="margin-top:.5rem;">Die App verhält sich je nach Rolle unterschiedlich (Admin-Reiter sichtbar nur für Admin).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passwort vergessen Modal -->
+    <div id="forgotPasswordModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Passwort zurücksetzen</h2>
+                <button onclick="closeForgotPassword()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Geben Sie Ihre E-Mail-Adresse ein, um ein neues Passwort anzufordern:</p>
+                
+                <div class="form-group">
+                    <label for="resetEmail">E-Mail-Adresse</label>
+                    <input type="email" id="resetEmail" placeholder="ihre@email.com">
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="sendPasswordReset()" class="btn">
+                        Zurücksetzen
+                    </button>
+                    <button onclick="closeForgotPassword()" class="btn btn-secondary">
+                        Abbrechen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrierung Modal -->
+    <div id="registerModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Neuen Account erstellen</h2>
+                <button onclick="closeRegisterForm()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regUsername">Benutzername</label>
+                        <input type="text" id="regUsername" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regEmail">E-Mail-Adresse</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regPassword">Passwort</label>
+                        <div class="password-container">
+                            <input type="password" id="regPassword" required>
+                            <button type="button" onclick="toggleRegisterPasswordVisibility()" class="password-toggle">
+                                <i id="registerPasswordToggleIcon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regPasswordConfirm">Passwort bestätigen</label>
+                        <input type="password" id="regPasswordConfirm" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regRole">Rolle</label>
+                        <select id="regRole" required style="width: 100%; padding: 16px 20px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 17px; background: rgba(255, 255, 255, 0.8); font-family: inherit;">
+                            <option value="schueler" selected>Schüler (Standard)</option>
+                        </select>
+                        <p style="margin-top: 8px; font-size: 14px; color: #86868b;">
+                            Neue Accounts werden standardmäßig als Schüler erstellt. Administratoren können später die Rechte anpassen.
+                        </p>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-success">
+                            Account erstellen
+                        </button>
+                        <button type="button" onclick="closeRegisterForm()" class="btn btn-secondary">
+                            Abbrechen
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
+        // Prüfe ob bereits authentifiziert
+        function checkExistingAuth() {
+            const isAuthenticated = localStorage.getItem('fightlog_authenticated');
+            if (isAuthenticated) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Prüfe auf Passkey-Verfügbarkeit
+        function checkPasskeyAvailability() {
+            const hasPasskey = localStorage.getItem('fightlog_passkey_available');
+            if (hasPasskey) {
+                showPasskeyOption();
+            }
+        }
+        
+        // Zeige Passkey-Option an
+        function showPasskeyOption() {
+            const passkeyButton = document.createElement('button');
+            passkeyButton.type = 'button';
+            passkeyButton.className = 'btn';
+            passkeyButton.style.marginTop = '1rem';
+            passkeyButton.style.backgroundColor = '#10b981';
+            passkeyButton.innerHTML = '<i class="fas fa-key"></i> Mit Passkey anmelden';
+            passkeyButton.onclick = attemptPasskeyLogin;
+            
+            const form = document.getElementById('loginForm');
+            form.parentNode.insertBefore(passkeyButton, form.nextSibling);
+        }
+        
+        // Versuche Passkey-Anmeldung
+        async function attemptPasskeyLogin() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            try {
+                // Zeige Ladeindikator
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Passkey wird überprüft...';
+                button.disabled = true;
+                
+                // Prüfe verfügbare Passkeys
+                const availablePasskeys = window.passkeyManager.listPasskeys();
+                if (availablePasskeys.length === 0) {
+                    throw new Error('Keine Passkeys registriert. Bitte registrieren Sie zuerst einen Passkey.');
+                }
+                
+                // Verwende den ersten verfügbaren Passkey (in echter App würde Benutzer auswählen)
+                const username = availablePasskeys[0];
+                
+                // Führe echte WebAuthn-Authentifizierung durch
+                const result = await window.passkeyManager.authenticateWithPasskey(username);
+                
+                if (result.success) {
+                    // Speichere Authentifizierung
+                    localStorage.setItem('fightlog_authenticated', 'true');
+                    localStorage.setItem('fightlog_user', JSON.stringify({
+                        username: username,
+                        role: 'admin', // Standardrolle für Passkey-Benutzer
+                        authMethod: 'passkey'
+                    }));
+                    
+                    alert('Passkey-Anmeldung erfolgreich! Weiterleitung zur Hauptanwendung...');
+                    window.location.href = 'index.html';
+                } else {
+                    throw new Error('Passkey-Authentifizierung fehlgeschlagen');
+                }
+                
+            } catch (error) {
+                console.error('Passkey-Anmeldung fehlgeschlagen:', error);
+                alert('Passkey-Anmeldung fehlgeschlagen: ' + error.message + '\n\nBitte verwenden Sie die normale Anmeldung.');
+            } finally {
+                // Stelle Button wieder her
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Registriere neuen Passkey
+        async function registerPasskey() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Prüfe zuerst registrierte Benutzer
+            const registeredUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
+            const registeredUser = registeredUsers[username];
+            
+            let validUser = null;
+            
+            if (registeredUser && registeredUser.password === password) {
+                validUser = registeredUser;
+            } else {
+                // Fallback zu Test-Logins
+                const validLogins = [
+                    { username: 'admin', password: 'admin123', role: 'admin' },
+                    { username: 'trainer', password: 'trainer123', role: 'trainer' },
+                    { username: 'schueler', password: 'schueler123', role: 'schueler' }
+                ];
+                
+                const validLogin = validLogins.find(login => 
+                    login.username === username && login.password === password
+                );
+                
+                if (validLogin) {
+                    validUser = validLogin;
+                }
+            }
+            
+            if (!validUser) {
+                alert('Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.');
+                return;
+            }
+            
+            try {
+                const result = await window.passkeyManager.registerPasskey(username);
+                
+                if (result.success) {
+                    alert('Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.');
+                    // Aktualisiere UI
+                    checkPasskeyAvailability();
+                } else {
+                    throw new Error('Passkey-Registrierung fehlgeschlagen');
+                }
+                
+            } catch (error) {
+                console.error('Passkey-Registrierung fehlgeschlagen:', error);
+                alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
+            }
+        }
+        
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            if (username === 'admin' && password === 'admin123') {
-                alert('Login erfolgreich! Admin-Trainer angemeldet. Die vollständige Anwendung wird geladen...');
-                // Hier würde normalerweise zur Hauptanwendung weitergeleitet
+            // Prüfe zuerst registrierte Benutzer
+            const registeredUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
+            const registeredUser = registeredUsers[username];
+            
+            if (registeredUser && registeredUser.password === password) {
+                // Registrierter Benutzer gefunden
+                localStorage.setItem('fightlog_authenticated', 'true');
+                localStorage.setItem('fightlog_user', JSON.stringify({
+                    username: registeredUser.username,
+                    role: registeredUser.role,
+                    email: registeredUser.email,
+                    authMethod: 'password'
+                }));
+                
+                alert(`Login erfolgreich! ${registeredUser.role.charAt(0).toUpperCase() + registeredUser.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Fallback zu Test-Logins
+            const validLogins = [
+                { username: 'admin', password: 'admin123', role: 'admin' },
+                { username: 'trainer', password: 'trainer123', role: 'trainer' },
+                { username: 'schueler', password: 'schueler123', role: 'schueler' }
+            ];
+            
+            const validLogin = validLogins.find(login => 
+                login.username === username && login.password === password
+            );
+            
+            if (validLogin) {
+                // Speichere Authentifizierung
+                localStorage.setItem('fightlog_authenticated', 'true');
+                localStorage.setItem('fightlog_user', JSON.stringify({
+                    username: validLogin.username,
+                    role: validLogin.role,
+                    authMethod: 'password'
+                }));
+                
+                alert(`Login erfolgreich! ${validLogin.role.charAt(0).toUpperCase() + validLogin.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
                 window.location.href = 'index.html';
             } else {
-                alert('Falsche Anmeldedaten! Verwende: admin / admin123');
+                alert('Falsche Anmeldedaten! Verwende einen der Test-Logins oder registriere einen neuen Account.');
             }
         });
+        
+        // Passwort-Sichtbarkeit umschalten
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+        
+        // Registrierung Passwort-Sichtbarkeit umschalten
+        function toggleRegisterPasswordVisibility() {
+            const passwordInput = document.getElementById('regPassword');
+            const toggleIcon = document.getElementById('registerPasswordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+        
+        // Passwort vergessen Modal anzeigen
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'block';
+        }
+        
+        // Passwort vergessen Modal schließen
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+            document.getElementById('resetEmail').value = '';
+        }
+        
+        // Passwort zurücksetzen senden
+        function sendPasswordReset() {
+            const email = document.getElementById('resetEmail').value;
+            
+            if (!email) {
+                alert('Bitte geben Sie eine E-Mail-Adresse ein.');
+                return;
+            }
+            
+            // Zeige Hinweis für Admin-Kontakt
+            alert(`Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.`);
+            closeForgotPassword();
+        }
+        
+        // Registrierung Modal anzeigen
+        function showRegisterForm() {
+            document.getElementById('registerModal').style.display = 'block';
+        }
+        
+        // Registrierung Modal schließen
+        function closeRegisterForm() {
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('registerForm').reset();
+        }
+        
+        // Registrierung verarbeiten
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+            const role = document.getElementById('regRole').value;
+            
+            // Validierung
+            if (!username || !email || !password || !passwordConfirm) {
+                alert('Bitte füllen Sie alle Felder aus.');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                alert('Die Passwörter stimmen nicht überein.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Das Passwort muss mindestens 6 Zeichen lang sein.');
+                return;
+            }
+            
+            // Prüfe ob Benutzername bereits existiert
+            const existingUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
+            if (existingUsers[username]) {
+                alert('Dieser Benutzername ist bereits vergeben.');
+                return;
+            }
+            
+            // Speichere neuen Benutzer
+            existingUsers[username] = {
+                username: username,
+                email: email,
+                password: password, // In echter App würde hier ein Hash gespeichert
+                role: role,
+                createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('fightlog_registered_users', JSON.stringify(existingUsers));
+            
+            alert(`Account erfolgreich erstellt!\n\nBenutzername: ${username}\nRolle: ${role}\n\nSie können sich jetzt anmelden.`);
+            closeRegisterForm();
+            
+            // Zeige Passkey-Registrierung Button an, da jetzt ein Account existiert
+            checkPasskeyAvailability();
+        });
+        
+        // Prüfe ob registrierte Benutzer existieren (für Passkey-Button)
+        function checkRegisteredUsers() {
+            const existingUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
+            const hasRegisteredUsers = Object.keys(existingUsers).length > 0;
+            
+            // Zeige Passkey-Button nur wenn registrierte Benutzer existieren
+            const passkeyBtn = document.getElementById('passkeyRegisterBtn');
+            if (hasRegisteredUsers) {
+                passkeyBtn.style.display = 'block';
+            } else {
+                passkeyBtn.style.display = 'none';
+            }
+        }
+        
+        // Initialisierung
+        checkExistingAuth();
+        checkPasskeyAvailability();
+        checkRegisteredUsers();
     </script>
 </body>
 </html> 

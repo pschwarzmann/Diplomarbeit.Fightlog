@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightLog - Demo & Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>🥋 FightLog - Demo & Test</h1>
+    
+    <div class="demo-section">
+        <h2>Authentifizierungsstatus</h2>
+        <div id="authStatus" class="status info">Wird geladen...</div>
+        <button class="btn" onclick="checkAuthStatus()">Status aktualisieren</button>
+        <button class="btn" onclick="clearAuth()">Alle Daten löschen</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Registrierte Benutzer</h2>
+        <div id="registeredUsersStatus" class="status info">Wird geladen...</div>
+        <button class="btn" onclick="checkRegisteredUsers()">Registrierte Benutzer anzeigen</button>
+        <button class="btn" onclick="clearRegisteredUsers()">Alle registrierten Benutzer löschen</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Passkey-Management</h2>
+        <div id="passkeyStatus" class="status info">Wird geladen...</div>
+        <button class="btn" onclick="checkPasskeyStatus()">Passkey-Status prüfen</button>
+        <button class="btn" onclick="testPasskeyRegistration()">Test-Passkey registrieren</button>
+        <button class="btn" onclick="testPasskeyAuth()">Test-Passkey-Authentifizierung</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Navigation</h2>
+        <button class="btn" onclick="goToLogin()">Zur Anmeldeseite</button>
+        <button class="btn" onclick="goToMain()">Zur Hauptanwendung</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Anleitung</h2>
+        <ol>
+            <li><strong>Neuen Account erstellen:</strong> Klicke auf "Registrieren" und erstelle einen neuen Account</li>
+            <li><strong>Erste Anmeldung:</strong> Melde dich mit deinen neuen Anmeldedaten oder einem Test-Login an</li>
+            <li><strong>Passkey registrieren:</strong> Nach der Anmeldung erscheint der "Passkey registrieren" Button</li>
+            <li><strong>Passkey testen:</strong> Melde dich ab und teste die Passkey-Anmeldung</li>
+            <li><strong>Passwort-Funktionen:</strong> Teste "Passwort vergessen" und "Passwort anzeigen"</li>
+            <li><strong>Automatische Weiterleitung:</strong> Bei erneutem Besuch wirst du automatisch zur Anmeldeseite weitergeleitet (außer bei aktivem Passkey)</li>
+        </ol>
+        
+        <h3>Test-Logins:</h3>
+        <ul>
+            <li><strong>Admin:</strong> admin / admin123</li>
+            <li><strong>Trainer:</strong> trainer / trainer123</li>
+            <li><strong>Schüler:</strong> schueler / schueler123</li>
+        </ul>
+    </div>
+
+    <script src="./passkey.js"></script>
+    <script>
+        function checkAuthStatus() {
+            const isAuthenticated = localStorage.getItem('fightlog_authenticated');
+            const userData = localStorage.getItem('fightlog_user');
+            const hasPasskey = localStorage.getItem('fightlog_passkey_available');
+            
+            let status = '';
+            
+            if (isAuthenticated && userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    status = `✅ Authentifiziert als ${user.username} (${user.role})`;
+                    if (user.authMethod === 'passkey') {
+                        status += ' - via Passkey';
+                    }
+                } catch (error) {
+                    status = '❌ Fehler beim Laden der Benutzerdaten';
+                }
+            } else {
+                status = '❌ Nicht authentifiziert';
+            }
+            
+            if (hasPasskey) {
+                status += '<br>🔑 Passkey verfügbar';
+            } else {
+                status += '<br>🔒 Kein Passkey registriert';
+            }
+            
+            document.getElementById('authStatus').innerHTML = status;
+            document.getElementById('authStatus').className = 'status ' + (isAuthenticated ? 'success' : 'error');
+        }
+        
+        function checkPasskeyStatus() {
+            if (window.passkeyManager) {
+                const passkeys = window.passkeyManager.listPasskeys();
+                const isSupported = window.passkeyManager.isSupported;
+                
+                let status = '';
+                status += `WebAuthn unterstützt: ${isSupported ? '✅ Ja' : '❌ Nein'}<br>`;
+                status += `Registrierte Passkeys: ${passkeys.length}<br>`;
+                
+                if (passkeys.length > 0) {
+                    status += 'Benutzer mit Passkeys: ' + passkeys.join(', ');
+                }
+                
+                document.getElementById('passkeyStatus').innerHTML = status;
+                document.getElementById('passkeyStatus').className = 'status ' + (isSupported ? 'success' : 'error');
+            } else {
+                document.getElementById('passkeyStatus').innerHTML = '❌ PasskeyManager nicht verfügbar';
+                document.getElementById('passkeyStatus').className = 'status error';
+            }
+        }
+        
+        async function testPasskeyRegistration() {
+            try {
+                const result = await window.passkeyManager.registerPasskey('testuser');
+                alert('Test-Passkey erfolgreich registriert!');
+                checkPasskeyStatus();
+            } catch (error) {
+                alert('Test-Passkey-Registrierung fehlgeschlagen: ' + error.message);
+            }
+        }
+        
+        async function testPasskeyAuth() {
+            try {
+                const result = await window.passkeyManager.authenticateWithPasskey('testuser');
+                alert('Test-Passkey-Authentifizierung erfolgreich!');
+            } catch (error) {
+                alert('Test-Passkey-Authentifizierung fehlgeschlagen: ' + error.message);
+            }
+        }
+        
+        function checkRegisteredUsers() {
+            const registeredUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
+            const userCount = Object.keys(registeredUsers).length;
+            
+            let status = `Registrierte Benutzer: ${userCount}<br>`;
+            
+            if (userCount > 0) {
+                status += '<br><strong>Benutzer:</strong><br>';
+                Object.values(registeredUsers).forEach(user => {
+                    status += `• ${user.username} (${user.role}) - ${user.email}<br>`;
+                });
+            } else {
+                status += '<br>Keine registrierten Benutzer vorhanden.';
+            }
+            
+            document.getElementById('registeredUsersStatus').innerHTML = status;
+            document.getElementById('registeredUsersStatus').className = 'status ' + (userCount > 0 ? 'success' : 'info');
+        }
+        
+        function clearRegisteredUsers() {
+            if (confirm('Alle registrierten Benutzer löschen? Dies kann nicht rückgängig gemacht werden.')) {
+                localStorage.removeItem('fightlog_registered_users');
+                alert('Alle registrierten Benutzer gelöscht!');
+                checkRegisteredUsers();
+            }
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('fightlog_authenticated');
+            localStorage.removeItem('fightlog_user');
+            localStorage.removeItem('fightlog_passkey_available');
+            localStorage.removeItem('fightlog_passkeys');
+            localStorage.removeItem('fightlog_username');
+            alert('Alle Authentifizierungsdaten gelöscht!');
+            checkAuthStatus();
+            checkPasskeyStatus();
+        }
+        
+        function goToLogin() {
+            window.location.href = 'simple.html';
+        }
+        
+        function goToMain() {
+            window.location.href = 'index.html';
+        }
+        
+        // Initialisierung
+        checkAuthStatus();
+        checkPasskeyStatus();
+        checkRegisteredUsers();
+    </script>
+</body>
+</html>
