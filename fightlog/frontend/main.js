@@ -1984,23 +1984,24 @@ const app = createApp({
                         phone: '' // Zurücksetzen des Telefonfelds
                     };
                 } else {
-                    alert(response.error || 'Login fehlgeschlagen');
+                    await notify.alert(response.error || 'Login fehlgeschlagen');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                alert('Login fehlgeschlagen');
+                await notify.alert('Login fehlgeschlagen');
             }
         },
         
         async handleRegister() {
             try {
                 if (!this.validateEmail() || !this.validatePhone()) {
-                    return alert(this.validateEmail() ? this.t('phoneInvalid') : this.t('emailInvalid'));
+                    await notify.alert(this.validateEmail() ? this.t('phoneInvalid') : this.t('emailInvalid'));
+                    return;
                 }
                 const payload = { ...this.authForm, role: 'schueler' };
                 const response = await apiService.register(payload);
                 if (response.success) {
-                    alert('Registrierung erfolgreich! Sie können sich jetzt anmelden.');
+                    await notify.alert('Registrierung erfolgreich! Sie können sich jetzt anmelden.');
                     this.showRegister = false;
                     this.authForm = {
                         username: '',
@@ -2015,7 +2016,7 @@ const app = createApp({
                 }
             } catch (error) {
                 console.error('Register error:', error);
-                alert('Registrierung fehlgeschlagen');
+                await notify.alert('Registrierung fehlgeschlagen');
             }
         },
         
@@ -2065,9 +2066,10 @@ const app = createApp({
         },
         
         // Passkey entfernen
-        removePasskey(passkeyId) {
-            if (!confirm('Passkey wirklich entfernen?')) return;
-            
+        async removePasskey(passkeyId) {
+            const ok = await notify.confirm('Passkey wirklich entfernen?');
+            if (!ok) return;
+
             try {
                 const username = this.currentUser.username;
                 window.passkeyManager.removePasskey(username);
@@ -2187,16 +2189,18 @@ const app = createApp({
         editCertificate(cert) {
             alert('Bearbeiten (Platzhalter): ' + cert.title);
         },
-        deleteCertificate(cert) {
-            if (confirm('Diese Urkunde löschen?')) {
+        async deleteCertificate(cert) {
+            const ok = await notify.confirm('Diese Urkunde löschen?');
+            if (ok) {
                 this.certificates = this.certificates.filter(c => c.id !== cert.id);
             }
         },
         editExam(exam) {
             alert('Bearbeiten (Platzhalter): ' + exam.level + ' - ' + exam.category);
         },
-        deleteExam(exam) {
-            if (confirm('Diesen Prüfungseintrag löschen?')) {
+        async deleteExam(exam) {
+            const ok = await notify.confirm('Diesen Prüfungseintrag löschen?');
+            if (ok) {
                 this.exams = this.exams.filter(e => e.id !== exam.id);
             }
         },
@@ -2287,7 +2291,8 @@ const app = createApp({
             user.passkeys = current.filter(k => k !== key);
         },
         async deleteUser(user) {
-            if (!confirm('Benutzer wirklich löschen?')) return;
+            const ok = await notify.confirm('Benutzer wirklich löschen?');
+            if (!ok) return;
             // Platzhalter: entfernt den Benutzer lokal aus der Liste
             this.adminUserList = this.adminUserList.filter(u => u.id !== user.id);
             alert('Benutzer gelöscht (Platzhalter).');
@@ -2404,15 +2409,16 @@ const app = createApp({
                 ? this.groupForm.userIds.filter(id => id !== user.id)
                 : [...this.groupForm.userIds, user.id];
         },
-        removeGroup(grp) {
-            if (!confirm('Gruppe löschen?')) return;
+        async removeGroup(grp) {
+            const ok = await notify.confirm('Gruppe löschen?');
+            if (!ok) return;
             this.studentGroups = this.studentGroups.filter(g => g.id !== grp.id);
             this.savePresets();
         },
-        applyGroupTo(target) {
+        async applyGroupTo(target) {
             // target: 'cert' | 'exam' | 'course'
             const arr = target === 'cert' ? this.certificateForm.userIds : target === 'exam' ? this.examForm.userIds : this.courseForm.userIds;
-            const select = prompt('Gruppenname eingeben, der angewendet werden soll:');
+            const select = await notify.prompt('Gruppenname eingeben, der angewendet werden soll:');
             if (!select) return;
             const grp = this.studentGroups.find(g => g.name.toLowerCase() === select.toLowerCase());
             if (!grp) return alert('Gruppe nicht gefunden.');
@@ -2429,20 +2435,21 @@ const app = createApp({
             this.certificatePresetForm = { title: '', type: '', level: '', instructor: '' };
             this.savePresets();
         },
-        editCertificatePreset(preset) {
-            const title = prompt('Titel', preset.title);
+        async editCertificatePreset(preset) {
+            const title = await notify.prompt('Titel', preset.title);
             if (title == null) return;
-            const level = prompt('Level', preset.level || '');
+            const level = await notify.prompt('Level', preset.level || '');
             if (level == null) return;
-            const instructor = prompt('Trainer/Prüfer', preset.instructor || '');
+            const instructor = await notify.prompt('Trainer/Prüfer', preset.instructor || '');
             if (instructor == null) return;
             const updated = { ...preset, title, level, instructor };
             const idx = this.certificatePresets.findIndex(x => x.id === preset.id);
             if (idx !== -1) this.certificatePresets[idx] = updated;
             this.savePresets();
         },
-        removeCertificatePreset(preset) {
-            if (!confirm('Preset löschen?')) return;
+        async removeCertificatePreset(preset) {
+            const ok = await notify.confirm('Preset löschen?');
+            if (!ok) return;
             this.certificatePresets = this.certificatePresets.filter(x => x.id !== preset.id);
             this.savePresets();
         },
@@ -2453,20 +2460,21 @@ const app = createApp({
             this.examPresetForm = { level: '', category: '', instructor: '' };
             this.savePresets();
         },
-        editExamPreset(preset) {
-            const level = prompt('Level', preset.level);
+        async editExamPreset(preset) {
+            const level = await notify.prompt('Level', preset.level);
             if (level == null) return;
-            const category = prompt('Kategorie', preset.category);
+            const category = await notify.prompt('Kategorie', preset.category);
             if (category == null) return;
-            const instructor = prompt('Prüfer', preset.instructor || '');
+            const instructor = await notify.prompt('Prüfer', preset.instructor || '');
             if (instructor == null) return;
             const updated = { ...preset, level, category, instructor };
             const idx = this.examPresets.findIndex(x => x.id === preset.id);
             if (idx !== -1) this.examPresets[idx] = updated;
             this.savePresets();
         },
-        removeExamPreset(preset) {
-            if (!confirm('Preset löschen?')) return;
+        async removeExamPreset(preset) {
+            const ok = await notify.confirm('Preset löschen?');
+            if (!ok) return;
             this.examPresets = this.examPresets.filter(x => x.id !== preset.id);
             this.savePresets();
         },
@@ -2477,20 +2485,21 @@ const app = createApp({
             this.coursePresetForm = { title: '', instructor: '', status: 'approved' };
             this.savePresets();
         },
-        editCoursePreset(preset) {
-            const title = prompt('Kurstitel', preset.title);
+        async editCoursePreset(preset) {
+            const title = await notify.prompt('Kurstitel', preset.title);
             if (title == null) return;
-            const instructor = prompt('Trainer', preset.instructor || '');
+            const instructor = await notify.prompt('Trainer', preset.instructor || '');
             if (instructor == null) return;
-            const status = prompt('Status (approved/pending)', preset.status || 'approved');
+            const status = await notify.prompt('Status (approved/pending)', preset.status || 'approved');
             if (status == null) return;
             const updated = { ...preset, title, instructor, status };
             const idx = this.coursePresets.findIndex(x => x.id === preset.id);
             if (idx !== -1) this.coursePresets[idx] = updated;
             this.savePresets();
         },
-        removeCoursePreset(preset) {
-            if (!confirm('Preset löschen?')) return;
+        async removeCoursePreset(preset) {
+            const ok = await notify.confirm('Preset löschen?');
+            if (!ok) return;
             this.coursePresets = this.coursePresets.filter(x => x.id !== preset.id);
             this.savePresets();
         },
@@ -2522,7 +2531,7 @@ const app = createApp({
             }
         },
         async editCourse(course) {
-            const newTitle = prompt('Titel bearbeiten:', course.title);
+            const newTitle = await notify.prompt('Titel bearbeiten:', course.title);
             if (newTitle == null) return;
             const updated = { ...course, title: newTitle };
             const res = await apiService.updateCourse(updated);
@@ -2531,7 +2540,8 @@ const app = createApp({
             }
         },
         async removeCourse(course) {
-            if (!confirm('Diesen Kurs löschen?')) return;
+            const ok = await notify.confirm('Diesen Kurs löschen?');
+            if (!ok) return;
             const res = await apiService.deleteCourse(course.id);
             if (res.success) {
                 this.courses = this.courses.filter(c => c.id !== course.id);

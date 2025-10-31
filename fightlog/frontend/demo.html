@@ -91,7 +91,17 @@
         </ul>
     </div>
 
+    <script>
+        (function(){
+            if (!window._notifyQueue) window._notifyQueue = [];
+            const _nativeAlert = window.alert;
+            window.alert = function(msg){
+                try { window._notifyQueue.push(msg); } catch(e){ _nativeAlert(msg); }
+            };
+        })();
+    </script>
     <script src="./passkey.js"></script>
+    <script src="./notify.js"></script>
     <script>
         function checkAuthStatus() {
             const isAuthenticated = localStorage.getItem('fightlog_authenticated');
@@ -148,19 +158,19 @@
         async function testPasskeyRegistration() {
             try {
                 const result = await window.passkeyManager.registerPasskey('testuser');
-                alert('Test-Passkey erfolgreich registriert!');
+                await notify.alert('Test-Passkey erfolgreich registriert!');
                 checkPasskeyStatus();
             } catch (error) {
-                alert('Test-Passkey-Registrierung fehlgeschlagen: ' + error.message);
+                await notify.alert('Test-Passkey-Registrierung fehlgeschlagen: ' + error.message);
             }
         }
         
         async function testPasskeyAuth() {
             try {
                 const result = await window.passkeyManager.authenticateWithPasskey('testuser');
-                alert('Test-Passkey-Authentifizierung erfolgreich!');
+                await notify.alert('Test-Passkey-Authentifizierung erfolgreich!');
             } catch (error) {
-                alert('Test-Passkey-Authentifizierung fehlgeschlagen: ' + error.message);
+                await notify.alert('Test-Passkey-Authentifizierung fehlgeschlagen: ' + error.message);
             }
         }
         
@@ -183,21 +193,22 @@
             document.getElementById('registeredUsersStatus').className = 'status ' + (userCount > 0 ? 'success' : 'info');
         }
         
-        function clearRegisteredUsers() {
-            if (confirm('Alle registrierten Benutzer löschen? Dies kann nicht rückgängig gemacht werden.')) {
+        async function clearRegisteredUsers() {
+            const ok = await notify.confirm('Alle registrierten Benutzer löschen? Dies kann nicht rückgängig gemacht werden.');
+            if (ok) {
                 localStorage.removeItem('fightlog_registered_users');
-                alert('Alle registrierten Benutzer gelöscht!');
+                await notify.alert('Alle registrierten Benutzer gelöscht!');
                 checkRegisteredUsers();
             }
         }
         
-        function clearAuth() {
+        async function clearAuth() {
             localStorage.removeItem('fightlog_authenticated');
             localStorage.removeItem('fightlog_user');
             localStorage.removeItem('fightlog_passkey_available');
             localStorage.removeItem('fightlog_passkeys');
             localStorage.removeItem('fightlog_username');
-            alert('Alle Authentifizierungsdaten gelöscht!');
+            await notify.alert('Alle Authentifizierungsdaten gelöscht!');
             checkAuthStatus();
             checkPasskeyStatus();
         }

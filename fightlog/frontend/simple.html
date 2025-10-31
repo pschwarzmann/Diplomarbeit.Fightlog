@@ -16,8 +16,20 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Bridge for early alerts (queues calls until notify.js is ready) -->
+    <script>
+        (function(){
+            if (!window._notifyQueue) window._notifyQueue = [];
+            // queue native alert calls
+            const _nativeAlert = window.alert;
+            window.alert = function(msg){
+                try { window._notifyQueue.push(msg); } catch(e){ /* fallback */ _nativeAlert(msg); }
+            };
+        })();
+    </script>
     <!-- Passkey Manager -->
     <script src="./passkey.js"></script>
+    <script src="./notify.js"></script>
     
     <style>
         /* Apple-ähnliches Design */
@@ -505,8 +517,7 @@
                         role: 'admin', // Standardrolle für Passkey-Benutzer
                         authMethod: 'passkey'
                     }));
-                    
-                    alert('Passkey-Anmeldung erfolgreich! Weiterleitung zur Hauptanwendung...');
+                    await notify.alert('Passkey-Anmeldung erfolgreich! Weiterleitung zur Hauptanwendung...');
                     window.location.href = 'index.html';
                 } else {
                     throw new Error('Passkey-Authentifizierung fehlgeschlagen');
@@ -514,7 +525,7 @@
                 
             } catch (error) {
                 console.error('Passkey-Anmeldung fehlgeschlagen:', error);
-                alert('Passkey-Anmeldung fehlgeschlagen: ' + error.message + '\n\nBitte verwenden Sie die normale Anmeldung.');
+                await notify.alert('Passkey-Anmeldung fehlgeschlagen: ' + error.message + '\n\nBitte verwenden Sie die normale Anmeldung.');
             } finally {
                 // Stelle Button wieder her
                 button.innerHTML = originalText;
@@ -553,7 +564,7 @@
             }
             
             if (!validUser) {
-                alert('Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.');
+                await notify.alert('Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.');
                 return;
             }
             
@@ -561,7 +572,7 @@
                 const result = await window.passkeyManager.registerPasskey(username);
                 
                 if (result.success) {
-                    alert('Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.');
+                    await notify.alert('Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.');
                     // Aktualisiere UI
                     checkPasskeyAvailability();
                 } else {
@@ -570,11 +581,11 @@
                 
             } catch (error) {
                 console.error('Passkey-Registrierung fehlgeschlagen:', error);
-                alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
+                await notify.alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
             }
         }
         
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
@@ -593,8 +604,7 @@
                     email: registeredUser.email,
                     authMethod: 'password'
                 }));
-                
-                alert(`Login erfolgreich! ${registeredUser.role.charAt(0).toUpperCase() + registeredUser.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
+                await notify.alert(`Login erfolgreich! ${registeredUser.role.charAt(0).toUpperCase() + registeredUser.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
                 window.location.href = 'index.html';
                 return;
             }
@@ -618,11 +628,10 @@
                     role: validLogin.role,
                     authMethod: 'password'
                 }));
-                
-                alert(`Login erfolgreich! ${validLogin.role.charAt(0).toUpperCase() + validLogin.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
+                await notify.alert(`Login erfolgreich! ${validLogin.role.charAt(0).toUpperCase() + validLogin.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
                 window.location.href = 'index.html';
             } else {
-                alert('Falsche Anmeldedaten! Verwende einen der Test-Logins oder registriere einen neuen Account.');
+                await notify.alert('Falsche Anmeldedaten! Verwende einen der Test-Logins oder registriere einen neuen Account.');
             }
         });
         
@@ -666,16 +675,16 @@
         }
         
         // Passwort zurücksetzen senden
-        function sendPasswordReset() {
+        async function sendPasswordReset() {
             const email = document.getElementById('resetEmail').value;
-            
+
             if (!email) {
-                alert('Bitte geben Sie eine E-Mail-Adresse ein.');
+                await notify.alert('Bitte geben Sie eine E-Mail-Adresse ein.');
                 return;
             }
-            
+
             // Zeige Hinweis für Admin-Kontakt
-            alert(`Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.`);
+            await notify.alert(`Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.`);
             closeForgotPassword();
         }
         
@@ -691,7 +700,7 @@
         }
         
         // Registrierung verarbeiten
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('regUsername').value;
@@ -702,24 +711,24 @@
             
             // Validierung
             if (!username || !email || !password || !passwordConfirm) {
-                alert('Bitte füllen Sie alle Felder aus.');
+                await notify.alert('Bitte füllen Sie alle Felder aus.');
                 return;
             }
-            
+
             if (password !== passwordConfirm) {
-                alert('Die Passwörter stimmen nicht überein.');
+                await notify.alert('Die Passwörter stimmen nicht überein.');
                 return;
             }
-            
+
             if (password.length < 6) {
-                alert('Das Passwort muss mindestens 6 Zeichen lang sein.');
+                await notify.alert('Das Passwort muss mindestens 6 Zeichen lang sein.');
                 return;
             }
             
             // Prüfe ob Benutzername bereits existiert
             const existingUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
             if (existingUsers[username]) {
-                alert('Dieser Benutzername ist bereits vergeben.');
+                await notify.alert('Dieser Benutzername ist bereits vergeben.');
                 return;
             }
             
@@ -734,7 +743,7 @@
             
             localStorage.setItem('fightlog_registered_users', JSON.stringify(existingUsers));
             
-            alert(`Account erfolgreich erstellt!\n\nBenutzername: ${username}\nRolle: ${role}\n\nSie können sich jetzt anmelden.`);
+            await notify.alert(`Account erfolgreich erstellt!\n\nBenutzername: ${username}\nRolle: ${role}\n\nSie können sich jetzt anmelden.`);
             closeRegisterForm();
             
             // Zeige Passkey-Registrierung Button an, da jetzt ein Account existiert

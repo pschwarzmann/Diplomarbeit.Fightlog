@@ -1,0 +1,80 @@
+/* Styles for notify.js in-page modals */
+#notify-root { 
+    position: fixed; 
+    inset: 0; pointer-events: none; z-index: 9999; 
+}
+
+.notify-overlay { 
+    position: fixed; 
+    inset: 0; display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    background: rgba(0,0,0,0.35); 
+    backdrop-filter: blur(6px); 
+    pointer-events: auto; 
+}
+
+.notify-box { 
+    width: 90%; 
+    max-width: 460px; 
+    background: rgba(255,255,255,0.96); 
+    border-radius: 12px; 
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2); 
+    border: 1px solid rgba(0,0,0,0.06); 
+    overflow: hidden; 
+    font-family: inherit; 
+}
+
+.notify-content { 
+    padding: 18px; 
+}
+
+.notify-message { 
+    color: #111; 
+    font-size: 15px; 
+    line-height: 1.4; 
+    margin-bottom: 12px; 
+}
+
+.notify-actions { 
+    display:flex; 
+    gap:8px; 
+    justify-content:flex-end; 
+    padding: 12px 18px 18px; 
+}
+
+.notify-btn { 
+    background: #f1f1f3; 
+    color: #111; 
+    border: none; 
+    padding: 10px 14px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-size: 15px; 
+}
+
+.notify-btn:hover { 
+    filter: brightness(0.98); 
+    transform: translateY(-1px); 
+}
+
+.notify-btn:active { 
+    transform: translateY(0); 
+}
+
+.notify-btn-primary { 
+    background: #007aff; 
+    color: white; 
+}
+
+.notify-input { 
+    width: 100%; 
+    padding: 12px 14px; 
+    border-radius: 10px; 
+    border: 1px solid #e6e6e9; 
+    font-size: 15px; 
+}
+
+@media (max-width:480px){
+  .notify-box{ max-width: 92%; }
+}

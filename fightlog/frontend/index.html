@@ -8,6 +8,15 @@
     <!-- Vue.js CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
+        (function(){
+            if (!window._notifyQueue) window._notifyQueue = [];
+            const _nativeAlert = window.alert;
+            window.alert = function(msg){
+                try { window._notifyQueue.push(msg); } catch(e){ _nativeAlert(msg); }
+            };
+        })();
+    </script>
+    <script>
         // Fallback für Vue.js
         if (typeof Vue === 'undefined') {
             console.error('Vue.js konnte nicht geladen werden');
@@ -28,6 +37,7 @@
     
     <!-- Passkey Manager -->
     <script src="./passkey.js"></script>
+    <script src="./notify.js"></script>
 </head>
 <body>
     <div id="app">
@@ -72,7 +82,7 @@
                 }
                 
                 // Zeige Passkey-Anmeldung an
-                const usePasskey = confirm('Passkey verfügbar! Möchten Sie sich mit Passkey anmelden?');
+                const usePasskey = await notify.confirm('Passkey verfügbar! Möchten Sie sich mit Passkey anmelden?');
                 
                 if (usePasskey) {
                     // Verwende den ersten verfügbaren Passkey
