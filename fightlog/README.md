@@ -92,33 +92,33 @@ Die Anwendung ist so strukturiert, dass Backend-API-Calls einfach integriert wer
 
 ```javascript
 // Authentifizierung
-POST /backend/api/login.php
-POST /backend/api/register.php
-POST /backend/api/logout.php
+POST /fightlog/backend/api/login.php
+POST /fightlog/backend/api/register.php
+POST /fightlog/backend/api/logout.php
 
 // Urkunden
-GET /backend/api/certificates.php
-POST /backend/api/upload.php
-PUT /backend/api/certificates.php
-DELETE /backend/api/certificates.php
+GET /fightlog/backend/api/certificates.php
+POST /fightlog/backend/api/upload.php
+PUT /fightlog/backend/api/certificates.php
+DELETE /fightlog/backend/api/certificates.php
 
 // Prüfungen
-GET /backend/api/exams.php
-POST /backend/api/exams.php
-PUT /backend/api/exams.php
+GET /fightlog/backend/api/exams.php
+POST /fightlog/backend/api/exams.php
+PUT /fightlog/backend/api/exams.php
 
 // Trainingsverlauf
-GET /backend/api/training.php
-POST /backend/api/training.php
+GET /fightlog/backend/api/training.php
+POST /fightlog/backend/api/training.php
 
 // Sonderkurse
-GET /backend/api/courses.php
-POST /backend/api/courses/book.php
+GET /fightlog/backend/api/courses.php
+POST /fightlog/backend/api/courses/book.php
 
 // Ziele
-GET /backend/api/goals.php
-POST /backend/api/goals.php
-PUT /backend/api/goals.php
+GET /fightlog/backend/api/goals.php
+POST /fightlog/backend/api/goals.php
+PUT /fightlog/backend/api/goals.php
 ```
 
 #### 2. **Dateien zum Anpassen:**
@@ -129,7 +129,7 @@ PUT /backend/api/goals.php
 const apiService = {
     async login(credentials) {
         // Ersetze durch echten API-Call:
-        // return fetch('/backend/api/login.php', {
+   // return fetch('/fightlog/backend/api/login.php', {
         //     method: 'POST',
         //     headers: { 'Content-Type': 'application/json' },
         //     body: JSON.stringify(credentials)
@@ -250,7 +250,7 @@ cp -r frontend/* /var/www/html/
 ### Backend-Server:
 ```bash
 # Backend-Dateien auf PHP-Server kopieren
-cp -r backend/* /var/www/html/backend/
+cp -r backend/* /var/www/html/fightlog/backend/
 ```
 
 ### Datenbank:

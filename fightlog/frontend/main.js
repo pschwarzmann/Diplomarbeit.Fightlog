@@ -410,164 +410,74 @@ const demoData = {
 
 // API-Service (Dummy-Implementierung)
 const apiService = {
-    // Backend-Entwickler: Hier echte API-Calls einfügen
+    // Real backend API calls
     async login(credentials) {
-        console.log('API Call: Login', credentials);
-        const { username, password } = credentials;
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                let matchedUser = null;
-                if (username === 'admin' && password === 'admin123') {
-                    matchedUser = demoData.users.find(u => u.username === 'admin');
-                } else if (username === 'trainer' && password === 'trainer123') {
-                    matchedUser = demoData.users.find(u => u.username === 'trainer');
-                } else if (username === 'schueler' && password === 'schueler123') {
-                    matchedUser = demoData.users.find(u => u.username === 'schueler');
-                }
-
-                if (matchedUser) {
-                    resolve({ success: true, user: matchedUser, token: 'dummy-token-123' });
-                } else {
-                    resolve({ success: false, error: 'Ungültige Anmeldedaten' });
-                }
-            }, 400);
+        const res = await fetch('/fightlog/backend/api/login.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
         });
+        return res.json();
     },
 
     async register(userData) {
-        console.log('API Call: Register', userData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    success: true,
-                    message: 'Registrierung erfolgreich'
-                });
-            }, 500);
+        const res = await fetch('/fightlog/backend/api/register.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
         });
+        return res.json();
     },
 
     async uploadCertificate(certificateData) {
-        console.log('API Call: Upload Certificate', certificateData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newCert = {
-                    id: Date.now(),
-                    ...certificateData,
-                    status: 'pending'
-                };
-                demoData.certificates.unshift(newCert);
-                resolve({
-                    success: true,
-                    certificate: newCert
-                });
-            }, 1000);
+        const res = await fetch('/fightlog/backend/api/upload.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(certificateData)
         });
+        return res.json();
     },
 
     async getCertificates() {
-        console.log('API Call: Get Certificates');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.certificates);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/certificates.php');
+        return res.json();
     },
 
     async addExam(examData) {
-        console.log('API Call: Add Exam', examData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newExam = {
-                    id: Date.now(),
-                    ...examData,
-                    status: 'passed'
-                };
-                demoData.exams.unshift(newExam);
-                resolve({
-                    success: true,
-                    exam: newExam
-                });
-            }, 500);
-        });
+        const res = await fetch('/fightlog/backend/api/exams.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(examData) });
+        return res.json();
     },
 
     async getExams() {
-        console.log('API Call: Get Exams');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.exams);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/exams.php');
+        return res.json();
     },
 
     async getTrainingHistory() {
-        console.log('API Call: Get Training History');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.trainingHistory);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/training.php');
+        return res.json();
     },
 
     async getSpecialCourses() {
-        console.log('API Call: Get Special Courses');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.specialCourses);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/courses.php');
+        return res.json();
     },
 
     async getGoals() {
-        console.log('API Call: Get Goals');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.goals);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/goals.php');
+        return res.json();
     },
 
     async addGoal(goalData) {
-        console.log('API Call: Add Goal', goalData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newGoal = {
-                    id: Date.now(),
-                    ...goalData,
-                    status: 'in_progress'
-                };
-                demoData.goals.unshift(newGoal);
-                resolve({
-                    success: true,
-                    goal: newGoal
-                });
-            }, 500);
-        });
+        const res = await fetch('/fightlog/backend/api/goals.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(goalData) });
+        return res.json();
     },
 
     async getUsers() {
-        console.log('API Call: Get Users');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Tiefkopie, damit UI-Änderungen nicht direkt auf demoData zeigen
-                resolve(demoData.users.map(u => ({ ...u, permissions: [...u.permissions] })));
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/users.php');
+        return res.json();
     },
 
     async updateUser(updatedUser) {
-        console.log('API Call: Update User', updatedUser);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const idx = demoData.users.findIndex(u => u.id === updatedUser.id);
-                if (idx !== -1) {
-                    demoData.users[idx] = { ...demoData.users[idx], ...updatedUser, permissions: [...updatedUser.permissions] };
-                    resolve({ success: true, user: demoData.users[idx] });
-                } else {
-                    resolve({ success: false, error: 'User not found' });
-                }
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/users.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedUser) });
+        return res.json();
     },
 
     async verifyAsTrainer(userId) {

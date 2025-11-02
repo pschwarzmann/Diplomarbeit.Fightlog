@@ -113,8 +113,9 @@
         
         // Lade die Hauptanwendung
         function loadMainApp() {
+            // Cache-busting to ensure the browser loads the latest main.js after route changes
             const script = document.createElement('script');
-            script.src = './main.js';
+            script.src = './main.js?v=' + Date.now();
             document.body.appendChild(script);
         }
         

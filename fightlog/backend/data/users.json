@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@fightlog.com",
+    "role": "admin",
+    "name": "Admin Trainer",
+    "firstName": "Admin",
+    "lastName": "Trainer",
+    "school": "Kampfsport Akademie Berlin",
+    "beltLevel": "Schwarzgurt 5. Dan - Meister",
+    "permissions": ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"],
+    "verifiedTrainer": true,
+    "phone": "+49 30 1234567",
+    "passkeys": ["YubiKey-Admin", "Phone-Admin"]
+  },
+  {
+    "id": 2,
+    "username": "trainer",
+    "email": "trainer@fightlog.com",
+    "role": "trainer",
+    "name": "Tom Trainer",
+    "firstName": "Tom",
+    "lastName": "Trainer",
+    "school": "Kampfsport Akademie Berlin",
+    "beltLevel": "Schwarzgurt 2. Dan",
+    "permissions": ["manage_certificates", "manage_exams", "edit_training_history"],
+    "verifiedTrainer": true,
+    "phone": "+49 30 2345678",
+    "passkeys": ["Phone-Trainer"]
+  },
+  {
+    "id": 3,
+    "username": "schueler",
+    "email": "schueler@fightlog.com",
+    "role": "schueler",
+    "name": "Sam Schüler",
+    "firstName": "Sam",
+    "lastName": "Schüler",
+    "school": "Kampfsport Akademie Berlin",
+    "beltLevel": "Gelbgurt",
+    "permissions": [],
+    "verifiedTrainer": false,
+    "phone": "+49 30 3456789",
+    "passkeys": []
+  },
+  {
+    "id": 4,
+    "username": "paul",
+    "email": "paul.schwarzmann@fightlog.com",
+    "role": "schueler",
+    "name": "Paul Schwarzmann",
+    "firstName": "Paul",
+    "lastName": "Schwarzmann",
+    "school": "Kampfsport Akademie Berlin",
+    "beltLevel": "Weißgurt",
+    "permissions": [],
+    "verifiedTrainer": false,
+    "phone": "+49 30 0000001",
+    "passkeys": []
+  }
+]

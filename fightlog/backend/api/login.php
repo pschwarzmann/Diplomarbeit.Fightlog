@@ -24,21 +24,49 @@ if (!isset($input['username']) || !isset($input['password'])) {
     exit;
 }
 
-// TODO: Backend-Entwickler - Hier echte Authentifizierung implementieren
-// Beispiel für Dummy-Response:
-$response = [
-    'success' => true,
-    'user' => [
-        'id' => 1,
-        'username' => $input['username'],
-        'email' => $input['username'] . '@example.com',
-        'role' => 'trainer', // oder 'schueler'
-        'name' => 'Max Müller',
-        'school' => 'Kampfsport Akademie Berlin',
-        'beltLevel' => 'Schwarzgurt 3. Dan'
-    ],
-    'token' => 'dummy-token-' . time()
-];
+// Simple file-based authentication for demo
+require_once __DIR__ . '/../db/storage.php';
 
-echo json_encode($response);
+if (!isset($input['username']) || !isset($input['password'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Username and password required']);
+    exit;
+}
+
+$users = read_data('users');
+$found = null;
+foreach ($users as $u) {
+    if ($u['username'] === $input['username'] && isset($u['password']) && $u['password'] === $input['password']) {
+        $found = $u; break;
+    }
+}
+
+// fallback: create demo user if not found
+if (!$found) {
+    // check demo logins
+    $demos = [
+        ['username'=>'admin','password'=>'admin123','role'=>'admin','name'=>'Admin Trainer'],
+        ['username'=>'trainer','password'=>'trainer123','role'=>'trainer','name'=>'Tom Trainer'],
+        ['username'=>'schueler','password'=>'schueler123','role'=>'schueler','name'=>'Sam Schüler']
+    ];
+    foreach ($demos as $d) {
+        if ($d['username'] === $input['username'] && $d['password'] === $input['password']) {
+            $found = $d; break;
+        }
+    }
+}
+
+if ($found) {
+    $user = [
+        'id' => $found['id'] ?? rand(100,9999),
+        'username' => $input['username'],
+        'email' => ($found['email'] ?? ($input['username'] . '@example.com')),
+        'role' => $found['role'] ?? 'schueler',
+        'name' => $found['name'] ?? $input['username']
+    ];
+
+    echo json_encode(['success'=>true,'user'=>$user,'token'=>'token-' . time()]);
+} else {
+    echo json_encode(['success'=>false,'error'=>'Ungültige Anmeldedaten']);
+}
 ?> 
