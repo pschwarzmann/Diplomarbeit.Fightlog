@@ -1,38 +1,28 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-require_once __DIR__ . '/../db/storage.php';
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { echo json_encode(['ok'=>true]); exit; }
+// backend/api/goals.php
+require_once __DIR__ . '/../db/config.php';
+$mysqli = db();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    echo json_encode(read_data('goals'));
-    exit;
+    $res = $mysqli->query("SELECT id, user_id as userId, title, target_date as targetDate, progress, category, status FROM goals ORDER BY created_at DESC, id DESC");
+    $list = $res->fetch_all(MYSQLI_ASSOC);
+    json_out($list);
 }
-
-$input = json_decode(file_get_contents('php://input'), true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $item = array_merge(['id'=>time(),'status'=>'in_progress'], $input);
-    $res = append_data('goals', $item);
-    if (is_array($res)) {
-        echo json_encode(['success'=>$res['ok'], 'used_db'=>$res['used_db'], 'error'=>$res['error'], 'goal'=>$res['item']]);
-    } else {
-        echo json_encode(['success'=>false, 'error'=>'append_data returned unexpected result']);
+    $body = read_json_body();
+    // Wenn kein userId angegeben: 1 (Admin) als Demo
+    if (!isset($body['userId'])) $body['userId'] = 1;
+    require_fields($body, ['userId','title','targetDate','progress','category']);
+    $status = isset($body['status']) ? $body['status'] : 'in_progress';
+
+    $stmt = $mysqli->prepare("INSERT INTO goals (user_id, title, target_date, progress, category, status) VALUES (?,?,?,?,?,?)");
+    $stmt->bind_param('ississ', $body['userId'], $body['title'], $body['targetDate'], $body['progress'], $body['category'], $status);
+    if (!$stmt->execute()) {
+        json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);
     }
-    exit;
+    json_out(['success'=>true, 'id'=>$stmt->insert_id]);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    if (!isset($input['id'])) { http_response_code(400); echo json_encode(['success'=>false,'error'=>'id required']); exit; }
-    $ok = update_item('goals', $input['id'], $input);
-    echo json_encode(['success'=>$ok]);
-    exit;
-}
-
-http_response_code(405); echo json_encode(['error'=>'Method not allowed']);
-
+json_out(['success'=>false, 'error'=>'Nur GET/POST erlaubt'], 405);
 ?>

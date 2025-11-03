@@ -1,38 +1,28 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-require_once __DIR__ . '/../db/storage.php';
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { echo json_encode(['ok'=>true]); exit; }
+// backend/api/certificates.php
+require_once __DIR__ . '/../db/config.php';
+$mysqli = db();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $certs = read_data('certificates');
-    echo json_encode($certs);
-    exit;
+    $res = $mysqli->query("SELECT id, user_id as userId, title, type, date, level, instructor, file_url as fileUrl, preview, status FROM certificates ORDER BY date DESC, id DESC");
+    $list = $res->fetch_all(MYSQLI_ASSOC);
+    json_out($list);
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $body = read_json_body();
+    require_fields($body, ['userId','title','type','date','level','instructor']);
+    $status = isset($body['status']) ? $body['status'] : 'pending';
+    $fileUrl = isset($body['fileUrl']) ? $body['fileUrl'] : null;
+    $preview = isset($body['preview']) ? $body['preview'] : '📄';
 
-if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    if (!isset($input['id'])) { http_response_code(400); echo json_encode(['success'=>false,'error'=>'id required']); exit; }
-    $ok = update_item('certificates', $input['id'], $input);
-    echo json_encode(['success'=>$ok]);
-    exit;
+    $stmt = $mysqli->prepare("INSERT INTO certificates (user_id, title, type, date, level, instructor, file_url, preview, status) VALUES (?,?,?,?,?,?,?,?,?)");
+    $stmt->bind_param('issssssss', $body['userId'], $body['title'], $body['type'], $body['date'], $body['level'], $body['instructor'], $fileUrl, $preview, $status);
+    if (!$stmt->execute()) {
+        json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);
+    }
+    json_out(['success'=>true, 'id'=>$stmt->insert_id]);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    // Accept id via query or JSON
-    $id = $_GET['id'] ?? ($input['id'] ?? null);
-    if (!$id) { http_response_code(400); echo json_encode(['success'=>false,'error'=>'id required']); exit; }
-    $ok = delete_item('certificates', $id);
-    echo json_encode(['success'=>$ok]);
-    exit;
-}
-
-http_response_code(405);
-echo json_encode(['error'=>'Method not allowed']);
-
+json_out(['success'=>false, 'error'=>'Nur GET/POST erlaubt'], 405);
 ?>

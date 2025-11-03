@@ -410,7 +410,6 @@ const demoData = {
 
 // API-Service (Dummy-Implementierung)
 const apiService = {
-    // Real backend API calls
     async login(credentials) {
         const res = await fetch('/fightlog/backend/api/login.php', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -441,7 +440,11 @@ const apiService = {
     },
 
     async addExam(examData) {
-        const res = await fetch('/fightlog/backend/api/exams.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(examData) });
+        const res = await fetch('/fightlog/backend/api/exams.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(examData)
+        });
         return res.json();
     },
 
@@ -466,7 +469,11 @@ const apiService = {
     },
 
     async addGoal(goalData) {
-        const res = await fetch('/fightlog/backend/api/goals.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(goalData) });
+        const res = await fetch('/fightlog/backend/api/goals.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(goalData)
+        });
         return res.json();
     },
 
@@ -476,69 +483,56 @@ const apiService = {
     },
 
     async updateUser(updatedUser) {
-        const res = await fetch('/fightlog/backend/api/users.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedUser) });
+        const res = await fetch('/fightlog/backend/api/users.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', ...updatedUser })
+        });
         return res.json();
     },
 
     async verifyAsTrainer(userId) {
-        console.log('API Call: Verify as Trainer', userId);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const user = demoData.users.find(u => u.id === userId);
-                if (!user) return resolve({ success: false, error: 'User not found' });
-                user.role = 'trainer';
-                user.verifiedTrainer = true;
-                if (!user.permissions.includes('manage_exams')) user.permissions.push('manage_exams');
-                resolve({ success: true, user: { ...user } });
-            }, 300);
+        const res = await fetch('/fightlog/backend/api/users.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify', id: userId })
         });
+        return res.json();
     },
 
     async getCourses() {
-        console.log('API Call: Get Courses');
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(demoData.courses);
-            }, 300);
-        });
+        const res = await fetch('/fightlog/backend/api/courses.php');
+        return res.json();
     },
 
     async addCourse(courseData) {
-        console.log('API Call: Add Course', courseData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newCourse = { id: Date.now(), ...courseData };
-                demoData.courses.unshift(newCourse);
-                resolve({ success: true, course: newCourse });
-            }, 400);
+        const res = await fetch('/fightlog/backend/api/courses.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add', ...courseData })
         });
+        return res.json();
     },
 
     async updateCourse(courseData) {
-        console.log('API Call: Update Course', courseData);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const idx = demoData.courses.findIndex(c => c.id === courseData.id);
-                if (idx !== -1) {
-                    demoData.courses[idx] = { ...demoData.courses[idx], ...courseData };
-                    resolve({ success: true, course: demoData.courses[idx] });
-                } else {
-                    resolve({ success: false });
-                }
-            }, 300);
+        const res = await fetch('/fightlog/backend/api/courses.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', ...courseData })
         });
+        return res.json();
     },
 
     async deleteCourse(courseId) {
-        console.log('API Call: Delete Course', courseId);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                demoData.courses = demoData.courses.filter(c => c.id !== courseId);
-                resolve({ success: true });
-            }, 300);
+        const res = await fetch('/fightlog/backend/api/courses.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', id: courseId })
         });
+        return res.json();
     }
 };
+
 
 // Hauptanwendung
 const app = createApp({

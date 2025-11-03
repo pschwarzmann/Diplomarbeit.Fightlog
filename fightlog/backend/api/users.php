@@ -1,26 +1,67 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// backend/api/users.php
+require_once __DIR__ . '/../db/config.php';
 
-require_once __DIR__ . '/../db/storage.php';
+$mysqli = db();
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { echo json_encode(['ok'=>true]); exit; }
+$method = $_SERVER['REQUEST_METHOD'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    echo json_encode(read_data('users'));
-    exit;
+if ($method === 'GET') {
+    $res = $mysqli->query("SELECT id, username, email, role, name, first_name as firstName, last_name as lastName, school, belt_level as beltLevel, verified_trainer as verifiedTrainer FROM users ORDER BY id ASC");
+    $list = [];
+    while ($row = $res->fetch_assoc()) {
+        $row['id'] = (int)$row['id'];
+        $row['verifiedTrainer'] = (bool)$row['verifiedTrainer'];
+        $row['permissions'] = []; // optional: Rechte extra nachladen
+        $row['phone'] = null; // Spalte nicht vorhanden – für UI-Kompatibilität
+        $row['passkeys'] = [];
+        $list[] = $row;
+    }
+    json_out($list);
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    if (!isset($input['id'])) { http_response_code(400); echo json_encode(['success'=>false,'error'=>'id required']); exit; }
-    $ok = update_item('users', $input['id'], $input);
-    echo json_encode(['success'=>$ok]);
-    exit;
+if ($method === 'POST') {
+    $body = read_json_body();
+    $action = isset($body['action']) ? $body['action'] : 'update';
+
+    if ($action === 'update') {
+        require_fields($body, ['id','role']);
+        $verified = isset($body['verifiedTrainer']) ? (int)!!$body['verifiedTrainer'] : 0;
+        $name = isset($body['name']) ? $body['name'] : '';
+        $first = isset($body['firstName']) ? $body['firstName'] : null;
+        $last  = isset($body['lastName']) ? $body['lastName'] : null;
+        $email = isset($body['email']) ? $body['email'] : null;
+        $role  = $body['role'];
+        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=? WHERE id=?");
+        $stmt->bind_param('sissssi', $role, $verified, $name, $first, $last, $email, $body['id']);
+        if (!$stmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Update fehlgeschlagen: '.$stmt->error], 500);
+        }
+        json_out(['success'=>true]);
+    }
+
+    if ($action === 'verify') {
+        require_fields($body, ['id']);
+        $stmt = $mysqli->prepare("UPDATE users SET role='trainer', verified_trainer=1 WHERE id=?");
+        $stmt->bind_param('i', $body['id']);
+        if (!$stmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Verify fehlgeschlagen: '.$stmt->error], 500);
+        }
+        json_out(['success'=>true]);
+    }
+
+    if ($action === 'delete') {
+        require_fields($body, ['id']);
+        $stmt = $mysqli->prepare("DELETE FROM users WHERE id=?");
+        $stmt->bind_param('i', $body['id']);
+        if (!$stmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Delete fehlgeschlagen: '.$stmt->error], 500);
+        }
+        json_out(['success'=>true]);
+    }
+
+    json_out(['success'=>false, 'error'=>'Unbekannte Aktion'], 400);
 }
 
-http_response_code(405); echo json_encode(['error'=>'Method not allowed']);
-
+json_out(['success'=>false, 'error'=>'Nur GET/POST erlaubt'], 405);
 ?>

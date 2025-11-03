@@ -1,42 +1,29 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+// backend/api/register.php
+require_once __DIR__ . '/../db/config.php';
+
+$mysqli = db();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    json_out(['success'=>false, 'error'=>'Nur POST erlaubt'], 405);
 }
+$body = read_json_body();
+require_fields($body, ['username','email','password','firstName','lastName','phone']);
 
-$input = json_decode(file_get_contents('php://input'), true);
-require_once __DIR__ . '/../db/storage.php';
+// Standardrolle: schueler
+$role = 'schueler';
+$name = trim($body['firstName'].' '.$body['lastName']);
+$school = isset($body['school']) ? $body['school'] : 'Kampfsport Akademie Berlin';
+$belt = isset($body['beltLevel']) ? $body['beltLevel'] : 'Weißgurt';
 
-if (!isset($input['username']) || !isset($input['password']) || !isset($input['email'])) {
-    http_response_code(400);
-    echo json_encode(['success'=>false,'error' => 'username, password and email required']);
-    exit;
+// In Produktion: $hash = password_hash($body['password'], PASSWORD_BCRYPT);
+$hash = '$2y$10$dummyhash';
+
+$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, school, belt_level, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)");
+$stmt->bind_param('sssssssss', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $school, $belt);
+
+if (!$stmt->execute()) {
+    json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);
 }
-
-$users = read_data('users');
-foreach ($users as $u) {
-    if ($u['username'] === $input['username']) {
-        echo json_encode(['success'=>false,'error'=>'Username already exists']);
-        exit;
-    }
-}
-
-$new = [
-    'id' => time(),
-    'username' => $input['username'],
-    'email' => $input['email'],
-    'password' => $input['password'], // NOTE: plain text for demo only
-    'role' => $input['role'] ?? 'schueler',
-    'createdAt' => date('c')
-];
-
-append_data('users', $new);
-echo json_encode(['success'=>true,'user'=>$new]);
-
+json_out(['success'=>true, 'id'=>$stmt->insert_id]);
 ?>
