@@ -549,11 +549,12 @@ const app = createApp({
                         </a>
                         
                                                  <div class="user-info">
-                             <button @click="showPasskeyManagement" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; margin-right: 0.5rem;">
+                             <span>Angemeldet als {{ currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'trainer' ? 'Trainer' : 'Schüler' }}</span>
+                             <button @click="showPasskeyManagement" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; margin-right: 0.5rem; background-color: #8b5cf6;">
                                  <i class="fas fa-key"></i> Passkey verwalten
                              </button>
                              <button @click="logout" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">
-                                 <i class="fas fa-right-from-bracket"></i> {{ t('logout') }}
+                                 {{ t('logout') }}
                              </button>
                          </div>
                     </nav>
@@ -683,7 +684,7 @@ const app = createApp({
                     <div class="dashboard">
                         <div class="container">
                             <div class="dashboard-header">
-                                <h1>Willkommen bei <span class="brand-logo">FightLog</span></h1>
+                                <h1>{{ t('welcome') }}</h1>
                                 <p>{{ t('subtitle') }}</p>
                             </div>
                             
@@ -700,7 +701,7 @@ const app = createApp({
                                     <p>Prüfungsergebnisse & Bewertungen</p>
                                 </div>
                                 
-                                <div v-if="currentUser" class="nav-card" @click="navigateTo('goals')">
+                                <div v-if="currentUser && currentUser.role !== 'admin'" class="nav-card" @click="navigateTo('goals')">
                                     <i class="fas fa-bullseye"></i>
                                     <h3>{{ t('goals') }}</h3>
                                     <p>Protokoll und Ziele verwalten</p>
@@ -1924,21 +1925,14 @@ const app = createApp({
         },
         
         logout() {
-            try {
-                localStorage.removeItem('fightlog_username');
-                localStorage.removeItem('fightlog_authenticated');
-                localStorage.removeItem('fightlog_user');
-            } catch (e) {}
-
-            if (typeof window.navigateWithTransition === 'function') {
-                window.navigateWithTransition('simple.html');
-            } else {
-                const overlay = document.createElement('div');
-                overlay.id = 'page-transition';
-                overlay.className = 'page-transition show';
-                document.body.appendChild(overlay);
-                setTimeout(()=> { window.location.href = 'simple.html'; }, 280);
-            }
+            this.isLoggedIn = false;
+            this.currentUser = null;
+            this.currentPage = 'dashboard';
+            localStorage.removeItem('fightlog_username');
+            localStorage.removeItem('fightlog_authenticated');
+            localStorage.removeItem('fightlog_user');
+            // Weiterleitung zur Anmeldeseite
+            window.location.href = 'simple.html';
         },
         
         // Passkey-Verwaltung anzeigen

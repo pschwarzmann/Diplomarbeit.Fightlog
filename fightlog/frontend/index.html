@@ -38,9 +38,6 @@
     <!-- Passkey Manager -->
     <script src="./passkey.js"></script>
     <script src="./notify.js"></script>
-    <script src="./custom-select.js"></script>
-    <script src="./custom-datepicker.js"></script>
-    <script src="./form-validation.js"></script>
 </head>
 <body>
     <div id="app">
@@ -49,20 +46,70 @@
     
     <!-- JavaScript -->
     <script>
-        // Prüfe ob Benutzer bereits authentifiziert ist; ansonsten immer zur Login-Startseite
+        // Prüfe ob Benutzer bereits authentifiziert ist oder Passkey verfügbar
         function checkAuthentication() {
+            // Prüfe auf gespeicherte Authentifizierung
             const isAuthenticated = localStorage.getItem('fightlog_authenticated');
-
-            if (!isAuthenticated) {
+            const hasPasskey = localStorage.getItem('fightlog_passkey_available');
+            
+            // Wenn nicht authentifiziert und kein Passkey verfügbar, zur Anmeldeseite weiterleiten
+            if (!isAuthenticated && !hasPasskey) {
                 window.location.href = 'simple.html?v=' + Date.now();
                 return;
             }
-
-            // Authentifiziert → Hauptanwendung laden
-            loadMainApp();
+            
+            // Wenn Passkey verfügbar, versuche automatische Anmeldung
+            if (hasPasskey && !isAuthenticated) {
+                attemptPasskeyLogin();
+                return;
+            }
+            
+            // Wenn authentifiziert, Hauptanwendung laden
+            if (isAuthenticated) {
+                loadMainApp();
+            }
         }
         
-        // Passkey-Auto-Login wird nicht mehr von index.html erzwungen
+        // Versuche Passkey-Anmeldung
+        async function attemptPasskeyLogin() {
+            try {
+                // Prüfe verfügbare Passkeys
+                const availablePasskeys = window.passkeyManager.listPasskeys();
+                if (availablePasskeys.length === 0) {
+                    console.log('Keine Passkeys verfügbar, weiter zur Anmeldeseite');
+                    window.location.href = 'simple.html?v=' + Date.now();
+                    return;
+                }
+                
+                // Zeige Passkey-Anmeldung an
+                const usePasskey = await notify.confirm('Passkey verfügbar! Möchten Sie sich mit Passkey anmelden?');
+                
+                if (usePasskey) {
+                    // Verwende den ersten verfügbaren Passkey
+                    const username = availablePasskeys[0];
+                    
+                    // Führe echte WebAuthn-Authentifizierung durch
+                    const result = await window.passkeyManager.authenticateWithPasskey(username);
+                    
+                    if (result.success) {
+                        localStorage.setItem('fightlog_authenticated', 'true');
+                        localStorage.setItem('fightlog_user', JSON.stringify({
+                            username: username,
+                            role: 'admin', // Standardrolle für Passkey-Benutzer
+                            authMethod: 'passkey'
+                        }));
+                        loadMainApp();
+                    } else {
+                        window.location.href = 'simple.html?v=' + Date.now();
+                    }
+                } else {
+                    window.location.href = 'simple.html?v=' + Date.now();
+                }
+            } catch (error) {
+                console.error('Passkey-Anmeldung fehlgeschlagen:', error);
+                window.location.href = 'simple.html?v=' + Date.now();
+            }
+        }
         
         // Lade die Hauptanwendung
         function loadMainApp() {
@@ -74,31 +121,6 @@
         
         // Starte Authentifizierungsprüfung
         checkAuthentication();
-    </script>
-    
-    <script>
-        // Page-Transition Overlay beim Laden einrichten und ausblenden
-        (function(){
-            const overlay = document.createElement('div');
-            overlay.id = 'page-transition';
-            overlay.className = 'page-transition show';
-            document.addEventListener('DOMContentLoaded', function(){
-                document.body.appendChild(overlay);
-                // kleinem Timeout, damit CSS greift, dann ausblenden
-                setTimeout(()=> overlay.classList.remove('show'), 40);
-            });
-            // Globale Helferfunktion für Navigations-Übergänge
-            window.navigateWithTransition = function(url){
-                try {
-                    const el = document.getElementById('page-transition') || overlay;
-                    if (!el.isConnected) document.body.appendChild(el);
-                    el.classList.add('show');
-                    setTimeout(()=> { window.location.href = url; }, 280);
-                } catch (e) {
-                    window.location.href = url;
-                }
-            };
-        })();
     </script>
 </body>
 </html> 

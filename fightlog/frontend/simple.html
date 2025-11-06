@@ -30,9 +30,6 @@
     <!-- Passkey Manager -->
     <script src="./passkey.js"></script>
     <script src="./notify.js"></script>
-    <script src="./custom-select.js"></script>
-    <script src="./custom-datepicker.js"></script>
-    <script src="./form-validation.js"></script>
     
     <style>
         /* Apple-ähnliches Design */
@@ -57,70 +54,36 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 24px;
-            background: #ffffff;
-            position: relative;
+            padding: 20px;
+            background: #f5f5f7;
         }
         
         .login-card {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(14px) saturate(130%);
-            border-radius: 22px;
-            padding: 42px 34px;
-            box-shadow:
-                0 24px 48px rgba(2,6,23,0.10),
-                0 0 0 1px rgba(0,0,0,0.04),
-                0 0 0 6px rgba(255,255,255,0.45) inset;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 48px 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 440px;
-            position: relative;
-            overflow: hidden;
-        }
-        .login-card::before{
-            content: '';
-            position: absolute; inset: -1px;
-            border-radius: inherit;
-            padding: 1px;
-            background: linear-gradient(120deg, rgba(99,102,241,0.55), rgba(14,165,233,0.45), rgba(255,255,255,0.3));
-            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            pointer-events: none;
-            opacity: .6;
-        }
-        .login-card::after{
-            content: '';
-            position: absolute; inset: 0;
-            pointer-events: none;
-            background: radial-gradient(600px 240px at 50% -10%, rgba(255,255,255,0.65), rgba(255,255,255,0));
-            opacity: .7;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .login-card h1 {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #1d1d1f;
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.003em;
         }
         
         .login-subtitle {
             text-align: center;
-            margin-bottom: 32px;
-            color: #6b7280;
-            font-size: 15px;
+            margin-bottom: 40px;
+            color: #86868b;
+            font-size: 17px;
             font-weight: 400;
-        }
-
-        /* Akzent-Linie unter Titel */
-        .login-card h1 + .login-subtitle::after{
-            content: '';
-            display: block;
-            width: 72px; height: 4px;
-            margin: 14px auto 0;
-            border-radius: 9999px;
-            background: linear-gradient(90deg, rgba(99,102,241,0.9), rgba(14,165,233,0.9));
-            box-shadow: 0 2px 8px rgba(14,165,233,0.25);
         }
         
         .form-group {
@@ -138,21 +101,20 @@
         .form-group input {
             width: 100%;
             padding: 16px 20px;
-            border: 1px solid rgba(0, 0, 0, 0.14);
-            border-radius: 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
             font-size: 17px;
             font-weight: 400;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.8);
             transition: all 0.2s ease;
             font-family: inherit;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) inset;
         }
         
         .form-group input:focus {
             outline: none;
-            background: #ffffff;
-            border-color: rgba(0, 0, 0, 0.28);
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            background: rgba(255, 255, 255, 0.95);
         }
         
         .password-container {
@@ -188,232 +150,56 @@
             font-size: 17px;
             font-weight: 400;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             font-family: inherit;
             margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 122, 255, 0.25);
-        }
-        
-        /* Glanz-Effekt für alle Buttons */
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, left 0s 0.9s;
-            pointer-events: none;
-            opacity: 0;
-        }
-        
-        .btn:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
         }
         
         .btn:hover {
             background: #0056b3;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
+            transform: translateY(-1px);
         }
         
         .btn:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(0, 122, 255, 0.25);
+            transform: translateY(0);
         }
         
         .btn-secondary {
             background: rgba(0, 0, 0, 0.04);
             color: #1d1d1f;
             border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         
         .btn-secondary:hover {
             background: rgba(0, 0, 0, 0.08);
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
         }
         
-        .btn-secondary:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        .btn-danger {
+            background: #ff3b30;
         }
         
-        /* Passwort vergessen Button - komplett neu */
-        .btn.btn-danger {
-            background: #ff3b30 !important;
-            box-shadow: 0 4px 6px rgba(255, 59, 48, 0.25) !important;
-            position: relative !important;
-            overflow: hidden !important;
-        }
-        
-        .btn.btn-danger::after {
-            content: '' !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: -150% !important;
-            width: 130% !important;
-            height: 100% !important;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.6) 30%,
-                rgba(255,255,255,0) 60%) !important;
-            transform: skewX(-20deg) translateX(0) !important;
-            transition: transform 0.9s ease, opacity 0.1s ease !important;
-            pointer-events: none !important;
-            z-index: 1 !important;
-            opacity: 0 !important;
-        }
-        
-        .btn.btn-danger:hover {
-            background: #ff3b30 !important;
-            color: white !important;
-            transform: translateY(-1px) scale(1.01) !important;
-            box-shadow: 0 8px 16px rgba(255, 59, 48, 0.3) !important;
-        }
-        
-        .btn.btn-danger:hover::after {
-            transform: translateX(250%) skewX(-20deg) !important;
-            opacity: 1 !important;
-            transition: transform 0.9s ease, opacity 0.1s ease !important;
-        }
-        
-        .btn.btn-danger:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0) !important;
-            opacity: 0 !important;
-            transition: transform 0s ease, opacity 0.1s ease !important;
-        }
-        
-        .btn.btn-danger:active {
-            transform: translateY(0) scale(0.99) !important;
-            box-shadow: 0 4px 8px rgba(255, 59, 48, 0.25) !important;
-        }
-        
-        .btn.btn-danger > * {
-            position: relative !important;
-            z-index: 2 !important;
+        .btn-danger:hover {
+            background: #d70015;
+            transform: translateY(-1px);
         }
         
         .btn-success {
             background: #34c759;
-            box-shadow: 0 4px 6px rgba(52, 199, 89, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-success::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, opacity 0.1s ease;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-        }
-        
-        .btn-success:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn-success:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
         }
         
         .btn-success:hover {
             background: #248a3d;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(52, 199, 89, 0.3);
-        }
-        
-        .btn-success:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(52, 199, 89, 0.25);
-        }
-        
-        .btn-success > * {
-            position: relative;
-            z-index: 2;
+            transform: translateY(-1px);
         }
         
         .btn-purple {
             background: #af52de;
-            box-shadow: 0 4px 6px rgba(175, 82, 222, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-purple::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, opacity 0.1s ease;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-        }
-        
-        .btn-purple:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn-purple:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
         }
         
         .btn-purple:hover {
             background: #8e44ad;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(175, 82, 222, 0.3);
-        }
-        
-        .btn-purple:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(175, 82, 222, 0.25);
-        }
-        
-        .btn-purple > * {
-            position: relative;
-            z-index: 2;
+            transform: translateY(-1px);
         }
         
         .button-group {
@@ -443,286 +229,97 @@
             font-size: 13px;
         }
         
-        /* Modal Styles - am Ende für höchste Priorität */
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #86868b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1d1d1f;
+        }
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .simple-login {
-                padding: 16px;
-            }
-            
             .login-card {
                 padding: 32px 24px;
-                margin: 0;
-                max-width: 100%;
-                border-radius: 16px;
+                margin: 16px;
             }
             
             .login-card h1 {
                 font-size: 28px;
             }
             
-            .login-subtitle {
-                font-size: 16px;
-                margin-bottom: 32px;
-            }
-            
-            .form-group {
-                margin-bottom: 18px;
-            }
-            
-            .form-group input {
-                padding: 14px 18px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-            
-            .btn {
-                padding: 14px 20px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-            
             .button-group {
                 flex-direction: column;
-                gap: 10px;
-            }
-            
-            .button-group .btn {
-                margin-bottom: 0;
-            }
-            
-            .demo-info {
-                margin-top: 24px;
-                font-size: 14px;
-            }
-            
-            .demo-info code {
-                font-size: 12px;
-                padding: 2px 5px;
-            }
-            
-            .modal-overlay {
-                padding: 1rem;
             }
             
             .modal-content {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 16px;
-                max-height: 90vh;
+                width: 95%;
+                margin: 16px;
             }
-            
-            .modal-header {
-                padding: 28px 24px 20px;
-            }
-            
-            .modal-header h2 {
-                font-size: 22px;
-            }
-            
-            .modal-body {
-                padding: 0 24px 24px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .simple-login {
-                padding: 12px;
-            }
-            
-            .login-card {
-                padding: 24px 20px;
-                border-radius: 14px;
-            }
-            
-            .login-card h1 {
-                font-size: 24px;
-                margin-bottom: 6px;
-            }
-            
-            .login-subtitle {
-                font-size: 15px;
-                margin-bottom: 28px;
-            }
-            
-            .form-group {
-                margin-bottom: 16px;
-            }
-            
-            .form-group label {
-                font-size: 15px;
-                margin-bottom: 6px;
-            }
-            
-            .form-group input {
-                padding: 12px 16px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-                border-radius: 10px;
-            }
-            
-            .password-toggle {
-                right: 12px;
-                padding: 6px;
-            }
-            
-            .btn {
-                padding: 12px 18px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-                border-radius: 10px;
-                margin-bottom: 10px;
-            }
-            
-            .button-group {
-                gap: 8px;
-            }
-            
-            .demo-info {
-                margin-top: 20px;
-                font-size: 13px;
-            }
-            
-            .demo-info p {
-                margin: 4px 0;
-            }
-            
-            .demo-info code {
-                font-size: 11px;
-                padding: 1px 4px;
-            }
-            
-            .modal-overlay {
-                padding: 0.5rem;
-            }
-            
-            .modal-content {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 14px;
-                max-height: 95vh;
-            }
-            
-            .modal-header {
-                padding: 24px 20px 16px;
-            }
-            
-            .modal-header h2 {
-                font-size: 20px;
-            }
-            
-            .modal-body {
-                padding: 0 20px 20px;
-            }
-            
-            .modal-body .form-group {
-                margin-bottom: 16px;
-            }
-            
-            .modal-body .form-group label {
-                font-size: 14px;
-            }
-            
-            .modal-body .form-group input,
-            .modal-body .form-group select {
-                padding: 12px 16px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-        }
-        
-        @media (max-width: 360px) {
-            .login-card {
-                padding: 20px 16px;
-            }
-            
-            .login-card h1 {
-                font-size: 22px;
-            }
-            
-            .login-subtitle {
-                font-size: 14px;
-            }
-            
-            .form-group input {
-                padding: 10px 14px;
-            }
-            
-            .btn {
-                padding: 10px 16px;
-                font-size: 15px;
-            }
-            
-            .demo-info {
-                font-size: 12px;
-            }
-        }
-        
-        /* Modal Styles - Apple Design - am Ende für höchste Priorität */
-        .modal-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: rgba(0, 0, 0, 0.4) !important;
-            backdrop-filter: blur(8px) !important;
-            display: none;
-            justify-content: center !important;
-            align-items: center !important;
-            z-index: 1000 !important;
-            padding: 1rem !important;
-            box-sizing: border-box !important;
-        }
-        
-        .modal-overlay .modal-content {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: saturate(180%) blur(20px) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 0.5px rgba(0, 0, 0, 0.05) !important;
-            max-width: 420px !important;
-            width: 100% !important;
-            max-height: 90vh !important;
-            overflow-y: auto !important;
-            border: none !important;
-            position: relative !important;
-            margin: auto !important;
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
-        }
-        
-        .modal-overlay .modal-content::-webkit-scrollbar {
-            display: none !important;
-            width: 0 !important;
-        }
-        
-        .modal-overlay .modal-header {
-            padding: 32px 32px 24px !important;
-            border-bottom: none !important;
-            position: relative !important;
-            text-align: center !important;
-        }
-        
-        .modal-overlay .modal-header h2 {
-            margin: 0 !important;
-            color: #1d1d1f !important;
-            font-size: 24px !important;
-            font-weight: 600 !important;
-            letter-spacing: -0.003em !important;
-        }
-        
-        .modal-overlay .modal-body {
-            padding: 0 32px 32px !important;
-        }
-        
-        .modal-overlay .close-btn {
-            display: none !important;
-            visibility: hidden !important;
         }
     </style>
 </head>
 <body>
     <div class="simple-login">
         <div class="login-card">
-            <h1><span class="brand-logo">FightLog</span></h1>
+            <h1>🥋 FightLog</h1>
             <p class="login-subtitle">Kampfsporterfolge digital erfassen</p>
             
             <form id="loginForm">
@@ -759,6 +356,13 @@
                     Passkey registrieren
                 </button>
             </form>
+            
+            <div class="demo-info">
+                <p><strong>Test-Logins:</strong></p>
+                <p><strong>Admin</strong> — Benutzername: <code>admin</code> — Passwort: <code>admin123</code></p>
+                <p><strong>Trainer</strong> — Benutzername: <code>trainer</code> — Passwort: <code>trainer123</code></p>
+                <p><strong>Schüler</strong> — Benutzername: <code>schueler</code> — Passwort: <code>schueler123</code></p>
+            </div>
         </div>
     </div>
 
@@ -767,6 +371,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Passwort zurücksetzen</h2>
+                <button onclick="closeForgotPassword()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             
             <div class="modal-body">
@@ -794,6 +401,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Neuen Account erstellen</h2>
+                <button onclick="closeRegisterForm()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             
             <div class="modal-body">
@@ -851,7 +461,7 @@
         function checkExistingAuth() {
             const isAuthenticated = localStorage.getItem('fightlog_authenticated');
             if (isAuthenticated) {
-                navigateWithFade('index.html');
+                window.location.href = 'index.html';
             }
         }
         
@@ -907,9 +517,8 @@
                         role: 'admin', // Standardrolle für Passkey-Benutzer
                         authMethod: 'passkey'
                     }));
-                    const roleLabel = 'Admin';
-                    await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                    navigateWithFade('index.html');
+                    await notify.alert('Passkey-Anmeldung erfolgreich! Weiterleitung zur Hauptanwendung...');
+                    window.location.href = 'index.html';
                 } else {
                     throw new Error('Passkey-Authentifizierung fehlgeschlagen');
                 }
@@ -995,9 +604,8 @@
                     email: registeredUser.email,
                     authMethod: 'password'
                 }));
-                const roleLabel = registeredUser.role === 'admin' ? 'Admin' : registeredUser.role === 'trainer' ? 'Trainer' : 'Schüler';
-                await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                navigateWithFade('index.html');
+                await notify.alert(`Login erfolgreich! ${registeredUser.role.charAt(0).toUpperCase() + registeredUser.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
+                window.location.href = 'index.html';
                 return;
             }
             
@@ -1020,9 +628,8 @@
                     role: validLogin.role,
                     authMethod: 'password'
                 }));
-                const roleLabel = validLogin.role === 'admin' ? 'Admin' : validLogin.role === 'trainer' ? 'Trainer' : 'Schüler';
-                await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                navigateWithFade('index.html');
+                await notify.alert(`Login erfolgreich! ${validLogin.role.charAt(0).toUpperCase() + validLogin.role.slice(1)} angemeldet. Weiterleitung zur Hauptanwendung...`);
+                window.location.href = 'index.html';
             } else {
                 await notify.alert('Falsche Anmeldedaten! Verwende einen der Test-Logins oder registriere einen neuen Account.');
             }
@@ -1056,28 +663,34 @@
             }
         }
         
-        // Passwort vergessen - Direkte Meldung anzeigen
-        async function showForgotPassword() {
-            await notify.alert('Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.');
+        // Passwort vergessen Modal anzeigen
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'block';
         }
         
-        // Passwort vergessen Modal schließen (wird nicht mehr verwendet, aber für Kompatibilität behalten)
+        // Passwort vergessen Modal schließen
         function closeForgotPassword() {
             document.getElementById('forgotPasswordModal').style.display = 'none';
-            if (document.getElementById('resetEmail')) {
-                document.getElementById('resetEmail').value = '';
-            }
+            document.getElementById('resetEmail').value = '';
         }
         
-        // Passwort zurücksetzen senden (wird nicht mehr verwendet, aber für Kompatibilität behalten)
+        // Passwort zurücksetzen senden
         async function sendPasswordReset() {
-            await notify.alert('Bitte wenden Sie sich an einen Administrator, um Ihr Passwort zurücksetzen zu lassen.');
+            const email = document.getElementById('resetEmail').value;
+
+            if (!email) {
+                await notify.alert('Bitte geben Sie eine E-Mail-Adresse ein.');
+                return;
+            }
+
+            // Zeige Hinweis für Admin-Kontakt
+            await notify.alert(`Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.`);
             closeForgotPassword();
         }
         
         // Registrierung Modal anzeigen
         function showRegisterForm() {
-            document.getElementById('registerModal').style.display = 'flex';
+            document.getElementById('registerModal').style.display = 'block';
         }
         
         // Registrierung Modal schließen
@@ -1155,29 +768,6 @@
         checkExistingAuth();
         checkPasskeyAvailability();
         checkRegisteredUsers();
-
-        // Hilfsfunktion: Navigation mit Page-Transition-Overlay (Crossfade)
-        function navigateWithFade(url){
-            try {
-                // falls globaler Helfer vorhanden (index.html)
-                if (typeof window.navigateWithTransition === 'function') {
-                    window.navigateWithTransition(url);
-                    return;
-                }
-                // Fallback: eigenes Overlay erzeugen
-                let overlay = document.getElementById('page-transition');
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'page-transition';
-                    overlay.className = 'page-transition';
-                    document.body.appendChild(overlay);
-                }
-                overlay.classList.add('show');
-                setTimeout(()=> { window.location.href = url; }, 280);
-            } catch (e) {
-                window.location.href = url;
-            }
-        }
     </script>
 </body>
 </html> 
