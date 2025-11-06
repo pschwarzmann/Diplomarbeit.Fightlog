@@ -39,7 +39,21 @@
     const notify = {
         alert(message){
             return new Promise(resolve=>{
-                const { overlay, box } = createModal(`\n+                    <div class=\"notify-content\">\n+                        <div class=\"notify-message\">${escapeHtml(String(message)).replace(/\n/g,'<br>')}</div>\n+                        <div class=\"notify-actions\">\n+                            <button class=\"notify-btn notify-btn-primary\">OK</button>\n+                        </div>\n+                    </div>\n+                `);
+                const str = String(message);
+                const parts = str.split(/\n+/);
+                const title = escapeHtml(parts.shift() || '');
+                const subtitle = escapeHtml(parts.join('\n')).replace(/\n/g,'<br>');
+                const { overlay, box } = createModal(`
+                    <div class="notify-content">
+                        <div class="notify-message">
+                            <div class="notify-title">${title}</div>
+                            ${subtitle ? `<div class="notify-subtitle">${subtitle}</div>` : ''}
+                        </div>
+                        <div class="notify-actions">
+                            <button class="notify-btn notify-btn-primary">OK</button>
+                        </div>
+                    </div>
+                `);
 
                 box.querySelector('.notify-btn').focus();
                 box.querySelector('.notify-btn').addEventListener('click', ()=>{
