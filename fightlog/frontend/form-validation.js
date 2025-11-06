@@ -413,10 +413,8 @@
         });
     });
     
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    function startObserver(){const target=document.body;if(!target)return;observer.observe(target,{childList:true,subtree:true});}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startObserver);}else{startObserver();}
 
     // Exportiere Funktionen für manuelle Nutzung
     window.formValidation = {

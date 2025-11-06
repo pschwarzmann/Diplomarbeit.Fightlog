@@ -1,28 +1,36 @@
 <?php
-// backend/api/goals.php
-require_once __DIR__ . '/../db/config.php';
+require_once __DIR__ . '/_bootstrap.php';
 $mysqli = db();
+$method = $_SERVER['REQUEST_METHOD'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $res = $mysqli->query("SELECT id, user_id as userId, title, target_date as targetDate, progress, category, status FROM goals ORDER BY created_at DESC, id DESC");
-    $list = $res->fetch_all(MYSQLI_ASSOC);
-    json_out($list);
+function fetch_goals($mysqli, $userId){
+    $stmt = $mysqli->prepare("SELECT g.id, g.user_id as userId, g.title, g.target_date as targetDate, g.progress, g.category, g.status
+        FROM goals g WHERE g.user_id=? ORDER BY g.target_date DESC, g.id DESC");
+    $stmt->bind_param('i',$userId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    return $res->fetch_all(MYSQLI_ASSOC);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $body = read_json_body();
-    // Wenn kein userId angegeben: 1 (Admin) als Demo
-    if (!isset($body['userId'])) $body['userId'] = 1;
-    require_fields($body, ['userId','title','targetDate','progress','category']);
-    $status = isset($body['status']) ? $body['status'] : 'in_progress';
+if ($method === 'GET'){
+    $userId = isset($_GET['userId']) ? (int)$_GET['userId'] : (auth_user_id($mysqli) ?? 1);
+    $rows = fetch_goals($mysqli, $userId);
+    json_ok($rows); // <-- flat array
+}
 
-    $stmt = $mysqli->prepare("INSERT INTO goals (user_id, title, target_date, progress, category, status) VALUES (?,?,?,?,?,?)");
-    $stmt->bind_param('ississ', $body['userId'], $body['title'], $body['targetDate'], $body['progress'], $body['category'], $status);
-    if (!$stmt->execute()) {
-        json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);
+if ($method === 'POST'){
+    $b = body_json();
+    if (empty($b['userId'])) { $b['userId'] = auth_user_id($mysqli) ?? 1; }
+    foreach (['userId','title','targetDate','progress','category'] as $r) {
+        if (!isset($b[$r]) || $b[$r] === '') json_error('Feld fehlt: '.$r, 400);
     }
-    json_out(['success'=>true, 'id'=>$stmt->insert_id]);
+    $targetDate = normalize_date($b['targetDate']);
+    if (!$targetDate) json_error('Ungültiges Datum', 400);
+    $status = $b['status'] ?? 'in_progress';
+    $stmt = $mysqli->prepare("INSERT INTO goals (user_id, title, target_date, progress, category, status) VALUES (?,?,?,?,?,?)");
+    $stmt->bind_param('ississ', $b['userId'], $b['title'], $targetDate, $b['progress'], $b['category'], $status);
+    if (!$stmt->execute()) json_error('Insert fehlgeschlagen: '.$stmt->error, 500);
+    json_ok(['success'=>true,'id'=>$stmt->insert_id]);
 }
 
-json_out(['success'=>false, 'error'=>'Nur GET/POST erlaubt'], 405);
-?>
+json_error('Nicht erlaubt', 405);
