@@ -16,6 +16,9 @@ body {
     letter-spacing: -0.022em;
 }
 
+/* Verhindert Layout-Shift (Header „springt“ nicht, wenn Scrollbar ein-/ausblendet) */
+html { scrollbar-gutter: stable both-edges; }
+
 /* Container */
 .container {
     max-width: 1200px;
@@ -32,6 +35,9 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    left: 0;
+    right: 0;
+    width: 100%;
 }
 
 .nav {
@@ -53,9 +59,35 @@ body {
 }
 
 .logo::before {
-    content: "🥋";
-    font-size: 1.8rem;
-    filter: saturate(120%);
+    content: none;
+}
+
+/* Brand: FightLog – markanter, aber cleaner Schriftzug */
+.brand-logo,
+.logo {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #1f2937 0%, #0a84ff 50%, #5e5ce6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* leicht kompakter im Header */
+.header .logo {
+    font-size: 1.35rem;
+}
+
+/* alternative einfarbige Fallback-Farbe bei High-Contrast */
+@media (prefers-contrast: high) {
+    .brand-logo,
+    .logo {
+        -webkit-text-fill-color: currentColor;
+        text-shadow: none;
+        background: none;
+        color: #000;
+    }
 }
 
 .user-info {
@@ -122,13 +154,22 @@ body {
         rgba(255,255,255,0) 0%,
         rgba(255,255,255,0.5) 30%,
         rgba(255,255,255,0) 60%);
-    transform: skewX(-20deg);
-    transition: transform 0.9s ease;
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
     pointer-events: none;
+    opacity: 0;
 }
 
 .back-btn:hover::after {
     transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+
+.back-btn:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
 }
 
 .page-header h1 {
@@ -411,6 +452,352 @@ body {
     color: #9ca3af;
 }
 
+/* Deaktiviere native Browser-Validierungsmeldungen */
+form {
+    /* novalidate wird per JavaScript gesetzt, aber CSS unterstützt auch */
+}
+
+input:invalid,
+select:invalid,
+textarea:invalid {
+    /* Keine native Validierung - wir machen es selbst */
+    box-shadow: none;
+}
+
+/* Fehlermeldungen - nur wenn explizit .error Klasse gesetzt ist */
+.form-control.error,
+.cs-trigger.error {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+}
+
+.form-control.error:focus,
+.cs-trigger.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Custom-Select mit Fehler */
+.cs-select .cs-trigger.error {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+}
+
+.cs-select .cs-trigger.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Form-Group mit Platz für Fehlermeldung (verhindert Layout-Shift) */
+.form-group {
+    position: relative;
+    margin-bottom: 0.5rem;
+    padding-bottom: 20px; /* Platz für Fehlermeldung */
+}
+
+/* Nur wenn Fehler vorhanden ist, wird der Platz genutzt */
+.form-group:not(.has-error) {
+    padding-bottom: 0.5rem;
+}
+
+.form-group.has-error {
+    padding-bottom: 24px; /* Etwas mehr Platz für Fehlermeldung */
+}
+
+.form-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    color: #dc2626;
+    font-size: 11px;
+    margin-top: 3px;
+    padding-left: 2px;
+    animation: errorSlideIn 0.2s ease-out;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    line-height: 1.2;
+    z-index: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.form-error::before {
+    content: '⚠';
+    font-size: 12px;
+    line-height: 1.2;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Responsive: Kleinere Schrift auf sehr kleinen Bildschirmen */
+@media (max-width: 480px) {
+    .form-error {
+        font-size: 10px;
+        margin-top: 2px;
+        gap: 3px;
+    }
+    
+    .form-error::before {
+        font-size: 11px;
+    }
+    
+    .form-group.has-error {
+        padding-bottom: 22px;
+    }
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fehler-Icon für Input-Felder */
+.form-group.has-error .form-control {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+}
+
+.form-group.has-error .form-control:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Selects & Date-Picker: runder, schema-passender Look */
+select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: rgba(255,255,255,0.92);
+    border: none; /* nur Shadow, kein sichtbarer Rand */
+    border-radius: 14px;
+    padding-right: 44px; /* Platz für Pfeil */
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+select.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Entfernt altes IE-Dropdownpfeilchen */
+select.form-control::-ms-expand { display: none; }
+
+/* Date Input: Icon dezenter, klickbar, rund */
+/* Date-Picker: Standard-Verhalten beibehalten, nur dezenter Farbton */
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+    filter: grayscale(20%);
+}
+
+/* Date/Select Hover: softer edge, kein dunkler Rand */
+select.form-control:hover,
+input[type="date"].form-control:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* Date ohne sichtbaren Rand, nur Shadow wie Select */
+input[type="date"].form-control {
+    border: none;
+    border-radius: 14px;
+    background-color: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+input[type="date"].form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Enhanced date input wrapper + indicator */
+.cdp-input-wrap { position: relative; }
+.cdp-enhanced.form-control { padding-right: 44px; }
+.cdp-indicator {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer;
+}
+.cdp-indicator::before {
+    content: '';
+    display: block; width: 16px; height: 16px; margin: 0 auto;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' ry='3' stroke='%2364748b' stroke-width='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 11h18' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+}
+.cdp-indicator:hover { background: rgba(10,132,255,0.08); }
+
+/* ===== Custom Select (animated, rounded) ===== */
+.cs-select {
+    position: relative;
+    display: block;
+}
+
+.cs-trigger {
+    width: 100%;
+    text-align: left;
+    padding: 16px 44px 16px 20px;
+    background: rgba(255,255,255,0.92);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    font: inherit;
+    color: #1e293b;
+    cursor: pointer;
+    position: relative;
+}
+
+.cs-trigger::after {
+    content: '';
+    position: absolute;
+    right: 14px; top: 50%;
+    width: 16px; height: 16px;
+    transform: translateY(-50%);
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+}
+
+.cs-select.open .cs-trigger {
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.cs-menu {
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 6px);
+    background: rgba(255,255,255,0.98);
+    border-radius: 14px;
+    box-shadow: 0 18px 26px rgba(0,0,0,0.12);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
+    z-index: 1000;
+}
+
+.cs-select.open .cs-menu {
+    max-height: 260px;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: auto;
+}
+
+.cs-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    color: #1e293b;
+}
+
+.cs-option:hover {
+    background: rgba(10,132,255,0.08);
+}
+
+.cs-option.selected {
+    background: rgba(10,132,255,0.12);
+    color: #0a84ff;
+}
+
+/* Scrollbar nur für Dropdown-Menü verfeinern */
+.cs-menu {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(100,116,139,0.35) transparent;
+}
+
+.cs-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cs-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cs-menu::-webkit-scrollbar-thumb {
+    background-color: rgba(100,116,139,0.35); /* slate */
+    border-radius: 9999px;
+    border: 2px solid transparent; /* optische Schlankheit */
+    background-clip: content-box;
+}
+
+.cs-menu::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100,116,139,0.5);
+}
+
+/* ===== Custom Datepicker (matching select style) ===== */
+.cdp-root { position: absolute; left: 0; top: 0; z-index: 1000; display: none; }
+.cdp-root.open { display: block; }
+.cdp-root .cdp-card {
+    background: rgba(255,255,255,0.98);
+    border-radius: 14px;
+    box-shadow: 0 18px 26px rgba(0,0,0,0.12);
+    overflow: hidden;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition: opacity .18s ease, transform .22s ease;
+}
+.cdp-root.visible .cdp-card { opacity: 1; transform: translateY(0); }
+
+.cdp-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; gap: 4px; }
+.cdp-title { 
+    font-weight: 700; 
+    color: #1e293b; 
+    flex: 1; 
+    text-align: center; 
+    cursor: pointer; 
+    padding: 4px 8px; 
+    border-radius: 8px; 
+    transition: background 0.2s ease;
+    user-select: none;
+}
+.cdp-title:hover { background: rgba(142,142,147,0.08); }
+.cdp-title:focus { outline: 2px solid rgba(10,132,255,0.35); outline-offset: 2px; }
+.cdp-nav { 
+    appearance: none; 
+    border: none; 
+    background: rgba(142,142,147,0.12); 
+    border-radius: 10px; 
+    width: 28px; 
+    height: 28px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 16px; 
+    color: #1e293b;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+.cdp-nav:hover { background: rgba(142,142,147,0.18); }
+.cdp-nav:active { transform: scale(0.95); }
+.cdp-prev-year, .cdp-next-year { font-weight: 600; }
+
+.cdp-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 8px 4px; color: #64748b; font-size: 12px; text-align: center; }
+.cdp-weekday { padding: 4px 0; }
+.cdp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 8px 10px; max-height: 240px; overflow: auto; }
+.cdp-cell { appearance: none; border: none; background: transparent; border-radius: 8px; padding: 6px 0; cursor: pointer; color: #1e293b; }
+.cdp-cell:hover { background: rgba(10,132,255,0.08); }
+.cdp-cell.selected { background: rgba(10,132,255,0.12); color: #0a84ff; }
+.cdp-cell.other { color: #94a3b8; }
+
+/* Datepicker Scrollbar */
+.cdp-grid { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,0.35) transparent; }
+.cdp-grid::-webkit-scrollbar { width: 8px; }
+.cdp-grid::-webkit-scrollbar-track { background: transparent; }
+.cdp-grid::-webkit-scrollbar-thumb { background-color: rgba(100,116,139,0.35); border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
+.cdp-grid::-webkit-scrollbar-thumb:hover { background-color: rgba(100,116,139,0.5); }
+
+/* Konsistente Höhe für Date/Select gegenüber normalen Inputs */
+select.form-control,
+input[type="date"].form-control {
+    min-height: 48px;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -445,6 +832,25 @@ body {
     }
     .back-btn {
         padding: 0.9rem 1.1rem;
+        min-height: 44px;
+    }
+    .password-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .close-btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .icon-btn {
+        min-width: 44px;
+        min-height: 44px;
     }
 }
 
@@ -569,6 +975,11 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     background: #f9fafb;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .upload-area:hover,
@@ -740,9 +1151,43 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .container {
-        padding: 0 0.5rem;
+        padding: 0 1rem;
+    }
+    
+    .nav-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .certificates-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+    
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    .nav {
+        padding: 0.75rem 0;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .logo {
+        font-size: 1.25rem;
+    }
+    
+    .user-info {
+        font-size: 0.85rem;
+        gap: 0.75rem;
     }
     
     .nav-grid {
@@ -754,17 +1199,66 @@ body {
         grid-template-columns: 1fr;
     }
     
+    .auth-container {
+        padding: 1.5rem 1rem;
+    }
+    
     .auth-card {
         padding: 2rem 1.5rem;
-        margin: 1rem;
+        margin: 0;
+        max-width: 100%;
+        border-radius: 12px;
+    }
+    
+    .auth-card h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .dashboard {
+        padding: 1.5rem 0;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 2rem;
     }
     
     .dashboard-header h1 {
         font-size: 2rem;
     }
     
+    .dashboard-header p {
+        font-size: 1rem;
+    }
+    
     .nav-card {
         padding: 1.5rem;
+    }
+    
+    .nav-card i {
+        font-size: 2.25rem;
+    }
+    
+    .nav-card h3 {
+        font-size: 1.15rem;
+    }
+    
+    .form-container {
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+    
+    .form-container h2 {
+        font-size: 1.25rem;
+    }
+    
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding: 0.75rem 0;
+    }
+    
+    .page-header h1 {
+        font-size: 1.75rem;
     }
     
     .timeline {
@@ -774,23 +1268,83 @@ body {
     .timeline-item::before {
         left: -2rem;
     }
+    
+    .certificates-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .choice-group {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .preset-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .upload-area {
+        padding: 1.5rem 1rem;
+        min-height: 100px;
+    }
+    
+    .upload-icon {
+        font-size: 1.75rem;
+    }
 }
 
 @media (max-width: 480px) {
+    body {
+        font-size: 15px;
+    }
+    
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    .nav {
+        padding: 0.5rem 0;
+    }
+    
+    .logo {
+        font-size: 1.1rem;
+    }
+    
+    .logo::before {
+        font-size: 1.5rem;
+    }
+    
     .user-info {
         flex-direction: column;
         gap: 0.5rem;
         align-items: flex-end;
+        font-size: 0.85rem;
     }
     
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+    .auth-container {
+        padding: 1rem 0.5rem;
     }
     
-    .back-btn {
-        align-self: flex-start;
+    .auth-card {
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+    }
+    
+    .auth-card h2 {
+        font-size: 1.15rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .dashboard-header p {
+        font-size: 0.95rem;
+    }
+    
+    .nav-card {
+        padding: 1.25rem;
     }
     
     .nav-card i {
@@ -799,6 +1353,182 @@ body {
     
     .nav-card h3 {
         font-size: 1.1rem;
+    }
+    
+    .nav-card p {
+        font-size: 0.85rem;
+    }
+    
+    .form-container {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+    
+    .form-container h2 {
+        font-size: 1.15rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+        font-size: 0.85rem;
+    }
+    
+    .form-control {
+        padding: 14px 18px;
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .back-btn {
+        align-self: flex-start;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn {
+        padding: 14px 18px;
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+    }
+    
+    .choice-group {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .choice-btn {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.9rem;
+    }
+    
+    .preset-tabs {
+        padding: 0.3rem;
+        gap: 0.25rem;
+    }
+    
+    .tab-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .timeline {
+        padding-left: 1.25rem;
+    }
+    
+    .timeline-item::before {
+        left: -1.75rem;
+        width: 10px;
+        height: 10px;
+    }
+    
+    .timeline-content {
+        padding: 1.25rem;
+    }
+    
+    .certificate-card {
+        padding: 1.25rem;
+    }
+    
+    .certificate-card h4 {
+        font-size: 1rem;
+    }
+    
+    .certificate-card p {
+        font-size: 0.85rem;
+    }
+    
+    .modal-overlay {
+        padding: 0.5rem;
+    }
+    
+    .modal-content {
+        max-width: 100%;
+        border-radius: 12px;
+        max-height: 95vh;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .close-btn {
+        padding: 0.4rem;
+        font-size: 1.1rem;
+    }
+    
+    .upload-area {
+        padding: 1.25rem 0.75rem;
+        min-height: 90px;
+    }
+    
+    .upload-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
+@media (max-width: 360px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .auth-card {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .nav-card {
+        padding: 1rem;
+    }
+    
+    .form-container {
+        padding: 1rem;
+    }
+    
+    .btn {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+    
+    .form-control {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+    
+    .modal-overlay {
+        padding: 0.25rem;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+    }
+    
+    .modal-header {
+        padding: 0.875rem;
+    }
+    
+    .modal-body {
+        padding: 0.875rem;
     }
 }
 
@@ -834,6 +1564,46 @@ body {
         color: #fff;
     }
 } 
+
+/* ===== Scrollbar (dezent, zur Seite passend) ===== */
+:root {
+    --scrollbar-size: 10px;
+    --scrollbar-thumb: rgba(100,116,139,0.35); /* slate-500 ~ #64748b */
+    --scrollbar-thumb-hover: rgba(100,116,139,0.5);
+    --scrollbar-track: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;                       /* dünn */
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit (Chromium, Safari, Edge) */
+*::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 9999px;                      /* Pill-Form */
+    border: 3px solid transparent;              /* optische Schlankheit */
+    background-clip: content-box;               /* Abstand zum Rand */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Auf sehr kleinen Viewports Scrollbar noch dezenter halten */
+@media (max-width: 480px) {
+    :root { --scrollbar-size: 8px; }
+}
 
 /* ===== iOS Look Tweaks ===== */
 :root {
@@ -1107,13 +1877,22 @@ body {
         rgba(255,255,255,0) 0%,
         rgba(255,255,255,0.5) 30%,
         rgba(255,255,255,0) 60%);
-    transform: skewX(-20deg);
-    transition: transform 0.9s ease;
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
     pointer-events: none;
+    opacity: 0;
 }
 
 .nav-card:hover::after {
     transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+
+.nav-card:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
 }
 
 /* ===== Auswahleffekt (iOS-Glanz) für Kacheln ===== */
@@ -1177,13 +1956,22 @@ body {
         rgba(255,255,255,0) 0%,
         rgba(255,255,255,0.5) 30%,
         rgba(255,255,255,0) 60%);
-    transform: skewX(-20deg);
-    transition: transform 0.9s ease;
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
     pointer-events: none;
+    opacity: 0;
 }
 
 .btn:hover::after {
     transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+
+.btn:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
 }
 
 /* Primär: iOS-Blau mit subtiler Tiefe und Outline-Glow beim Hover */
@@ -1281,12 +2069,20 @@ body {
         rgba(255,255,255,0) 0%,
         rgba(255,255,255,0.5) 30%,
         rgba(255,255,255,0) 60%);
-    transform: skewX(-20deg);
-    transition: transform 0.9s ease;
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
     pointer-events: none;
+    opacity: 0;
 }
 .icon-btn:hover::after {
     transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+.icon-btn:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
 }
 
 /* Modal Styles */
@@ -1302,6 +2098,7 @@ body {
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(4px);
+    padding: 1rem;
 }
 
 .modal-content {
@@ -1309,10 +2106,11 @@ body {
     border-radius: 16px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
+    width: 100%;
+    max-height: 90vh;
     overflow-y: auto;
     animation: modalSlideIn 0.3s ease-out;
+    position: relative;
 }
 
 @keyframes modalSlideIn {
@@ -1424,4 +2222,26 @@ body {
 .text-muted {
     color: #64748b;
     font-style: italic;
+} 
+
+/* Fade-Out für saubere Seitenwechsel (Logout) */
+.app-fade-out {
+    opacity: 0;
+    transition: opacity .25s ease;
+    will-change: opacity;
+} 
+
+/* Crossfade-Overlay für Seitenübergänge */
+.page-transition {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease;
+    z-index: 9998;
+}
+.page-transition.show {
+    opacity: 1;
+    pointer-events: auto;
 } 

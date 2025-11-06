@@ -9,72 +9,138 @@
     inset: 0; display:flex; 
     align-items:center; 
     justify-content:center; 
-    background: rgba(0,0,0,0.35); 
-    backdrop-filter: blur(6px); 
+    background: rgba(0, 0, 0, 0.45); 
+    backdrop-filter: blur(10px); 
     pointer-events: auto; 
 }
 
 .notify-box { 
     width: 90%; 
-    max-width: 460px; 
-    background: rgba(255,255,255,0.96); 
-    border-radius: 12px; 
-    box-shadow: 0 12px 40px rgba(0,0,0,0.2); 
-    border: 1px solid rgba(0,0,0,0.06); 
+    max-width: 420px; 
+    background: rgba(255, 255, 255, 0.95); 
+    border-radius: 20px; 
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.10); 
+    border: 1px solid var(--border, rgba(0,0,0,0.08)); 
     overflow: hidden; 
     font-family: inherit; 
+    animation: notifySlideIn .24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .notify-content { 
-    padding: 18px; 
+    padding: 24px 24px 0; 
 }
 
 .notify-message { 
-    color: #111; 
-    font-size: 15px; 
-    line-height: 1.4; 
-    margin-bottom: 12px; 
+    color: #1e293b; 
+    font-size: 17px; 
+    line-height: 1.47; 
+    letter-spacing: -0.022em; 
+    text-align: center; 
+    margin-bottom: 16px; 
+}
+
+.notify-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.notify-subtitle {
+    font-size: 14px;
+    color: #64748b;
 }
 
 .notify-actions { 
     display:flex; 
-    gap:8px; 
-    justify-content:flex-end; 
-    padding: 12px 18px 18px; 
+    gap:12px; 
+    justify-content:center; 
+    padding: 0 24px 24px; 
 }
 
 .notify-btn { 
-    background: #f1f1f3; 
-    color: #111; 
-    border: none; 
-    padding: 10px 14px; 
-    border-radius: 10px; 
+    background: rgba(142,142,147,0.12); 
+    color: #1e293b; 
+    border: 1px solid rgba(142,142,147,0.2); 
+    padding: 12px 18px; 
+    border-radius: 9999px; 
     cursor: pointer; 
-    font-size: 15px; 
+    font-size: 17px; 
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; 
+    flex: 1 1 0; 
+    position: relative;
+    overflow: hidden;
 }
 
+/* Sheen-Glanz wie bei .btn */
+.notify-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 130%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 30%,
+        rgba(255,255,255,0) 60%);
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.notify-btn:hover::after {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+}
+
+.notify-btn:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
+}
+
+/* Hover-Outline leicht blau wie bei .btn-secondary */
 .notify-btn:hover { 
-    filter: brightness(0.98); 
-    transform: translateY(-1px); 
+    background: rgba(142,142,147,0.18); 
+    border-color: rgba(10,132,255,0.25);
+    box-shadow: 0 0 0 3px rgba(10,132,255,0.08);
+}
+
+/* Primärer Button mit identischer Tiefe */
+.notify-btn-primary { 
+    background: var(--ios-blue, #0a84ff); 
+    color: white; 
+    border: none; 
+    box-shadow: 0 10px 20px rgba(10,132,255,0.25); 
+}
+
+.notify-btn-primary:hover {
+    background: #007aff;
+    box-shadow: 0 14px 28px rgba(10,132,255,0.28);
 }
 
 .notify-btn:active { 
     transform: translateY(0); 
 }
 
-.notify-btn-primary { 
-    background: #007aff; 
-    color: white; 
-}
-
 .notify-input { 
     width: 100%; 
-    padding: 12px 14px; 
-    border-radius: 10px; 
-    border: 1px solid #e6e6e9; 
-    font-size: 15px; 
+    padding: 16px 20px; 
+    border-radius: 14px; 
+    border: 1.5px solid var(--border, rgba(0,0,0,0.08)); 
+    background: rgba(255, 255, 255, 0.9); 
+    font-size: 17px; 
 }
 
 @media (max-width:480px){
-  .notify-box{ max-width: 92%; }
+  .notify-box{ max-width: 92%; border-radius: 16px; }
+  .notify-content{ padding: 20px 16px 0; }
+  .notify-actions{ padding: 0 16px 16px; gap: 10px; flex-direction: column; }
+  .notify-btn{ font-size: 16px; padding: 12px 16px; border-radius: 9999px; width: 100%; }
+  .notify-input{ font-size: 16px; padding: 14px 18px; border-radius: 12px; }
+}
+
+@keyframes notifySlideIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
