@@ -56,9 +56,15 @@
                                field.parentElement;
             }
             
-            // Füge Fehlermeldung direkt zur form-group hinzu (absolute Position)
-            // Die Fehlermeldung wird per CSS absolut positioniert
-            formGroup.appendChild(errorDiv);
+            // Füge Fehlermeldung direkt nach dem Feld-Element ein (nicht am Ende der form-group)
+            // So erscheint sie direkt unter dem Feld
+            if (fieldContainer && fieldContainer !== formGroup) {
+                // Wenn es einen Container gibt (z.B. cs-select, cdp-input-wrap), füge nach diesem ein
+                fieldContainer.insertAdjacentElement('afterend', errorDiv);
+            } else {
+                // Sonst füge direkt nach dem Feld ein
+                field.insertAdjacentElement('afterend', errorDiv);
+            }
             
             // Scroll zu Fehler, wenn außerhalb des Viewports
             setTimeout(() => {
