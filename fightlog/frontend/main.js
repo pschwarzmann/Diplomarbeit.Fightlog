@@ -308,7 +308,6 @@ const demoData = {
             date: "2023-06-15",
             level: "Gelbgurt",
             category: "Technik",
-            score: 85,
             instructor: "Hans Schmidt",
             comments: "Sehr gute Grundtechniken, Verbesserung bei der Ausdauer nötig",
             status: "passed"
@@ -318,7 +317,6 @@ const demoData = {
             date: "2023-12-10",
             level: "Grüngurt",
             category: "Kampf",
-            score: 92,
             instructor: "Anna Weber",
             comments: "Ausgezeichnete Kampftechniken, Führungsposition im Dojo",
             status: "passed"
@@ -448,8 +446,9 @@ const apiService = {
         return res.json();
     },
 
-    async getExams() {
-        const res = await fetch('/fightlog/backend/api/exams.php');
+    async getExams(userId) {
+        const url = userId ? `/fightlog/backend/api/exams.php?userId=${userId}` : '/fightlog/backend/api/exams.php';
+        const res = await fetch(url);
         return res.json();
     },
 
@@ -463,8 +462,9 @@ const apiService = {
         return res.json();
     },
 
-    async getGoals() {
-        const res = await fetch('/fightlog/backend/api/goals.php');
+    async getGoals(userId) {
+        const url = userId ? `/fightlog/backend/api/goals.php?userId=${userId}` : '/fightlog/backend/api/goals.php';
+        const res = await fetch(url);
         return res.json();
     },
 
@@ -938,8 +938,6 @@ const app = createApp({
                                         </div>
                                         
                                         <div class="form-group">
-                                            <label>{{ t('examScore') }}</label>
-                                            <input type="number" v-model="examForm.score" class="form-control" min="0" max="100" required>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -992,7 +990,6 @@ const app = createApp({
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>
                                             <p><strong>Datum:</strong> {{ exam.date }}</p>
-                                            <p><strong>Bewertung:</strong> {{ exam.score }}/100</p>
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
                                             <p v-if="exam.comments"><strong>Kommentare:</strong> {{ exam.comments }}</p>
@@ -1010,7 +1007,6 @@ const app = createApp({
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>
                                             <p><strong>Datum:</strong> {{ exam.date }}</p>
-                                            <p><strong>Bewertung:</strong> {{ exam.score }}/100</p>
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
                                             <p v-if="exam.comments"><strong>Kommentare:</strong> {{ exam.comments }}</p>
@@ -1577,9 +1573,7 @@ const app = createApp({
             examForm: {
                 date: '',
                 level: '',
-                category: '',
-                score: '',
-                instructor: '',
+                category: '',instructor: '',
                 comments: '',
                 userId: null,
                 userIds: [],
@@ -2085,7 +2079,8 @@ const app = createApp({
         
         async loadExams() {
             try {
-                this.exams = await apiService.getExams();
+                const uid = (this.currentUser && this.currentUser.role === 'schueler') ? this.currentUser.id : null;
+                this.exams = await apiService.getExams(uid);
             } catch (error) {
                 console.error('Load exams error:', error);
             }
@@ -2137,7 +2132,8 @@ const app = createApp({
         
         async loadGoals() {
             try {
-                this.goals = await apiService.getGoals();
+                const uid = (this.currentUser && this.currentUser.role === 'schueler') ? this.currentUser.id : null;
+                this.goals = await apiService.getGoals(uid);
             } catch (error) {
                 console.error('Load goals error:', error);
             }

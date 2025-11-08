@@ -63,7 +63,6 @@ CREATE TABLE exams (
     date DATE NOT NULL,
     level VARCHAR(50) NOT NULL,
     category VARCHAR(50) NOT NULL,
-    score INT CHECK (score >= 0 AND score <= 100),
     instructor VARCHAR(100) NOT NULL,
     comments TEXT,
     status ENUM('passed', 'failed', 'pending') DEFAULT 'passed',
@@ -136,6 +135,22 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE user_exams (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    exam_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE
+);
+
+CREATE TABLE user_goals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    goal_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
+);
+
 -- Indizes für bessere Performance
 CREATE INDEX idx_certificates_user_id ON certificates(user_id);
 CREATE INDEX idx_certificates_date ON certificates(date);
@@ -148,6 +163,10 @@ CREATE INDEX idx_sessions_token ON sessions(token);
 CREATE INDEX idx_sessions_expires ON sessions(expires_at);
 CREATE INDEX idx_users_first_name ON users(first_name);
 CREATE INDEX idx_users_last_name ON users(last_name);
+
+
+
+
 
 -- Beispiel-Daten (optional)
 INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, school, belt_level, verified_trainer) VALUES
