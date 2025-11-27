@@ -1,4 +1,4 @@
-/* Styles for notify.js in-page modals */
+/* Styles for notify.service.js in-page modals */
 #notify-root { 
     position: fixed; 
     inset: 0; pointer-events: none; z-index: 9999; 

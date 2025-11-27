@@ -1,13 +1,21 @@
 <?php
 // backend/api/courses.php
-require_once __DIR__ . '/../db/config.php';
-$mysqli = db();
+require_once __DIR__ . '/../core/bootstrap.php';
+
+try {
+    $mysqli = db();
+} catch (Throwable $e) {
+    json_out(['success' => false, 'error' => 'Datenbankverbindung fehlgeschlagen: ' . $e->getMessage()], 500);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $res = $mysqli->query("SELECT id, title, instructor, date, duration, description, status, current_participants, max_participants FROM (
         SELECT sc.id, sc.title, sc.instructor, sc.date, sc.duration, sc.description, 'approved' AS status, sc.current_participants, sc.max_participants
         FROM special_courses sc
     ) x ORDER BY date DESC, id DESC");
+    if (!$res) {
+        json_out(['success' => false, 'error' => 'Query fehlgeschlagen: ' . $mysqli->error], 500);
+    }
     $list = $res->fetch_all(MYSQLI_ASSOC);
     json_out($list);
 }

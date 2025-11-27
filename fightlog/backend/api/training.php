@@ -1,6 +1,12 @@
 <?php
-require_once __DIR__ . '/_bootstrap.php';
-$mysqli = db();
+require_once __DIR__ . '/../core/bootstrap.php';
+
+try {
+    $mysqli = db();
+} catch (Throwable $e) {
+    json_error('Datenbankverbindung fehlgeschlagen: ' . $e->getMessage(), 500);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') json_error('Nur GET erlaubt', 405);
 $userId = isset($_GET['userId']) ? (int)$_GET['userId'] : null;
 if (!$userId) json_error('userId fehlt', 400);

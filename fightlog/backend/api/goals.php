@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../core/bootstrap.php';
 $mysqli = db();
 $method = $_SERVER['REQUEST_METHOD'];
 

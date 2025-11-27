@@ -1,7 +1,7 @@
 <?php
 // backend/api/upload.php
 // Für die Demo speichern wir nur Metadaten per JSON (kein echter Datei-Upload)
-require_once __DIR__ . '/../db/config.php';
+require_once __DIR__ . '/../core/bootstrap.php';
 $mysqli = db();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

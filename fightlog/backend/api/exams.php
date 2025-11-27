@@ -1,6 +1,12 @@
 <?php
-require_once __DIR__ . '/_bootstrap.php';
-$mysqli = db();
+require_once __DIR__ . '/../core/bootstrap.php';
+
+try {
+    $mysqli = db();
+} catch (Throwable $e) {
+    json_error('Datenbankverbindung fehlgeschlagen: ' . $e->getMessage(), 500);
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 function get_user_role($mysqli, $uid){

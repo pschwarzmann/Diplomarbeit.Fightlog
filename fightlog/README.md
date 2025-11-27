@@ -20,20 +20,29 @@ FightLog ist eine responsive Webanwendung, die es Kampfsportlern und Trainern er
 
 ```
 fightlog/
-├── frontend/                 # Frontend (HTML, CSS, JS, Vue.js)
-│   ├── index.html           # Haupt-HTML-Datei
-│   ├── main.js              # Vue.js Anwendung
-│   └── styles/
-│       └── main.css         # CSS-Styles
-├── backend/                  # Backend (PHP)
-│   ├── api/                 # API-Endpunkte
-│   │   ├── login.php        # Login-API
-│   │   └── upload.php       # Upload-API
-│   ├── db/                  # Datenbank-Verbindung
-│   └── uploads/             # Upload-Ziel für Dateien
+├── frontend/                       # Frontend (Vue 3, Vanilla JS, CSS)
+│   ├── index.html / simple.html   # Entry Points (Login & App)
+│   ├── demo.html                  # Funktionsübersicht
+│   ├── main.js                    # Module-Bootstrap
+│   ├── styles/                    # Globale Styles
+│   └── src/                       # Modularisierte App-Logik
+│       ├── app/                   # App-spezifische Logik
+│       ├── components/            # Wiederverwendbare UI-Komponenten
+│       ├── constants/             # Übersetzungen & Konstanten
+│       ├── data/                  # Demo-Daten
+│       ├── services/              # API-, Notify-, Passkey-Services
+│       ├── store/                 # State- und Storage-Helfer
+│       └── utils/                 # Form-Validation, Custom Controls
+├── backend/                        # Backend (PHP)
+│   ├── api/                       # API-Endpunkte
+│   ├── core/                      # Bootstrap & DB-Layer
+│   ├── config/                    # Konfigurationen
+│   ├── services/                  # Business-Logik (z.B. AuthService)
+│   ├── utils/                     # Request/Response-Helfer
+│   └── models/                    # (Platzhalter) für spätere Datenmodelle
 ├── db/
-│   └── fightlog.sql         # Datenbankstruktur
-└── README.md               # Diese Datei
+│   └── fightlog.sql               # Datenbankstruktur
+└── README.md                     # Diese Datei
 ```
 
 ## 🚀 Installation und Start
@@ -123,20 +132,25 @@ PUT /fightlog/backend/api/goals.php
 
 #### 2. **Dateien zum Anpassen:**
 
-**`frontend/main.js` (Zeile 200-300):**
+**`frontend/src/services/api.service.js`:**
 ```javascript
-// Backend-Entwickler: Hier echte API-Calls einfügen
-const apiService = {
-    async login(credentials) {
-        // Ersetze durch echten API-Call:
-   // return fetch('/fightlog/backend/api/login.php', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(credentials)
-        // }).then(res => res.json());
-    }
+export const apiService = {
+    login(credentials) {
+        return request('/login.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(credentials)
+        });
+    },
+    // ...
 };
 ```
+
+**`frontend/main.js` (Bootstrap):**
+- Lädt Übersetzungen (`src/constants/translations.js`)
+- Bindet Demo-Daten (`src/data/demo-data.js`)
+- Registriert globale Komponenten (`src/components/registerGlobalComponents.js`)
+- Startet anschließend das Vue-Root-Layout
 
 **`backend/api/login.php` (Zeile 25-35):**
 ```php
@@ -195,7 +209,8 @@ Die Anwendung erwartet folgende Datenformate:
    ```
 
 2. **PHP-Konfiguration:**
-   - Erstelle `backend/db/config.php` mit Datenbankverbindung
+   - Passe `backend/config/database.php` (Zugangsdaten) an
+   - Gemeinsame Header + DB-Zugriff laufen über `backend/core/bootstrap.php`
    - Setze Upload-Pfad in `backend/uploads/`
 
 3. **API-Endpunkte implementieren:**
@@ -278,5 +293,5 @@ Dieses Projekt ist für die Diplomarbeit "FightLog" erstellt.
 **Nächste Schritte für Backend-Entwickler:**
 1. Datenbank mit `db/fightlog.sql` erstellen
 2. PHP-API-Endpunkte in `backend/api/` implementieren
-3. Datenbankverbindung in `backend/db/config.php` konfigurieren
-4. Frontend-API-Calls in `frontend/main.js` anpassen 
+3. Zugangsdaten in `backend/config/database.php` pflegen (Bootstrap kümmert sich um alles Weitere)
+4. Frontend-API-Calls in `frontend/src/services/api.service.js` (und bei Bedarf `frontend/main.js`) anpassen

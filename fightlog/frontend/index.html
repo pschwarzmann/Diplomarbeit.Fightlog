@@ -37,11 +37,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Passkey Manager -->
-    <script src="./passkey.js"></script>
-    <script src="./notify.js"></script>
-    <script src="./custom-select.js"></script>
-    <script src="./custom-datepicker.js"></script>
-    <script src="./form-validation.js"></script>
+    <script src="./src/services/passkey.service.js"></script>
+    <script src="./src/services/notify.service.js"></script>
+    <script src="./src/utils/custom-select.js"></script>
+    <script src="./src/utils/custom-datepicker.js"></script>
+    <script src="./src/utils/form-validation.js"></script>
 </head>
 <body>
     <div id="app">
@@ -69,6 +69,7 @@
         function loadMainApp() {
             // Cache-busting to ensure the browser loads the latest main.js after route changes
             const script = document.createElement('script');
+            script.type = 'module';
             script.src = './main.js?v=' + Date.now();
             document.body.appendChild(script);
         }

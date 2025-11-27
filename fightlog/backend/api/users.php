@@ -1,6 +1,6 @@
 <?php
 // backend/api/users.php
-require_once __DIR__ . '/../db/config.php';
+require_once __DIR__ . '/../core/bootstrap.php';
 
 $mysqli = db();
 

@@ -2,537 +2,25 @@
 // Diese Datei enthält die komplette Vue.js Anwendung
 // Backend-Entwickler: Hier können echte API-Calls eingefügt werden
 
-const { createApp } = Vue;
+import { translations } from './src/constants/translations.js';
+import { demoData } from './src/data/demo-data.js';
+import { apiService } from './src/services/api.service.js';
+import { registerGlobalComponents } from './src/components/registerGlobalComponents.js';
+import {
+    cacheUsername,
+    getCachedUsername,
+    clearUsernameCache,
+    clearAuthState,
+    readAuthSnapshot,
+    persistLanguage,
+    readLanguage
+} from './src/store/session-store.js';
 
-// Übersetzungen
-const translations = {
-    de: {
-        login: "Anmelden",
-        register: "Registrieren",
-        username: "Benutzername",
-        password: "Passwort",
-        email: "E-Mail",
-        role: "Rolle",
-        student: "Schüler",
-        trainer: "Trainer",
-        admin: "Admin",
-        stayLoggedIn: "Angemeldet bleiben",
-        dashboard: "Dashboard",
-        certificates: "Urkunden",
-        specialCourses: "Sonderkurse",
-        trainingHistory: "Trainingsverlauf",
-        exams: "Prüfungen",
-        goals: "Ziele",
-        adminPanel: "Admin",
-        users: "Benutzer",
-        permissions: "Berechtigungen",
-        verifyTrainer: "Als Trainer verifizieren",
-        makeTrainer: "Zu Trainer machen",
-        makeStudent: "Zu Schüler machen",
-        addUser: "Benutzer hinzufügen",
-        saveChanges: "Änderungen speichern",
-        search: "Suchen",
-        logout: "Abmelden",
-        welcome: "Willkommen bei FightLog",
-        subtitle: "Erfasse und verwalte deine Kampfsporterfolge",
-        uploadCertificate: "Urkunde hochladen",
-        certificateTitle: "Titel der Urkunde",
-        certificateType: "Art der Urkunde",
-        certificateDate: "Datum",
-        certificateLevel: "Stufe/Level",
-        certificateInstructor: "Trainer/Prüfer",
-        uploadFile: "Datei hochladen",
-        dragDropText: "Datei hier hineinziehen oder klicken zum Auswählen",
-        supportedFormats: "Unterstützte Formate: PDF, JPG, PNG",
-        examEntry: "Prüfungseintrag",
-        examDate: "Prüfungsdatum",
-        examLevel: "Prüfungsstufe",
-        examCategory: "Kategorie",
-        examScore: "Bewertung",
-        examComments: "Kommentare",
-        examInstructor: "Prüfer",
-        filter: "Filter",
-        applyFilter: "Filter anwenden",
-        clearFilter: "Filter löschen",
-        save: "Speichern",
-        cancel: "Abbrechen",
-        submit: "Absenden",
-        courses: "Kurse",
-        addCourse: "Kurs eintragen",
-        courseTitle: "Kurstitel",
-        courseDate: "Datum",
-        courseInstructor: "Trainer/Leiter",
-        courseDescription: "Beschreibung",
-        courseStatus: "Status",
-        approved: "freigegeben",
-        pendingLower: "ausstehend",
-        phone: "Telefonnummer",
-        passkeys: "Passkeys",
-        addPasskey: "Passkey hinzufügen",
-        remove: "Entfernen",
-        emailInvalid: "Bitte eine gültige E-Mail eingeben.",
-        phoneInvalid: "Bitte eine gültige Telefonnummer eingeben."
-    },
-    en: {
-        login: "Login",
-        register: "Register",
-        username: "Username",
-        password: "Password",
-        email: "Email",
-        role: "Role",
-        student: "Student",
-        trainer: "Trainer",
-        stayLoggedIn: "Stay logged in",
-        dashboard: "Dashboard",
-        certificates: "Certificates",
-        specialCourses: "Special Courses",
-        trainingHistory: "Training History",
-        exams: "Exams",
-        goals: "Goals",
-        logout: "Logout",
-        welcome: "Welcome to FightLog",
-        subtitle: "Record and manage your martial arts achievements",
-        uploadCertificate: "Upload Certificate",
-        certificateTitle: "Certificate Title",
-        certificateType: "Certificate Type",
-        certificateDate: "Date",
-        certificateLevel: "Level",
-        certificateInstructor: "Instructor/Examiner",
-        uploadFile: "Upload File",
-        dragDropText: "Drag file here or click to select",
-        supportedFormats: "Supported formats: PDF, JPG, PNG",
-        examEntry: "Exam Entry",
-        examDate: "Exam Date",
-        examLevel: "Exam Level",
-        examCategory: "Category",
-        examScore: "Score",
-        examComments: "Comments",
-        examInstructor: "Examiner",
-        filter: "Filter",
-        applyFilter: "Apply Filter",
-        clearFilter: "Clear Filter",
-        save: "Save",
-        cancel: "Cancel",
-        submit: "Submit",
-        courses: "Courses",
-        addCourse: "Add Course",
-        courseTitle: "Course Title",
-        courseDate: "Date",
-        courseInstructor: "Instructor",
-        courseDescription: "Description",
-        courseStatus: "Status",
-        approved: "approved",
-        pendingLower: "pending",
-        phone: "Phone number",
-        passkeys: "Passkeys",
-        addPasskey: "Add passkey",
-        remove: "Remove",
-        emailInvalid: "Please enter a valid email.",
-        phoneInvalid: "Please enter a valid phone number."
-    }
-};
+const { createApp } = window.Vue || Vue;
 
-// Dummy-Daten für Demo
-const demoData = {
-    user: {
-        id: 1,
-        username: "admin",
-        email: "admin@fightlog.com",
-        role: "admin", // "schueler", "trainer" oder "admin"
-        name: "Admin Trainer",
-        school: "Kampfsport Akademie Berlin",
-        beltLevel: "Schwarzgurt 5. Dan - Meister",
-        permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"],
-        verifiedTrainer: true
-    },
-    users: [
-        {
-            id: 1,
-            username: "admin",
-            email: "admin@fightlog.com",
-            role: "admin",
-            name: "Admin Trainer",
-            firstName: "Admin",
-            lastName: "Trainer",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Schwarzgurt 5. Dan - Meister",
-            permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"],
-            verifiedTrainer: true,
-            phone: "+49 30 1234567",
-            passkeys: ["YubiKey-Admin", "Phone-Admin"]
-        },
-        {
-            id: 2,
-            username: "trainer",
-            email: "trainer@fightlog.com",
-            role: "trainer",
-            name: "Tom Trainer",
-            firstName: "Tom",
-            lastName: "Trainer",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Schwarzgurt 2. Dan",
-            permissions: ["manage_certificates", "manage_exams", "edit_training_history"],
-            verifiedTrainer: true,
-            phone: "+49 30 2345678",
-            passkeys: ["Phone-Trainer"]
-        },
-        {
-            id: 3,
-            username: "schueler",
-            email: "schueler@fightlog.com",
-            role: "schueler",
-            name: "Sam Schüler",
-            firstName: "Sam",
-            lastName: "Schüler",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Gelbgurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 3456789",
-            passkeys: []
-        },
-        {
-            id: 4,
-            username: "paul",
-            email: "paul.schwarzmann@fightlog.com",
-            role: "schueler",
-            name: "Paul Schwarzmann",
-            firstName: "Paul",
-            lastName: "Schwarzmann",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Weißgurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 0000001",
-            passkeys: []
-        },
-        {
-            id: 5,
-            username: "paula",
-            email: "paula.meier@fightlog.com",
-            role: "schueler",
-            name: "Paula Meier",
-            firstName: "Paula",
-            lastName: "Meier",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Gelbgurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 0000002",
-            passkeys: []
-        },
-        {
-            id: 6,
-            username: "patrick",
-            email: "patrick.mueller@fightlog.com",
-            role: "schueler",
-            name: "Patrick Müller",
-            firstName: "Patrick",
-            lastName: "Müller",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Orangegurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 0000003",
-            passkeys: []
-        },
-        {
-            id: 7,
-            username: "peter",
-            email: "peter.schmidt@fightlog.com",
-            role: "schueler",
-            name: "Peter Schmidt",
-            firstName: "Peter",
-            lastName: "Schmidt",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Grüngurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 0000004",
-            passkeys: []
-        },
-        {
-            id: 8,
-            username: "sophia",
-            email: "sophia.schneider@fightlog.com",
-            role: "schueler",
-            name: "Sophia Schneider",
-            firstName: "Sophia",
-            lastName: "Schneider",
-            school: "Kampfsport Akademie Berlin",
-            beltLevel: "Blaugurt",
-            permissions: [],
-            verifiedTrainer: false,
-            phone: "+49 30 0000005",
-            passkeys: []
-        }
-    ],
-    certificates: [
-        {
-            id: 1,
-            title: "Gelbgurt Prüfung",
-            type: "belt_exam",
-            date: "2023-06-15",
-            level: "Gelbgurt",
-            instructor: "Hans Schmidt",
-            fileUrl: "certificate_1.pdf",
-            preview: "📄",
-            status: "approved"
-        },
-        {
-            id: 2,
-            title: "Turnier Sieg - Berlin Open",
-            type: "tournament",
-            date: "2023-08-20",
-            level: "Regional",
-            instructor: "Max Müller",
-            fileUrl: "certificate_2.jpg",
-            preview: "🏆",
-            status: "approved"
-        },
-        {
-            id: 3,
-            title: "Grüngurt Prüfung",
-            type: "belt_exam",
-            date: "2023-12-10",
-            level: "Grüngurt",
-            instructor: "Anna Weber",
-            fileUrl: "certificate_3.pdf",
-            preview: "📄",
-            status: "pending"
-        }
-    ],
-    exams: [
-        {
-            id: 1,
-            date: "2023-06-15",
-            level: "Gelbgurt",
-            category: "Technik",
-            instructor: "Hans Schmidt",
-            comments: "Sehr gute Grundtechniken, Verbesserung bei der Ausdauer nötig",
-            status: "passed"
-        },
-        {
-            id: 2,
-            date: "2023-12-10",
-            level: "Grüngurt",
-            category: "Kampf",
-            instructor: "Anna Weber",
-            comments: "Ausgezeichnete Kampftechniken, Führungsposition im Dojo",
-            status: "passed"
-        }
-    ],
-    trainingHistory: [
-        {
-            id: 1,
-            date: "2024-03-25",
-            duration: 90,
-            type: "Techniktraining",
-            instructor: "Hans Schmidt",
-            focus: "Grundtechniken, Kata",
-            notes: "Intensives Training der Grundstellungen"
-        },
-        {
-            id: 2,
-            date: "2024-03-23",
-            duration: 120,
-            type: "Kampftraining",
-            instructor: "Anna Weber",
-            focus: "Sparring, Wettkampfvorbereitung",
-            notes: "Gute Fortschritte im Sparring"
-        }
-    ],
-    specialCourses: [
-        {
-            id: 1,
-            title: "Selbstverteidigung für Frauen",
-            instructor: "Anna Weber",
-            date: "2024-04-15",
-            duration: "4 Stunden",
-            maxParticipants: 12,
-            currentParticipants: 8,
-            price: "45€",
-            description: "Spezieller Kurs für effektive Selbstverteidigung"
-        },
-        {
-            id: 2,
-            title: "Kampfrichter Ausbildung",
-            instructor: "Hans Schmidt",
-            date: "2024-05-10",
-            duration: "8 Stunden",
-            maxParticipants: 8,
-            currentParticipants: 6,
-            price: "120€",
-            description: "Offizielle Ausbildung zum Kampfrichter"
-        }
-    ],
-    goals: [
-        {
-            id: 1,
-            title: "Blaugurt erreichen",
-            targetDate: "2024-06-30",
-            progress: 75,
-            category: "Gürtelprüfung",
-            status: "in_progress"
-        },
-        {
-            id: 2,
-            title: "Erste Platzierung bei Turnier",
-            targetDate: "2024-08-15",
-            progress: 40,
-            category: "Wettkampf",
-            status: "in_progress"
-        }
-    ],
-    courses: [
-        {
-            id: 101,
-            title: "Grundlagen Sparring",
-            date: "2024-04-02",
-            instructor: "Hans Schmidt",
-            description: "Technik und leichtes Sparring",
-            status: "approved",
-            userId: 2
-        },
-        {
-            id: 102,
-            title: "Kata Intensiv",
-            date: "2024-04-05",
-            instructor: "Anna Weber",
-            description: "Kata-Feinschliff",
-            status: "pending",
-            userId: 3
-        }
-    ]
-};
+// Übersetzungen & Demo-Daten werden nun über src/constants und src/data eingebunden.
 
-// API-Service (Dummy-Implementierung)
-const apiService = {
-    async login(credentials) {
-        const res = await fetch('/fightlog/backend/api/login.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentials)
-        });
-        return res.json();
-    },
-
-    async register(userData) {
-        const res = await fetch('/fightlog/backend/api/register.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-        return res.json();
-    },
-
-    async uploadCertificate(certificateData) {
-        const res = await fetch('/fightlog/backend/api/upload.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(certificateData)
-        });
-        return res.json();
-    },
-
-    async getCertificates() {
-        const res = await fetch('/fightlog/backend/api/certificates.php');
-        return res.json();
-    },
-
-    async addExam(examData) {
-        const res = await fetch('/fightlog/backend/api/exams.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(examData)
-        });
-        return res.json();
-    },
-
-    async getExams(userId) {
-        const url = userId ? `/fightlog/backend/api/exams.php?userId=${userId}` : '/fightlog/backend/api/exams.php';
-        const res = await fetch(url);
-        return res.json();
-    },
-
-    async getTrainingHistory() {
-        const res = await fetch('/fightlog/backend/api/training.php');
-        return res.json();
-    },
-
-    async getSpecialCourses() {
-        const res = await fetch('/fightlog/backend/api/courses.php');
-        return res.json();
-    },
-
-    async getGoals(userId) {
-        const url = userId ? `/fightlog/backend/api/goals.php?userId=${userId}` : '/fightlog/backend/api/goals.php';
-        const res = await fetch(url);
-        return res.json();
-    },
-
-    async addGoal(goalData) {
-        const res = await fetch('/fightlog/backend/api/goals.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(goalData)
-        });
-        return res.json();
-    },
-
-    async getUsers() {
-        const res = await fetch('/fightlog/backend/api/users.php');
-        return res.json();
-    },
-
-    async updateUser(updatedUser) {
-        const res = await fetch('/fightlog/backend/api/users.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update', ...updatedUser })
-        });
-        return res.json();
-    },
-
-    async verifyAsTrainer(userId) {
-        const res = await fetch('/fightlog/backend/api/users.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'verify', id: userId })
-        });
-        return res.json();
-    },
-
-    async getCourses() {
-        const res = await fetch('/fightlog/backend/api/courses.php');
-        return res.json();
-    },
-
-    async addCourse(courseData) {
-        const res = await fetch('/fightlog/backend/api/courses.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', ...courseData })
-        });
-        return res.json();
-    },
-
-    async updateCourse(courseData) {
-        const res = await fetch('/fightlog/backend/api/courses.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update', ...courseData })
-        });
-        return res.json();
-    },
-
-    async deleteCourse(courseId) {
-        const res = await fetch('/fightlog/backend/api/courses.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'delete', id: courseId })
-        });
-        return res.json();
-    }
-};
-
+// API-Service wird über src/services/api.service.js gekapselt.
 
 // Hauptanwendung
 const app = createApp({
@@ -688,41 +176,50 @@ const app = createApp({
                             </div>
                             
                             <div class="nav-grid">
-                                <div class="nav-card" @click="navigateTo('certificates')">
-                                    <i class="fas fa-certificate"></i>
-                                    <h3>{{ t('certificates') }}</h3>
-                                    <p>Urkunden verwalten</p>
-                                </div>
+                                <nav-card
+                                    icon="fa-certificate"
+                                    :title="t('certificates')"
+                                    description="Urkunden verwalten"
+                                    @click="navigateTo('certificates')"
+                                />
                                 
-                                <div class="nav-card" @click="navigateTo('exams')">
-                                    <i class="fas fa-clipboard-check"></i>
-                                    <h3>{{ t('exams') }}</h3>
-                                    <p>Prüfungsergebnisse & Bewertungen</p>
-                                </div>
+                                <nav-card
+                                    icon="fa-clipboard-check"
+                                    :title="t('exams')"
+                                    description="Prüfungsergebnisse &amp; Bewertungen"
+                                    @click="navigateTo('exams')"
+                                />
                                 
-                                <div v-if="currentUser" class="nav-card" @click="navigateTo('goals')">
-                                    <i class="fas fa-bullseye"></i>
-                                    <h3>{{ t('goals') }}</h3>
-                                    <p>Protokoll und Ziele verwalten</p>
-                                </div>
+                                <nav-card
+                                    v-if="currentUser"
+                                    icon="fa-bullseye"
+                                    :title="t('goals')"
+                                    description="Protokoll und Ziele verwalten"
+                                    @click="navigateTo('goals')"
+                                />
 
-                                <div class="nav-card" @click="navigateTo('courses')">
-                                    <i class="fas fa-list-check"></i>
-                                    <h3>{{ t('courses') }}</h3>
-                                    <p>Kurse verwalten/sehen</p>
-                                </div>
+                                <nav-card
+                                    icon="fa-list-check"
+                                    :title="t('courses')"
+                                    description="Kurse verwalten/sehen"
+                                    @click="navigateTo('courses')"
+                                />
 
-                                <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="nav-card" @click="navigateTo('presets')">
-                                    <i class="fas fa-sliders-h"></i>
-                                    <h3>Presets</h3>
-                                    <p>Vorlagen für Urkunden, Prüfungen, Kurse</p>
-                                </div>
+                                <nav-card
+                                    v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')"
+                                    icon="fa-sliders-h"
+                                    title="Presets"
+                                    description="Vorlagen für Urkunden, Prüfungen, Kurse"
+                                    @click="navigateTo('presets')"
+                                />
 
-                                <div v-if="currentUser && currentUser.role === 'admin'" class="nav-card" @click="navigateTo('admin')">
-                    <i class="fas fa-user-shield"></i>
-                    <h3>{{ t('adminPanel') }}</h3>
-                    <p>Benutzer, Rollen & Rechte verwalten</p>
-                </div>
+                                <nav-card
+                                    v-if="currentUser && currentUser.role === 'admin'"
+                                    icon="fa-user-shield"
+                                    :title="t('adminPanel')"
+                                    description="Benutzer, Rollen &amp; Rechte verwalten"
+                                    @click="navigateTo('admin')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -1445,8 +942,8 @@ const app = createApp({
                                 </div>
 
                                 <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="user in adminFilteredUsers" :key="user.id" class="nav-card admin-user-card collapsible" :class="{ open: user._open }" @click.self="user._open = !user._open" style="text-align: left;">
-                                        <div class="collapsible-header" @click="user._open = !user._open">
+                                    <div v-for="user in adminFilteredUsers" :key="user.id" class="nav-card admin-user-card collapsible" :class="{ open: user._open }" style="text-align: left;">
+                                        <div class="collapsible-header" @click.stop="toggleUserCard(user)">
                                             <div class="role-emoji" aria-hidden="true">{{ roleEmoji(user.role) }}</div>
                                             <div class="header-text">
                                                 <div class="name">{{ user.name }}</div>
@@ -1455,24 +952,19 @@ const app = createApp({
                                             <div class="caret" :class="{ open: user._open }"><i class="fas fa-chevron-down"></i></div>
                                         </div>
                                         <transition name="collapse">
-                                            <div v-show="user._open" class="collapsible-body" @click.stop>
+                                            <div v-if="user._open" class="collapsible-body" @click.stop>
                                                 <p><strong>Benutzername:</strong> {{ user.username }}</p>
                                                 <p><strong>E-Mail:</strong> {{ user.email }}</p>
                                                 <p><strong>{{ t('phone') }}:</strong> {{ user.phone || '-' }}</p>
                                                 <!-- Passkeys bewusst ausgeblendet -->
-                                                <p>
-                                                    <strong>Rolle:</strong>
-                                                    <select v-model="user.role" class="form-control" style="margin-top:.25rem;">
+                                                <div class="form-group" style="margin-top: 0.5rem;">
+                                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;"><strong>Rolle:</strong></label>
+                                                    <select v-model="user.role" class="form-control">
                                                         <option value="schueler">Schüler</option>
                                                         <option value="trainer">Trainer</option>
                                                         <option value="admin">Admin</option>
                                                     </select>
-                                                </p>
-                                                <p>
-                                                    <strong>Verifiziert (Trainer):</strong>
-                                                    <span :class="user.verifiedTrainer ? 'status-approved' : 'status-pending'">{{ user.verifiedTrainer ? 'Ja' : 'Nein' }}</span>
-                                                    <button v-if="!user.verifiedTrainer" class="btn btn-plain btn-sm" style="margin-left:.5rem;" @click="verifyUserAsTrainer(user)">{{ t('verifyTrainer') }}</button>
-                                                </p>
+                                                </div>
                                                 <div class="actions">
                                                     <button class="btn btn-primary btn-sm" @click="saveUser(user)">{{ t('saveChanges') }}</button>
                                                     <button class="btn btn-danger btn-sm" @click="deleteUser(user)" aria-label="Benutzer löschen"><i class="fas fa-trash"></i></button>
@@ -1869,7 +1361,7 @@ const app = createApp({
                     this.currentUser = response.user;
                     
                     if (this.authForm.stayLoggedIn) {
-                        localStorage.setItem('fightlog_username', this.authForm.username);
+                        cacheUsername(this.authForm.username);
                     }
                     
                     this.authForm = {
@@ -1918,11 +1410,8 @@ const app = createApp({
         },
         
         logout() {
-            try {
-                localStorage.removeItem('fightlog_username');
-                localStorage.removeItem('fightlog_authenticated');
-                localStorage.removeItem('fightlog_user');
-            } catch (e) {}
+            clearUsernameCache();
+            clearAuthState();
 
             if (typeof window.navigateWithTransition === 'function') {
                 window.navigateWithTransition('simple.html');
@@ -1997,7 +1486,7 @@ const app = createApp({
                  // Sprache (nur Deutsch)
          setLanguage(lang) {
              this.currentLanguage = 'de'; // Immer Deutsch
-             localStorage.setItem('fightlog_language', 'de');
+             persistLanguage('de');
          },
         
         // Datei-Upload entfernt
@@ -2143,10 +1632,22 @@ const app = createApp({
         async loadUsers() {
             try {
                 const users = await apiService.getUsers();
-                this.adminUserList = users;
+                // Stelle sicher, dass jeder User eine _open-Property hat
+                this.adminUserList = users.map(user => ({
+                    ...user,
+                    _open: user._open || false
+                }));
             } catch (error) {
                 console.error('Load users error:', error);
             }
+        },
+        toggleUserCard(user) {
+            // Toggle nur diesen spezifischen User
+            // Stelle sicher, dass _open initialisiert ist
+            if (user._open === undefined) {
+                user._open = false;
+            }
+            user._open = !user._open;
         },
         togglePermission(user, permKey) {
             const has = user.permissions.includes(permKey);
@@ -2154,21 +1655,6 @@ const app = createApp({
                 user.permissions = user.permissions.filter(p => p !== permKey);
             } else {
                 user.permissions = [...user.permissions, permKey];
-            }
-        },
-        async verifyUserAsTrainer(user) {
-            try {
-                const res = await apiService.verifyAsTrainer(user.id);
-                if (res.success) {
-                    const idx = this.adminUserList.findIndex(u => u.id === user.id);
-                    if (idx !== -1) this.adminUserList[idx] = res.user;
-                    alert('Benutzer wurde als Trainer verifiziert.');
-                } else {
-                    alert('Verifizierung fehlgeschlagen');
-                }
-            } catch (e) {
-                console.error('Verify trainer error:', e);
-                alert('Verifizierung fehlgeschlagen');
             }
         },
         async saveUser(user) {
@@ -2467,18 +1953,15 @@ const app = createApp({
         }
     },
     
-         mounted() {
-         // Lade gespeicherte Einstellungen (nur Deutsch)
-         this.currentLanguage = 'de';
-         localStorage.setItem('fightlog_language', 'de');
+        mounted() {
+            // Lade gespeicherte Einstellungen (nur Deutsch)
+            this.currentLanguage = readLanguage('de');
+            persistLanguage(this.currentLanguage);
         
-        // Prüfe neue Authentifizierungsdaten
-        const isAuthenticated = localStorage.getItem('fightlog_authenticated');
-        const userData = localStorage.getItem('fightlog_user');
+            // Prüfe neue Authentifizierungsdaten
+            const { isAuthenticated, user } = readAuthSnapshot();
         
-        if (isAuthenticated && userData) {
-            try {
-                const user = JSON.parse(userData);
+            if (isAuthenticated && user) {
                 this.isLoggedIn = true;
                 
                 // Setze Benutzer basierend auf Authentifizierungsmethode
@@ -2497,25 +1980,19 @@ const app = createApp({
                         role: user.role
                     };
                 }
-            } catch (error) {
-                console.error('Fehler beim Laden der Benutzerdaten:', error);
+            } else {
                 // Fallback zu altem System
-                const savedUsername = localStorage.getItem('fightlog_username');
+                const savedUsername = getCachedUsername();
                 if (savedUsername) {
                     this.isLoggedIn = true;
                     this.currentUser = demoData.user;
                 }
             }
-        } else {
-            // Fallback zu altem System
-            const savedUsername = localStorage.getItem('fightlog_username');
-            if (savedUsername) {
-                this.isLoggedIn = true;
-                this.currentUser = demoData.user;
-            }
         }
-    }
 });
 
+// Globale Komponenten registrieren
+registerGlobalComponents(app);
+
 // Starte Anwendung
-app.mount('#app'); 
+app.mount('#app');

@@ -8,6 +8,7 @@
     // Globaler Manager für alle offenen Dropdowns
     const openDropdowns = new Set();
     let globalClickHandler = null;
+    let globalScrollHandler = null;
     
     function setupGlobalClickHandler(){
         if (globalClickHandler) return;
@@ -22,8 +23,17 @@
                                        target.closest('.cdp-input-wrap') ||
                                        target.closest('.cdp-root');
             
-            // Prüfe ob der Klick auf ein offenes Dropdown war (Trigger oder Option)
+            // Prüfe ob der Klick auf ein offenes Dropdown war (Trigger, Option oder Menu)
+            const clickedOnMenu = target.closest('.cs-menu');
+            const clickedOnTrigger = target.closest('.cs-trigger');
+            const clickedOnOption = target.closest('.cs-option');
             const clickedOnOpenDropdown = clickedDropdown && clickedDropdown.classList.contains('open');
+            
+            // Schließe NICHT wenn:
+            // - Klick auf ein offenes Dropdown (Trigger, Option oder Menu)
+            if (clickedOnMenu || (clickedOnTrigger && clickedOnOpenDropdown) || (clickedOnOption && clickedOnOpenDropdown)) {
+                return; // Nicht schließen
+            }
             
             // Schließe alle offenen Dropdowns wenn:
             // 1. Auf ein Form-Element geklickt wurde (Textfeld, Kalender, etc.)
@@ -54,6 +64,19 @@
         // Verwende capture phase, damit wir vor anderen Event-Handlern sind
         // ABER: Wir blockieren den Event nicht, damit andere Handler normal funktionieren
         document.addEventListener('click', globalClickHandler, true);
+    }
+    
+    function setupGlobalScrollHandler(){
+        if (globalScrollHandler) return;
+        globalScrollHandler = () => {
+            // Schließe alle offenen Dropdowns beim Scrollen
+            openDropdowns.forEach(closeFn => {
+                if (typeof closeFn === 'function') closeFn();
+            });
+            openDropdowns.clear();
+        };
+        window.addEventListener('scroll', globalScrollHandler, true);
+        window.addEventListener('resize', globalScrollHandler, true);
     }
 
     function enhanceSelect(native){
@@ -87,6 +110,7 @@
             if (opt.value === native.value) item.classList.add('selected');
             item.addEventListener('click', (e)=>{
                 e.stopPropagation(); // Verhindere, dass der globale Handler das Dropdown schließt bevor der Wert gesetzt wird
+                e.preventDefault(); // Verhindere Standard-Verhalten
                 if (opt.disabled) return;
                 setValue(opt.value, true);
                 close();
@@ -122,6 +146,7 @@
             
             wrapper.classList.add('open');
             trigger.setAttribute('aria-expanded', 'true');
+            
             // focus selected item if available
             const sel = menu.querySelector('.cs-option.selected');
             if (sel) sel.scrollIntoView({ block: 'nearest' });
@@ -129,6 +154,7 @@
             // Füge dieses Dropdown zur Liste der offenen hinzu
             openDropdowns.add(close);
             setupGlobalClickHandler();
+            setupGlobalScrollHandler();
         }
 
         function close(){
@@ -139,11 +165,11 @@
 
         trigger.addEventListener('click', (e)=>{
             e.stopPropagation(); // Verhindere, dass der globale Handler sofort schließt
+            e.preventDefault(); // Verhindere Standard-Verhalten
             if (wrapper.classList.contains('open')) {
                 close();
             } else {
-                // Kleine Verzögerung, damit der Click-Event nicht sofort als Outside-Klick zählt
-                setTimeout(() => open(), 0);
+                open();
             }
         });
 

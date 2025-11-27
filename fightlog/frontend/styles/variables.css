@@ -1,0 +1,25 @@
+/* ===== FIGHTLOG - CSS VARIABLEN ===== */
+/* Zentrale Farben, Abstände und Design-Tokens */
+
+:root {
+    /* Scrollbar */
+    --scrollbar-size: 10px;
+    --scrollbar-thumb: rgba(100,116,139,0.35);
+    --scrollbar-thumb-hover: rgba(100,116,139,0.5);
+    --scrollbar-track: transparent;
+
+    /* iOS Design Tokens */
+    --ios-blue: #0a84ff;
+    --ios-green: #34c759;
+    --ios-gray: #8e8e93;
+    --card-bg: rgba(255,255,255,0.9);
+    --border: rgba(0,0,0,0.08);
+}
+
+/* Responsive Scrollbar */
+@media (max-width: 480px) {
+    :root {
+        --scrollbar-size: 8px;
+    }
+}
+

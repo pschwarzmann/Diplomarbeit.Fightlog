@@ -16,7 +16,7 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bridge for early alerts (queues calls until notify.js is ready) -->
+    <!-- Bridge for early alerts (queues calls until notify.service.js is ready) -->
     <script>
         (function(){
             if (!window._notifyQueue) window._notifyQueue = [];
@@ -28,11 +28,11 @@
         })();
     </script>
     <!-- Passkey Manager -->
-    <script src="./passkey.js"></script>
-    <script src="./notify.js"></script>
-    <script src="./custom-select.js"></script>
-    <script src="./custom-datepicker.js"></script>
-    <script src="./form-validation.js"></script>
+    <script src="./src/services/passkey.service.js"></script>
+    <script src="./src/services/notify.service.js"></script>
+    <script src="./src/utils/custom-select.js"></script>
+    <script src="./src/utils/custom-datepicker.js"></script>
+    <script src="./src/utils/form-validation.js"></script>
     
     <style>
         /* Apple-ähnliches Design */
@@ -745,15 +745,9 @@
                     Anmelden
                 </button>
                 
-                <div class="button-group">
-                    <button type="button" class="btn btn-danger" onclick="showForgotPassword()">
-                        Passwort vergessen
-                    </button>
-                    
-                    <button type="button" class="btn btn-success" onclick="showRegisterForm()">
-                        Registrieren
-                    </button>
-                </div>
+                <button type="button" class="btn btn-danger" onclick="showForgotPassword()" style="margin-top: 8px;">
+                    Passwort vergessen
+                </button>
                 
                 <button type="button" class="btn btn-purple" id="passkeyRegisterBtn" onclick="registerPasskey()" style="display: none;">
                     Passkey registrieren
