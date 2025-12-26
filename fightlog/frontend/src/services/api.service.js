@@ -1,11 +1,40 @@
 // src/services/api.service.js
 // Zentraler Client für alle Backend-API-Aufrufe
 
-const BASE_URL = '/fightlog/backend/api';
+// Automatische Erkennung: Dev-Server (localhost:3000) oder XAMPP
+const isDev = window.location.port === '3000';
+const BASE_URL = isDev ? 'http://localhost:8080/api' : '/fightlog/backend/api';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
+// Holt den aktuellen User aus localStorage
+function getCurrentUser() {
+    try {
+        // Prüfe fightlog_user (session-store)
+        const userData = localStorage.getItem('fightlog_user');
+        if (userData) {
+            return JSON.parse(userData);
+        }
+    } catch (e) {
+        console.warn('Error reading user from localStorage:', e);
+    }
+    return null;
+}
+
+// Erstellt Header mit Authorization (User-ID)
+function getAuthHeaders() {
+    const user = getCurrentUser();
+    const headers = { ...jsonHeaders };
+    if (user && user.id) {
+        headers['X-User-ID'] = String(user.id);
+        headers['X-User-Role'] = user.role || 'schueler';
+    }
+    return headers;
+}
+
 async function request(path, options = {}) {
+    // Merge Auth-Headers mit bestehenden Headers
+    options.headers = { ...getAuthHeaders(), ...(options.headers || {}) };
     const response = await fetch(`${BASE_URL}${path}`, options);
     return response.json();
 }
@@ -44,6 +73,22 @@ export const apiService = {
             method: 'POST',
             headers: jsonHeaders,
             body: JSON.stringify(examData)
+        });
+    },
+
+    updateExam(examData) {
+        return request('/exams.php', {
+            method: 'PUT',
+            headers: jsonHeaders,
+            body: JSON.stringify(examData)
+        });
+    },
+
+    deleteExam(examId) {
+        return request('/exams.php', {
+            method: 'DELETE',
+            headers: jsonHeaders,
+            body: JSON.stringify({ id: examId })
         });
     },
 
@@ -111,6 +156,27 @@ export const apiService = {
             headers: jsonHeaders,
             body: JSON.stringify({ action: 'delete', id: courseId })
         });
+    },
+
+    // Kurs-Buchungen
+    bookCourse(courseId) {
+        return request('/courses.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'book', courseId })
+        });
+    },
+
+    cancelCourseBooking(courseId) {
+        return request('/courses.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'cancel', courseId })
+        });
+    },
+
+    getCourseParticipants(courseId) {
+        return request(`/courses.php?action=participants&courseId=${courseId}`);
     }
 };
 

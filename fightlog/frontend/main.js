@@ -12,6 +12,7 @@ import {
     clearUsernameCache,
     clearAuthState,
     readAuthSnapshot,
+    persistAuthState,
     persistLanguage,
     readLanguage
 } from './src/store/session-store.js';
@@ -476,7 +477,7 @@ const app = createApp({
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>{{ t('search') }}</label>
-                                        <input type="text" v-model="examSearch" class="form-control" placeholder="Level/Prüfer/Kategorie">
+                                        <input type="text" v-model="examSearch" class="form-control" placeholder="Level/Prüfer/Kategorie/Schüler">
                                     </div>
                                     <div class="form-group" style="align-self:end;">
                                         <button class="btn btn-secondary" @click="clearExamSearch">{{ t('clearFilter') }}</button>
@@ -486,7 +487,8 @@ const app = createApp({
                                     <div v-for="exam in filteredExams" :key="exam.id" class="timeline-item">
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>
-                                            <p><strong>Datum:</strong> {{ exam.date }}</p>
+                                            <p><strong>Schüler:</strong> {{ exam.studentName || 'Unbekannt' }} <span v-if="exam.studentUsername" style="color:#64748b;">(@{{ exam.studentUsername }})</span></p>
+                                            <p><strong>Datum:</strong> {{ formatDate(exam.date) }}</p>
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
                                             <p v-if="exam.comments"><strong>Kommentare:</strong> {{ exam.comments }}</p>
@@ -503,11 +505,88 @@ const app = createApp({
                                     <div v-for="exam in ownExams" :key="exam.id" class="timeline-item">
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>
-                                            <p><strong>Datum:</strong> {{ exam.date }}</p>
+                                            <p><strong>Datum:</strong> {{ formatDate(exam.date) }}</p>
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
                                             <p v-if="exam.comments"><strong>Kommentare:</strong> {{ exam.comments }}</p>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bearbeiten-Modal für Prüfungen -->
+                            <div v-if="showExamEditModal" class="modal-overlay" @click="closeExamEditModal">
+                                <div class="modal-content" @click.stop style="max-width: 600px;">
+                                    <div class="modal-header">
+                                        <h2><i class="fas fa-edit"></i> Prüfung bearbeiten</h2>
+                                        <button @click="closeExamEditModal" class="close-btn">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form @submit.prevent="saveExamEdit">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label>Datum</label>
+                                                    <input type="date" v-model="examEditForm.date" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Stufe</label>
+                                                    <select v-model="examEditForm.level" class="form-control" required>
+                                                        <option value="Weißgurt">Weißgurt</option>
+                                                        <option value="Gelbgurt">Gelbgurt</option>
+                                                        <option value="Orangegurt">Orangegurt</option>
+                                                        <option value="Grüngurt">Grüngurt</option>
+                                                        <option value="Blaugurt">Blaugurt</option>
+                                                        <option value="Braungurt">Braungurt</option>
+                                                        <option value="Schwarzgurt">Schwarzgurt</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label>Kategorie</label>
+                                                    <select v-model="examEditForm.category" class="form-control" required>
+                                                        <option value="Technik">Technik</option>
+                                                        <option value="Kampf">Kampf</option>
+                                                        <option value="Theorie">Theorie</option>
+                                                        <option value="Kata">Kata</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Status</label>
+                                                    <select v-model="examEditForm.status" class="form-control" required>
+                                                        <option value="passed">Bestanden</option>
+                                                        <option value="failed">Nicht bestanden</option>
+                                                        <option value="pending">Ausstehend</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Schüler</label>
+                                                <div style="position:relative;">
+                                                    <input type="text" v-model="examEditForm.studentQuery" class="form-control" placeholder="Schüler suchen...">
+                                                    <div v-if="examEditForm.studentQuery && studentMatches(examEditForm.studentQuery).length" class="form-container" style="position:absolute; left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; z-index:1000; max-height:180px; overflow:auto;">
+                                                        <div v-for="u in studentMatches(examEditForm.studentQuery)" :key="u.id" style="padding:.4rem 1rem; cursor:pointer;" @click="selectStudentForExamEdit(u)">
+                                                            {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-if="examEditForm.studentName" style="margin-top:.25rem; color:#64748b; font-size:.9rem;">Ausgewählt: {{ examEditForm.studentName }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Prüfer</label>
+                                                <input type="text" v-model="examEditForm.instructor" class="form-control" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Kommentar</label>
+                                                <textarea v-model="examEditForm.comments" class="form-control" rows="3"></textarea>
+                                            </div>
+                                            <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+                                                <button type="button" class="btn btn-secondary" @click="closeExamEditModal">Abbrechen</button>
+                                                <button type="submit" class="btn btn-primary">Speichern</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -826,31 +905,39 @@ const app = createApp({
                                 <h1>{{ t('courses') }}</h1>
                             </div>
 
+                            <!-- Admin/Trainer Ansicht -->
                             <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
                                 <div class="form-container">
                                     <h2>{{ t('addCourse') }}</h2>
                                     <form @submit.prevent="submitCourse">
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label>{{ t('courseTitle') }}</label>
+                                                <label>{{ t('courseTitle') }} *</label>
                                                 <input type="text" v-model="courseForm.title" class="form-control" required>
                                             </div>
                                             <div class="form-group">
-                                                <label>{{ t('courseDate') }}</label>
+                                                <label>{{ t('courseDate') }} *</label>
                                                 <input type="date" v-model="courseForm.date" class="form-control" required>
                                             </div>
                                         </div>
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label>{{ t('courseInstructor') }}</label>
+                                                <label>{{ t('courseInstructor') }} *</label>
                                                 <input type="text" v-model="courseForm.instructor" class="form-control" required>
                                             </div>
                                             <div class="form-group">
-                                                <label>{{ t('courseStatus') }}</label>
-                                                <select v-model="courseForm.status" class="form-control" required>
-                                                    <option value="approved">{{ t('approved') }}</option>
-                                                    <option value="pending">{{ t('pendingLower') }}</option>
-                                                </select>
+                                                <label>Dauer *</label>
+                                                <input type="text" v-model="courseForm.duration" class="form-control" placeholder="z.B. 2 Stunden" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Max. Teilnehmer *</label>
+                                                <input type="number" v-model.number="courseForm.max_participants" class="form-control" min="1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Preis *</label>
+                                                <input type="text" v-model="courseForm.price" class="form-control" placeholder="z.B. 25€ oder Gratis" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -858,7 +945,7 @@ const app = createApp({
                                             <textarea v-model="courseForm.description" class="form-control" rows="3"></textarea>
                                         </div>
                                         <div class="form-group">
-                                            <label>Schüler zuordnen</label>
+                                            <label>Schüler zuordnen (optional)</label>
                                             <div style="position:relative;">
                                                 <input type="text" v-model="courseForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent>
                                                 <div v-if="courseForm.studentQuery" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
@@ -882,7 +969,7 @@ const app = createApp({
                                 </div>
 
                                 <div class="form-container">
-                                    <h2>{{ t('filter') }}</h2>
+                                    <h2>Alle Kurse</h2>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>{{ t('search') }}</label>
@@ -892,32 +979,137 @@ const app = createApp({
                                             <button class="btn btn-secondary" @click="clearCourseSearch">{{ t('clearFilter') }}</button>
                                         </div>
                                     </div>
-                                    <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                                    <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
                                         <div v-for="c in filteredCourses" :key="c.id" class="certificate-card" style="text-align:left;">
                                             <h4>{{ c.title }}</h4>
-                                            <p><strong>{{ t('courseDate') }}:</strong> {{ c.date }}</p>
+                                            <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
                                             <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
-                                            <p v-if="c.description">{{ c.description }}</p>
-                                            <p><strong>{{ t('courseStatus') }}:</strong> <span :class="c.status === 'approved' ? 'status-approved' : 'status-pending'">{{ c.status }}</span></p>
-                                            <div style="margin-top:.5rem; display:flex; gap:.5rem;">
-                                                <button class="btn btn-secondary" style="width:auto;" @click="editCourse(c)"><i class="fas fa-pen"></i></button>
-                                                <button class="btn btn-secondary" style="width:auto;" @click="removeCourse(c)"><i class="fas fa-trash"></i></button>
+                                            <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
+                                            <p><strong>Teilnehmer:</strong> {{ c.current_participants || 0 }} / {{ c.max_participants }} <span style="color:#64748b;">({{ c.free_spots || c.max_participants }} frei)</span></p>
+                                            <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
+                                            <p v-if="c.description" style="color:#64748b; font-size:0.9rem;">{{ c.description }}</p>
+                                            <div style="margin-top:.75rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+                                                <button class="btn btn-secondary btn-sm" @click="showParticipants(c)" title="Teilnehmer anzeigen">
+                                                    <i class="fas fa-users"></i> Teilnehmer
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" @click="editCourse(c)" title="Bearbeiten">
+                                                    <i class="fas fa-pen"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" @click="removeCourse(c)" title="Löschen">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Schüler Ansicht -->
                             <div v-else>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="c in studentApprovedCourses" :key="c.id" class="certificate-card" style="text-align:left;">
+                                <h2 style="margin-bottom:1rem;">Anstehende Kurse</h2>
+                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
+                                    <div v-for="c in upcomingCourses" :key="c.id" class="certificate-card" 
+                                         :style="{ textAlign: 'left', borderLeft: c.booking_status === 'confirmed' ? '4px solid #22c55e' : '' }">
+                                        <div v-if="c.booking_status === 'confirmed'" style="background:#22c55e; color:white; padding:.25rem .5rem; border-radius:4px; font-size:0.8rem; display:inline-block; margin-bottom:.5rem;">
+                                            <i class="fas fa-check"></i> Angemeldet
+                                        </div>
                                         <h4>{{ c.title }}</h4>
-                                        <p><strong>{{ t('courseDate') }}:</strong> {{ c.date }}</p>
+                                        <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
                                         <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
-                                        <p v-if="c.description">{{ c.description }}</p>
+                                        <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
+                                        <p><strong>Freie Plätze:</strong> {{ c.free_spots }} / {{ c.max_participants }}</p>
+                                        <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
+                                        <p v-if="c.description" style="color:#64748b; font-size:0.9rem;">{{ c.description }}</p>
+                                        <div style="margin-top:.75rem;">
+                                            <button v-if="!c.booking_status" class="btn btn-primary" @click="bookCourse(c)" :disabled="c.free_spots <= 0">
+                                                <i class="fas fa-plus"></i> Anmelden
+                                            </button>
+                                            <button v-else-if="c.booking_status === 'confirmed' && canCancelBooking(c)" class="btn btn-danger" @click="cancelBooking(c)">
+                                                <i class="fas fa-times"></i> Abmelden
+                                            </button>
+                                            <span v-else-if="c.booking_status === 'confirmed'" style="color:#64748b; font-size:0.85rem;">
+                                                <i class="fas fa-info-circle"></i> Abmeldung nicht mehr möglich
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                                <p v-if="upcomingCourses.length === 0" style="color:#64748b;">Keine anstehenden Kurse verfügbar.</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kurs bearbeiten Modal -->
+                <div v-if="showCourseEditModal" class="modal-overlay" @click.self="showCourseEditModal = false">
+                    <div class="modal-content form-container" style="max-width:500px;">
+                        <h2>Kurs bearbeiten</h2>
+                        <form @submit.prevent="saveCourseEdit">
+                            <div class="form-group">
+                                <label>Titel</label>
+                                <input type="text" v-model="courseEditForm.title" class="form-control" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Datum</label>
+                                    <input type="date" v-model="courseEditForm.date" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Trainer</label>
+                                    <input type="text" v-model="courseEditForm.instructor" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Dauer</label>
+                                    <input type="text" v-model="courseEditForm.duration" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max. Teilnehmer</label>
+                                    <input type="number" v-model.number="courseEditForm.max_participants" class="form-control" min="1">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Preis</label>
+                                <input type="text" v-model="courseEditForm.price" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Beschreibung</label>
+                                <textarea v-model="courseEditForm.description" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div style="display:flex; gap:.5rem; margin-top:1rem;">
+                                <button type="submit" class="btn btn-primary">Speichern</button>
+                                <button type="button" class="btn btn-secondary" @click="showCourseEditModal = false">Abbrechen</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Teilnehmer Modal -->
+                <div v-if="showParticipantsModal" class="modal-overlay" @click.self="showParticipantsModal = false">
+                    <div class="modal-content form-container" style="max-width:500px;">
+                        <h2><i class="fas fa-users"></i> Teilnehmer</h2>
+                        <p v-if="participantsModalCourse" style="color:#64748b; margin-bottom:1rem;">{{ participantsModalCourse.title }}</p>
+                        <div v-if="participantsList.length === 0" style="color:#64748b;">
+                            Keine Teilnehmer angemeldet.
+                        </div>
+                        <div v-else>
+                            <table style="width:100%; border-collapse:collapse;">
+                                <thead>
+                                    <tr style="border-bottom:2px solid #e2e8f0;">
+                                        <th style="text-align:left; padding:.5rem;">Name</th>
+                                        <th style="text-align:left; padding:.5rem;">Angemeldet am</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="p in participantsList" :key="p.id" style="border-bottom:1px solid #e2e8f0;">
+                                        <td style="padding:.5rem;">{{ p.name }} <span style="color:#64748b;">(@{{ p.username }})</span></td>
+                                        <td style="padding:.5rem;">{{ formatDateTime(p.booking_date) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top:1rem;">
+                            <button class="btn btn-secondary" @click="showParticipantsModal = false">Schließen</button>
                         </div>
                     </div>
                 </div>
@@ -1107,6 +1299,9 @@ const app = createApp({
                 title: '',
                 date: '',
                 instructor: '',
+                duration: '',
+                max_participants: 20,
+                price: '',
                 description: '',
                 status: 'approved',
                 userId: null,
@@ -1129,7 +1324,37 @@ const app = createApp({
             coursePresetForm: { title: '', instructor: '', status: 'approved' },
             // Gruppen (Presets)
             studentGroups: [],
-            groupForm: { name: '', userIds: [], query: '' }
+            groupForm: { name: '', userIds: [], query: '' },
+            // Prüfung bearbeiten Modal
+            showExamEditModal: false,
+            examEditForm: {
+                id: null,
+                date: '',
+                level: '',
+                category: '',
+                instructor: '',
+                comments: '',
+                status: 'passed',
+                userId: null,
+                studentName: '',
+                studentQuery: ''
+            },
+            // Kurs bearbeiten Modal
+            showCourseEditModal: false,
+            courseEditForm: {
+                id: null,
+                title: '',
+                date: '',
+                instructor: '',
+                duration: '',
+                max_participants: 20,
+                price: '',
+                description: ''
+            },
+            // Teilnehmer anzeigen Modal
+            showParticipantsModal: false,
+            participantsModalCourse: null,
+            participantsList: []
         }
     },
     
@@ -1202,7 +1427,9 @@ const app = createApp({
             return this.exams.filter(e =>
                 (e.level || '').toLowerCase().includes(q) ||
                 (e.instructor || '').toLowerCase().includes(q) ||
-                (e.category || '').toLowerCase().includes(q)
+                (e.category || '').toLowerCase().includes(q) ||
+                (e.studentName || '').toLowerCase().includes(q) ||
+                (e.studentUsername || '').toLowerCase().includes(q)
             );
         },
         ownExams() {
@@ -1221,6 +1448,19 @@ const app = createApp({
         studentApprovedCourses() {
             if (!this.currentUser) return [];
             return this.courses.filter(c => c.status === 'approved' && String(c.userId || c.user_id) === String(this.currentUser.id));
+        },
+        // Anstehende Kurse für Schüler (Datum >= heute, ungültige Daten werden übersprungen)
+        upcomingCourses() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return this.courses.filter(c => {
+                // Ungültige Daten überspringen
+                if (!c.date || c.date === '0000-00-00') return false;
+                const courseDate = new Date(c.date);
+                // Prüfen ob gültiges Datum
+                if (isNaN(courseDate.getTime())) return false;
+                return courseDate >= today;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
         }
     },
     
@@ -1359,6 +1599,9 @@ const app = createApp({
                 if (response.success) {
                     this.isLoggedIn = true;
                     this.currentUser = response.user;
+                    
+                    // User-Daten in localStorage speichern für API-Requests
+                    persistAuthState(response.user);
                     
                     if (this.authForm.stayLoggedIn) {
                         cacheUsername(this.authForm.username);
@@ -1590,12 +1833,101 @@ const app = createApp({
             }
         },
         editExam(exam) {
-            alert('Bearbeiten (Platzhalter): ' + exam.level + ' - ' + exam.category);
+            this.examEditForm = {
+                id: exam.id,
+                date: exam.date,
+                level: exam.level,
+                category: exam.category,
+                instructor: exam.instructor,
+                comments: exam.comments || '',
+                status: exam.status || 'passed',
+                userId: exam.userId || exam.user_id,
+                studentName: exam.studentName || '',
+                studentQuery: ''
+            };
+            this.showExamEditModal = true;
+        },
+        closeExamEditModal() {
+            this.showExamEditModal = false;
+        },
+        selectStudentForExamEdit(user) {
+            this.examEditForm.userId = user.id;
+            this.examEditForm.studentName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim();
+            this.examEditForm.studentQuery = '';
+        },
+        async saveExamEdit() {
+            try {
+                const res = await apiService.updateExam({
+                    id: this.examEditForm.id,
+                    userId: this.examEditForm.userId,
+                    date: this.examEditForm.date,
+                    level: this.examEditForm.level,
+                    category: this.examEditForm.category,
+                    instructor: this.examEditForm.instructor,
+                    comments: this.examEditForm.comments,
+                    status: this.examEditForm.status
+                });
+                if (res.success) {
+                    alert('Prüfung erfolgreich aktualisiert!');
+                    this.showExamEditModal = false;
+                    await this.loadExams();
+                } else {
+                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannter Fehler'));
+                }
+            } catch (e) {
+                console.error('Update exam error:', e);
+                alert('Fehler beim Speichern der Prüfung');
+            }
         },
         async deleteExam(exam) {
-            const ok = await notify.confirm('Diesen Prüfungseintrag löschen?');
-            if (ok) {
-                this.exams = this.exams.filter(e => e.id !== exam.id);
+            const ok = await notify.confirm('Diesen Prüfungseintrag wirklich löschen?');
+            if (!ok) return;
+            try {
+                const res = await apiService.deleteExam(exam.id);
+                if (res.success) {
+                    this.exams = this.exams.filter(e => e.id !== exam.id);
+                } else {
+                    alert('Fehler beim Löschen');
+                }
+            } catch (e) {
+                console.error('Delete exam error:', e);
+                alert('Fehler beim Löschen');
+            }
+        },
+        // Deutsches Datum (31.12.2025) zu ISO (2025-12-31) konvertieren
+        toISODate(dateStr) {
+            if (!dateStr) return '';
+            // Bereits im ISO-Format?
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+            // Deutsches Format: DD.MM.YYYY
+            const match = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            if (match) {
+                const day = match[1].padStart(2, '0');
+                const month = match[2].padStart(2, '0');
+                const year = match[3];
+                return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+        },
+        // Datum formatieren: 2025-12-26 -> 26. Dez. 2025
+        formatDate(dateStr) {
+            if (!dateStr || dateStr === '0000-00-00') return 'Kein Datum';
+            try {
+                const months = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parts[0];
+                    const month = parseInt(parts[1], 10) - 1;
+                    const day = parseInt(parts[2], 10);
+                    // Ungültiges Datum abfangen
+                    if (year === '0000' || month < 0 || month > 11 || day < 1 || day > 31) {
+                        return 'Kein Datum';
+                    }
+                    return `${day}. ${months[month]} ${year}`;
+                }
+                return dateStr;
+            } catch (e) {
+                return dateStr;
             }
         },
         
@@ -1904,40 +2236,160 @@ const app = createApp({
             this.courseSearch = '';
         },
         async submitCourse() {
+            console.log('submitCourse called');
+            console.log('courseForm:', JSON.stringify(this.courseForm));
             try {
-                const targetIds = (this.courseForm.userIds && this.courseForm.userIds.length)
-                    ? this.courseForm.userIds
-                    : (this.courseForm.userId ? [this.courseForm.userId] : []);
-                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
-                for (const uid of targetIds) {
-                    await apiService.addCourse({ ...this.courseForm, userId: uid });
-                }
-                {
-                    alert('Kurs eingetragen.');
-                    this.courseForm = { title: '', date: '', instructor: '', description: '', status: 'approved', userId: null, userIds: [], studentQuery: '', selectedStudents: [] };
+                // Datum zu ISO-Format konvertieren
+                const isoDate = this.toISODate(this.courseForm.date);
+                console.log('Submitting course with date:', this.courseForm.date, '->', isoDate);
+                
+                // Schüler sind jetzt optional
+                const courseData = {
+                    title: this.courseForm.title,
+                    date: isoDate,
+                    instructor: this.courseForm.instructor,
+                    duration: this.courseForm.duration,
+                    max_participants: this.courseForm.max_participants,
+                    price: this.courseForm.price,
+                    description: this.courseForm.description,
+                    userIds: this.courseForm.userIds || []
+                };
+                
+                const res = await apiService.addCourse(courseData);
+                if (res.success) {
+                    alert('Kurs erstellt.');
+                    this.courseForm = { 
+                        title: '', date: '', instructor: '', duration: '', 
+                        max_participants: 20, price: '', description: '', 
+                        status: 'approved', userId: null, userIds: [], 
+                        studentQuery: '', selectedStudents: [] 
+                    };
                     await this.loadCourses();
+                } else {
+                    alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (e) {
                 console.error('Add course error:', e);
-                alert('Kurs konnte nicht eingetragen werden.');
+                alert('Kurs konnte nicht erstellt werden.');
             }
         },
-        async editCourse(course) {
-            const newTitle = await notify.prompt('Titel bearbeiten:', course.title);
-            if (newTitle == null) return;
-            const updated = { ...course, title: newTitle };
-            const res = await apiService.updateCourse(updated);
-            if (res.success) {
-                await this.loadCourses();
+        editCourse(course) {
+            // Modal öffnen mit Kursdaten
+            // Ungültige Daten (0000-00-00) als leer behandeln
+            let courseDate = course.date || '';
+            if (courseDate === '0000-00-00') courseDate = '';
+            
+            this.courseEditForm = {
+                id: course.id,
+                title: course.title || '',
+                date: courseDate,
+                instructor: course.instructor || '',
+                duration: course.duration || '',
+                max_participants: course.max_participants || 20,
+                price: course.price || '',
+                description: course.description || ''
+            };
+            this.showCourseEditModal = true;
+        },
+        async saveCourseEdit() {
+            try {
+                // Datum zu ISO-Format konvertieren
+                const updateData = {
+                    ...this.courseEditForm,
+                    date: this.toISODate(this.courseEditForm.date)
+                };
+                console.log('Updating course with date:', this.courseEditForm.date, '->', updateData.date);
+                
+                const res = await apiService.updateCourse(updateData);
+                if (res.success) {
+                    this.showCourseEditModal = false;
+                    await this.loadCourses();
+                } else {
+                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Update course error:', e);
+                alert('Kurs konnte nicht aktualisiert werden.');
             }
         },
         async removeCourse(course) {
-            const ok = await notify.confirm('Diesen Kurs löschen?');
+            const ok = await notify.confirm('Diesen Kurs wirklich löschen?');
             if (!ok) return;
             const res = await apiService.deleteCourse(course.id);
             if (res.success) {
                 this.courses = this.courses.filter(c => c.id !== course.id);
             }
+        },
+        
+        // Teilnehmer anzeigen (Admin/Trainer)
+        async showParticipants(course) {
+            this.participantsModalCourse = course;
+            this.participantsList = [];
+            this.showParticipantsModal = true;
+            try {
+                const participants = await apiService.getCourseParticipants(course.id);
+                this.participantsList = Array.isArray(participants) ? participants : [];
+            } catch (e) {
+                console.error('Load participants error:', e);
+            }
+        },
+        
+        // Datum+Zeit formatieren
+        formatDateTime(dateStr) {
+            if (!dateStr) return '—';
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const months = ['Jan.', 'Feb.', 'Mär.', 'Apr.', 'Mai', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}. ${month} ${year}, ${hours}:${minutes}`;
+        },
+        
+        // Schüler: Für Kurs anmelden
+        async bookCourse(course) {
+            try {
+                const res = await apiService.bookCourse(course.id);
+                if (res.success) {
+                    alert('Erfolgreich angemeldet!');
+                    await this.loadCourses();
+                } else {
+                    alert('Anmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Book course error:', e);
+                alert('Anmeldung fehlgeschlagen.');
+            }
+        },
+        
+        // Schüler: Von Kurs abmelden
+        async cancelBooking(course) {
+            const ok = await notify.confirm('Wirklich vom Kurs abmelden?');
+            if (!ok) return;
+            try {
+                const res = await apiService.cancelCourseBooking(course.id);
+                if (res.success) {
+                    alert('Erfolgreich abgemeldet.');
+                    await this.loadCourses();
+                } else {
+                    alert('Abmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Cancel booking error:', e);
+                alert('Abmeldung fehlgeschlagen.');
+            }
+        },
+        
+        // Prüfen ob Abmeldung noch möglich (mind. 1 Tag vorher)
+        canCancelBooking(course) {
+            if (!course || !course.date) return false;
+            const courseDate = new Date(course.date);
+            courseDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffDays = Math.floor((courseDate - today) / (1000 * 60 * 60 * 24));
+            return diffDays >= 1;
         },
 
         // Validierung
@@ -1953,7 +2405,7 @@ const app = createApp({
         }
     },
     
-        mounted() {
+        async mounted() {
             // Lade gespeicherte Einstellungen (nur Deutsch)
             this.currentLanguage = readLanguage('de');
             persistLanguage(this.currentLanguage);
@@ -1964,28 +2416,23 @@ const app = createApp({
             if (isAuthenticated && user) {
                 this.isLoggedIn = true;
                 
-                // Setze Benutzer basierend auf Authentifizierungsmethode
-                if (user.authMethod === 'passkey') {
-                    // Für Passkey-Benutzer: Admin-Rechte
-                    this.currentUser = {
-                        ...demoData.user,
-                        username: user.username,
-                        role: 'admin'
-                    };
-                } else {
-                    // Für normale Anmeldung: Rolle aus Login-Daten
-                    this.currentUser = {
-                        ...demoData.user,
-                        username: user.username,
-                        role: user.role
-                    };
-                }
+                // Behalte ID aus localStorage, verwende demoData nur für Fallback-Felder
+                this.currentUser = {
+                    ...demoData.user,
+                    ...user, // Überschreibt mit gespeicherten Daten (inkl. id, role, username)
+                };
+                
+                // Lade Daten nach dem Login
+                await this.loadExams();
+                await this.loadCourses();
             } else {
                 // Fallback zu altem System
                 const savedUsername = getCachedUsername();
                 if (savedUsername) {
                     this.isLoggedIn = true;
                     this.currentUser = demoData.user;
+                    await this.loadExams();
+                    await this.loadCourses();
                 }
             }
         }

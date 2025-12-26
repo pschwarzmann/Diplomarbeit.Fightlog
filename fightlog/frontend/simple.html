@@ -897,6 +897,7 @@
                     // Speichere Authentifizierung
                     localStorage.setItem('fightlog_authenticated', 'true');
                     localStorage.setItem('fightlog_user', JSON.stringify({
+                        id: 1, // Admin ID
                         username: username,
                         role: 'admin', // Standardrolle für Passkey-Benutzer
                         authMethod: 'passkey'
@@ -984,6 +985,7 @@
                 // Registrierter Benutzer gefunden
                 localStorage.setItem('fightlog_authenticated', 'true');
                 localStorage.setItem('fightlog_user', JSON.stringify({
+                    id: registeredUser.id || null,
                     username: registeredUser.username,
                     role: registeredUser.role,
                     email: registeredUser.email,
@@ -997,9 +999,9 @@
             
             // Fallback zu Test-Logins
             const validLogins = [
-                { username: 'admin', password: 'admin123', role: 'admin' },
-                { username: 'trainer', password: 'trainer123', role: 'trainer' },
-                { username: 'schueler', password: 'schueler123', role: 'schueler' }
+                { username: 'admin', password: 'admin123', role: 'admin', id: 1 },
+                { username: 'trainer', password: 'trainer123', role: 'trainer', id: 2 },
+                { username: 'schueler', password: 'schueler123', role: 'schueler', id: 3 }
             ];
             
             const validLogin = validLogins.find(login => 
@@ -1010,6 +1012,7 @@
                 // Speichere Authentifizierung
                 localStorage.setItem('fightlog_authenticated', 'true');
                 localStorage.setItem('fightlog_user', JSON.stringify({
+                    id: validLogin.id,
                     username: validLogin.username,
                     role: validLogin.role,
                     authMethod: 'password'

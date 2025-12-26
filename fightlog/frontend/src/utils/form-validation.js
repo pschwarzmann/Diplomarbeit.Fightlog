@@ -193,10 +193,18 @@
         
         // Validiere "Schüler zuordnen" Felder (Vue.js spezifisch)
         // Diese haben kein required Attribut, aber müssen userIds haben
+        // AUSNAHME: Wenn das Label "(optional)" enthält, ist die Validierung nicht erforderlich
         const studentAssignmentGroups = form.querySelectorAll('.form-group');
         studentAssignmentGroups.forEach(formGroup => {
             const label = formGroup.querySelector('label');
             if (label && label.textContent.trim().includes('Schüler zuordnen')) {
+                // Prüfe ob das Feld als optional markiert ist
+                const isOptional = label.textContent.toLowerCase().includes('optional');
+                if (isOptional) {
+                    // Optional - keine Validierung erforderlich
+                    return;
+                }
+                
                 // Finde das zugehörige Input-Feld
                 const input = formGroup.querySelector('input[type="text"]');
                 if (input) {
