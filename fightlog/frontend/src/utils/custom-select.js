@@ -19,7 +19,6 @@
             const isCalendarIndicator = target.classList.contains('cdp-indicator') || target.closest('.cdp-indicator');
             const clickedOnFormElement = target.tagName === 'INPUT' || 
                                        target.tagName === 'TEXTAREA' || 
-                                       target.tagName === 'SELECT' ||
                                        target.closest('.cdp-input-wrap') ||
                                        target.closest('.cdp-root');
             
@@ -27,19 +26,17 @@
             const clickedOnMenu = target.closest('.cs-menu');
             const clickedOnTrigger = target.closest('.cs-trigger');
             const clickedOnOption = target.closest('.cs-option');
-            const clickedOnOpenDropdown = clickedDropdown && clickedDropdown.classList.contains('open');
             
-            // Schließe NICHT wenn:
-            // - Klick auf ein offenes Dropdown (Trigger, Option oder Menu)
-            if (clickedOnMenu || (clickedOnTrigger && clickedOnOpenDropdown) || (clickedOnOption && clickedOnOpenDropdown)) {
-                return; // Nicht schließen
+            // WICHTIG: Wenn auf Trigger oder Option geklickt wurde, NICHT schließen
+            // Der Click-Handler des Elements wird das selbst regeln
+            if (clickedOnTrigger || clickedOnOption || clickedOnMenu) {
+                return; // Nicht schließen - lasse den Element-Handler arbeiten
             }
             
             // Schließe alle offenen Dropdowns wenn:
             // 1. Auf ein Form-Element geklickt wurde (Textfeld, Kalender, etc.)
             // 2. Außerhalb aller Dropdowns geklickt wurde
-            // 3. Auf ein anderes (nicht offenes) Dropdown geklickt wurde
-            if (clickedOnFormElement || !clickedDropdown || !clickedOnOpenDropdown) {
+            if (clickedOnFormElement || !clickedDropdown) {
                 // Bei Kalender-Indikator: Asynchron schließen, damit der Kalender-Event-Handler zuerst ausgeführt wird
                 // Der Kalender-Indikator hat stopPropagation, also müssen wir warten bis der Event verarbeitet wurde
                 if (isCalendarIndicator) {

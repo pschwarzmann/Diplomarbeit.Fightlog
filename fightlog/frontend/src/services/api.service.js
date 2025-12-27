@@ -118,6 +118,22 @@ export const apiService = {
         });
     },
 
+    updateGoal(goalData) {
+        return request('/goals.php', {
+            method: 'PUT',
+            headers: jsonHeaders,
+            body: JSON.stringify(goalData)
+        });
+    },
+
+    deleteGoal(goalId) {
+        return request('/goals.php', {
+            method: 'DELETE',
+            headers: jsonHeaders,
+            body: JSON.stringify({ id: goalId })
+        });
+    },
+
     getUsers() {
         return request('/users.php');
     },

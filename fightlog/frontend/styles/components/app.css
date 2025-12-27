@@ -641,6 +641,10 @@ input[type="date"].form-control:focus {
     z-index: 1; /* Basis z-index für Dropdown-Kontext */
 }
 
+.cs-select.open {
+    z-index: 9999; /* Höherer z-index wenn offen, damit es über anderen Elementen liegt */
+}
+
 .cs-trigger {
     width: 100%;
     text-align: left;

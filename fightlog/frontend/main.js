@@ -424,7 +424,7 @@ const app = createApp({
                                     
                                     
                                     <div class="form-row">
-                                        <div class="form-group">
+                                        <div class="form-group" style="position: relative; z-index: 100;">
                                             <label>{{ t('examCategory') }}</label>
                                             <select v-model="examForm.category" class="form-control" required>
                                                 <option value="">{{ t('examCategory') }}</option>
@@ -606,8 +606,8 @@ const app = createApp({
                                  <h1>{{ t('goals') }}</h1>
                              </div>
                             
-                            <!-- Neues Ziel hinzufügen -->
-                            <div class="form-container">
+                            <!-- Neues Ziel hinzufügen (nur für Schüler und Trainer, nicht für Admins) -->
+                            <div v-if="currentUser && currentUser.role !== 'admin'" class="form-container">
                                 <h2>Neues Ziel hinzufügen</h2>
                                 <form @submit.prevent="addGoal">
                                     <div class="form-row">
@@ -623,7 +623,7 @@ const app = createApp({
                                     </div>
                                     
                                     <div class="form-row">
-                                        <div class="form-group">
+                                        <div class="form-group" style="position: relative; z-index: 100;">
                                             <label>Kategorie</label>
                                             <select v-model="goalForm.category" class="form-control" required>
                                                 <option value="">Kategorie wählen</option>
@@ -646,32 +646,90 @@ const app = createApp({
                                 </form>
                             </div>
                             
-                            <!-- Ziele Liste -->
-                            <div class="nav-grid">
-                                <div 
-                                    v-for="goal in goals" 
-                                    :key="goal.id" 
-                                    class="nav-card"
-                                    style="text-align: left;"
-                                >
-                                    <h3>{{ goal.title }}</h3>
-                                    <p><strong>Kategorie:</strong> {{ goal.category }}</p>
-                                    <p><strong>Zieldatum:</strong> {{ goal.targetDate }}</p>
-                                    <p><strong>Status:</strong> {{ goal.status }}</p>
-                                    
-                                    <div style="margin-top: 1rem;">
-                                        <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                                            <div 
-                                                :style="{ 
-                                                    background: goal.progress >= 100 ? '#10b981' : '#3b82f6', 
-                                                    width: Math.min(goal.progress, 100) + '%', 
-                                                    height: '100%' 
-                                                }"
-                                            ></div>
+                            <!-- Ausstehende Ziele -->
+                            <div class="form-container" style="margin-top: 1.5rem;">
+                                <h2><i class="fas fa-clock" style="color: #f59e0b;"></i> Ausstehende Ziele</h2>
+                                <div v-if="pendingGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
+                                    Keine ausstehenden Ziele vorhanden.
+                                </div>
+                                <div class="nav-grid" v-else>
+                                    <div 
+                                        v-for="goal in pendingGoals" 
+                                        :key="goal.id" 
+                                        class="nav-card"
+                                        style="text-align: left; cursor: pointer;"
+                                        @click="openGoalTasks(goal)"
+                                    >
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <h3>{{ goal.title }}</h3>
+                                            <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
-                                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                                            {{ goal.progress }}% abgeschlossen
+                                        <p v-if="currentUser && currentUser.role === 'admin'" style="color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                                            <i class="fas fa-user"></i> {{ goal.ownerName || 'Unbekannt' }} <span v-if="goal.ownerUsername">(@{{ goal.ownerUsername }})</span>
                                         </p>
+                                        <p><strong>Kategorie:</strong> {{ goal.category }}</p>
+                                        <p><strong>Zieldatum:</strong> {{ formatDate(goal.targetDate) }}</p>
+                                        
+                                        <div style="margin-top: 1rem;">
+                                            <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div 
+                                                    :style="{ 
+                                                        background: '#3b82f6', 
+                                                        width: Math.min(goal.progress, 100) + '%', 
+                                                        height: '100%' 
+                                                    }"
+                                                ></div>
+                                            </div>
+                                            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                                {{ goal.progress }}% abgeschlossen
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Erreichte Ziele -->
+                            <div class="form-container" style="margin-top: 1.5rem;">
+                                <h2><i class="fas fa-check-circle" style="color: #10b981;"></i> Erreichte Ziele</h2>
+                                <div v-if="completedGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
+                                    Noch keine Ziele erreicht.
+                                </div>
+                                <div class="nav-grid" v-else>
+                                    <div 
+                                        v-for="goal in completedGoals" 
+                                        :key="goal.id" 
+                                        class="nav-card"
+                                        style="text-align: left; border-left: 4px solid #10b981;"
+                                    >
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <h3>{{ goal.title }}</h3>
+                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <p v-if="currentUser && currentUser.role === 'admin'" style="color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                                            <i class="fas fa-user"></i> {{ goal.ownerName || 'Unbekannt' }} <span v-if="goal.ownerUsername">(@{{ goal.ownerUsername }})</span>
+                                        </p>
+                                        <p><strong>Kategorie:</strong> {{ goal.category }}</p>
+                                        <p><strong>Zieldatum:</strong> {{ formatDate(goal.targetDate) }}</p>
+                                        <p><strong>Status:</strong> <span style="color: #10b981;"><i class="fas fa-check"></i> Erreicht</span></p>
+                                        
+                                        <div style="margin-top: 1rem;">
+                                            <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div 
+                                                    :style="{ 
+                                                        background: '#10b981', 
+                                                        width: '100%', 
+                                                        height: '100%' 
+                                                    }"
+                                                ></div>
+                                            </div>
+                                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #10b981;">
+                                                <i class="fas fa-trophy"></i> 100% abgeschlossen
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1114,6 +1172,55 @@ const app = createApp({
                     </div>
                 </div>
 
+                <!-- Ziel-Aufgaben Modal -->
+                <div v-if="showGoalTasksModal" class="modal-overlay" @click.self="showGoalTasksModal = false">
+                    <div class="modal-content form-container" style="max-width:500px;">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2><i class="fas fa-tasks" style="color: #3b82f6;"></i> Aufgaben</h2>
+                            <button @click="showGoalTasksModal = false" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p v-if="goalTasksModalGoal" style="color:#64748b; margin-bottom:1rem;">
+                            <strong>{{ goalTasksModalGoal.title }}</strong> - {{ goalTasksModalGoal.category }}
+                        </p>
+                        <div v-if="goalTasks.length === 0" style="color:#64748b; padding: 1rem 0;">
+                            Keine Aufgaben für dieses Ziel definiert.
+                        </div>
+                        <div v-else>
+                            <div v-for="(task, index) in goalTasks" :key="index" 
+                                 style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; cursor: pointer;"
+                                 @click="toggleGoalTask(index)">
+                                <div :style="{
+                                    width: '24px', height: '24px', borderRadius: '6px', 
+                                    border: task.completed ? 'none' : '2px solid #cbd5e1',
+                                    background: task.completed ? '#10b981' : 'transparent',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0
+                                }">
+                                    <i v-if="task.completed" class="fas fa-check" style="color: white; font-size: 0.75rem;"></i>
+                                </div>
+                                <span :style="{ textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? '#94a3b8' : '#1e293b' }">
+                                    {{ task.title }}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="font-weight: 600;">Fortschritt:</span>
+                                <span style="color: #3b82f6; font-weight: 600;">{{ calculateGoalProgress() }}%</span>
+                            </div>
+                            <div style="background: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden;">
+                                <div :style="{ background: calculateGoalProgress() >= 100 ? '#10b981' : '#3b82f6', width: calculateGoalProgress() + '%', height: '100%', transition: 'width 0.3s ease' }"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" @click="saveGoalTasks">Speichern</button>
+                            <button class="btn btn-secondary" @click="showGoalTasksModal = false">Abbrechen</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Admin-Bereich -->
                 <div v-else-if="currentPage === 'admin' && currentUser && currentUser.role === 'admin'">
                     <div style="padding: 2rem 0;">
@@ -1354,7 +1461,11 @@ const app = createApp({
             // Teilnehmer anzeigen Modal
             showParticipantsModal: false,
             participantsModalCourse: null,
-            participantsList: []
+            participantsList: [],
+            // Ziel-Aufgaben Modal
+            showGoalTasksModal: false,
+            goalTasksModalGoal: null,
+            goalTasks: []
         }
     },
     
@@ -1461,6 +1572,14 @@ const app = createApp({
                 if (isNaN(courseDate.getTime())) return false;
                 return courseDate >= today;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
+        },
+        // Ausstehende Ziele (in_progress, nicht cancelled)
+        pendingGoals() {
+            return this.goals.filter(g => g.status === 'in_progress');
+        },
+        // Erreichte Ziele (completed)
+        completedGoals() {
+            return this.goals.filter(g => g.status === 'completed');
         }
     },
     
@@ -1779,6 +1898,19 @@ const app = createApp({
         // Prüfungen
         async addExam() {
             try {
+                // Prüfe ob Datum in der Zukunft liegt
+                if (this.examForm.date) {
+                    // Parse als lokales Datum (YYYY-MM-DD)
+                    const parts = this.examForm.date.split('-');
+                    const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    examDate.setHours(0, 0, 0, 0);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (examDate > today) {
+                        alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                        return;
+                    }
+                }
                 const targetIds = (this.examForm.userIds && this.examForm.userIds.length)
                     ? this.examForm.userIds
                     : (this.examForm.userId ? [this.examForm.userId] : []);
@@ -1857,6 +1989,19 @@ const app = createApp({
         },
         async saveExamEdit() {
             try {
+                // Prüfe ob Datum in der Zukunft liegt
+                if (this.examEditForm.date) {
+                    // Parse als lokales Datum (YYYY-MM-DD)
+                    const parts = this.examEditForm.date.split('-');
+                    const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    examDate.setHours(0, 0, 0, 0);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (examDate > today) {
+                        alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                        return;
+                    }
+                }
                 const res = await apiService.updateExam({
                     id: this.examEditForm.id,
                     userId: this.examEditForm.userId,
@@ -1951,10 +2096,87 @@ const app = createApp({
             }
         },
         
+        async deleteGoal(goal) {
+            const ok = await notify.confirm('Dieses Ziel wirklich löschen?');
+            if (!ok) return;
+            try {
+                const res = await apiService.deleteGoal(goal.id);
+                if (res.success) {
+                    this.goals = this.goals.filter(g => g.id !== goal.id);
+                } else {
+                    alert('Fehler beim Löschen: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Delete goal error:', e);
+                alert('Fehler beim Löschen des Ziels');
+            }
+        },
+        
+        // Ziel-Aufgaben Modal öffnen
+        openGoalTasks(goal) {
+            this.goalTasksModalGoal = goal;
+            // Lade gespeicherte Aufgaben aus localStorage oder erstelle leere Liste
+            const savedTasks = localStorage.getItem(`fightlog_goal_tasks_${goal.id}`);
+            if (savedTasks) {
+                this.goalTasks = JSON.parse(savedTasks);
+            } else {
+                // Leere Aufgabenliste - wird später mit konkreten Aufgaben gefüllt
+                this.goalTasks = [];
+            }
+            this.showGoalTasksModal = true;
+        },
+        
+        // Aufgabe toggle
+        toggleGoalTask(index) {
+            this.goalTasks[index].completed = !this.goalTasks[index].completed;
+        },
+        
+        // Fortschritt berechnen basierend auf erledigten Aufgaben
+        calculateGoalProgress() {
+            if (!this.goalTasks || this.goalTasks.length === 0) return 0;
+            const completed = this.goalTasks.filter(t => t.completed).length;
+            return Math.round((completed / this.goalTasks.length) * 100);
+        },
+        
+        // Aufgaben speichern und Progress aktualisieren
+        async saveGoalTasks() {
+            if (!this.goalTasksModalGoal) return;
+            
+            const goalId = this.goalTasksModalGoal.id;
+            const newProgress = this.calculateGoalProgress();
+            
+            // Speichere Aufgaben lokal
+            localStorage.setItem(`fightlog_goal_tasks_${goalId}`, JSON.stringify(this.goalTasks));
+            
+            // Aktualisiere Progress im Backend
+            try {
+                const res = await apiService.updateGoal({ id: goalId, progress: newProgress });
+                if (res.success) {
+                    // Aktualisiere lokale Ziele-Liste
+                    const goalIndex = this.goals.findIndex(g => g.id === goalId);
+                    if (goalIndex !== -1) {
+                        this.goals[goalIndex].progress = newProgress;
+                        // Wenn 100% erreicht, Status auf completed setzen
+                        if (newProgress >= 100) {
+                            this.goals[goalIndex].status = 'completed';
+                        }
+                    }
+                    this.showGoalTasksModal = false;
+                    // Lade Ziele neu um sicherzustellen dass alles synchron ist
+                    await this.loadGoals();
+                } else {
+                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Save goal tasks error:', e);
+                alert('Fehler beim Speichern der Aufgaben');
+            }
+        },
+        
         async loadGoals() {
             try {
-                const uid = (this.currentUser && this.currentUser.role === 'schueler') ? this.currentUser.id : null;
-                this.goals = await apiService.getGoals(uid);
+                // Alle Rollen (auch Trainer) laden jetzt nur ihre eigenen Ziele - Backend regelt das
+                this.goals = await apiService.getGoals();
             } catch (error) {
                 console.error('Load goals error:', error);
             }
