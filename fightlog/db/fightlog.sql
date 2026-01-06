@@ -169,6 +169,8 @@ CREATE INDEX idx_users_last_name ON users(last_name);
 
 
 -- Beispiel-Daten (optional)
+-- WICHTIG: Die Passwort-Hashes werden nach dem INSERT mit UPDATE-Statements gesetzt
+-- Standard-Passwörter: admin123, trainer123, schueler123, test123 (für alle anderen)
 INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, school, belt_level, verified_trainer) VALUES
 ('admin', 'admin@fightlog.com', '$2y$10$dummyhash', 'admin', 'Admin Trainer', 'Admin', 'Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 5. Dan - Meister', 1),
 ('trainer', 'trainer@fightlog.com', '$2y$10$dummyhash', 'trainer', 'Tom Trainer', 'Tom', 'Trainer', 'Kampfsport Akademie Berlin', 'Schwarzgurt 2. Dan', 1),
@@ -178,6 +180,15 @@ INSERT INTO users (username, email, password_hash, role, name, first_name, last_
 ('patrick', 'patrick.mueller@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Patrick Müller', 'Patrick', 'Müller', 'Kampfsport Akademie Berlin', 'Orangegurt', 0),
 ('peter', 'peter.schmidt@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Peter Schmidt', 'Peter', 'Schmidt', 'Kampfsport Akademie Berlin', 'Grüngurt', 0),
 ('sophia', 'sophia.schneider@fightlog.com', '$2y$10$dummyhash', 'schueler', 'Sophia Schneider', 'Sophia', 'Schneider', 'Kampfsport Akademie Berlin', 'Blaugurt', 0);
+
+-- Passwort-Hashes setzen (echte BCRYPT-Hashes)
+-- Passwörter: admin123, trainer123, schueler123, test123 (für alle anderen)
+-- HINWEIS: Diese Hashes müssen mit password_hash() generiert werden
+-- Führe nach dem Import das Skript db/generate-passwords.php aus oder setze die Hashes manuell
+-- Beispiel-Update (ersetze die Hashes mit echten Werten):
+-- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'admin';
+-- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'trainer';
+-- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'schueler';
 
 -- Basisrechte
 INSERT INTO permissions (`key`, label) VALUES

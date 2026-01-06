@@ -60,6 +60,42 @@ if ($method === 'POST') {
         json_out(['success'=>true]);
     }
 
+    if ($action === 'changePassword') {
+        // Passwortänderung durch Admin
+        require_fields($body, ['id', 'newPassword']);
+        
+        // Prüfe, ob der aufrufende Benutzer Admin ist
+        $currentUserId = auth_user_id($mysqli);
+        if (!$currentUserId) {
+            json_out(['success'=>false, 'error'=>'Nicht authentifiziert'], 401);
+        }
+        
+        $currentUserRole = auth_user_role($mysqli);
+        if ($currentUserRole !== 'admin') {
+            json_out(['success'=>false, 'error'=>'Nur Administratoren können Passwörter ändern'], 403);
+        }
+        
+        // Prüfe, ob Benutzer existiert
+        $checkStmt = $mysqli->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+        $checkStmt->bind_param('i', $body['id']);
+        $checkStmt->execute();
+        $userExists = $checkStmt->get_result()->fetch_assoc();
+        if (!$userExists) {
+            json_out(['success'=>false, 'error'=>'Benutzer nicht gefunden'], 404);
+        }
+        
+        // Passwort sicher hashen
+        $hash = password_hash($body['newPassword'], PASSWORD_BCRYPT);
+        
+        // Passwort in Datenbank aktualisieren
+        $stmt = $mysqli->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        $stmt->bind_param('si', $hash, $body['id']);
+        if (!$stmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Passwort-Update fehlgeschlagen: '.$stmt->error], 500);
+        }
+        json_out(['success'=>true, 'message'=>'Passwort erfolgreich geändert']);
+    }
+
     json_out(['success'=>false, 'error'=>'Unbekannte Aktion'], 400);
 }
 

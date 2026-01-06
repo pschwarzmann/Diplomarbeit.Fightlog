@@ -146,6 +146,22 @@ export const apiService = {
         });
     },
 
+    createUser(userData) {
+        return request('/register.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(userData)
+        });
+    },
+
+    changeUserPassword(userId, newPassword) {
+        return request('/users.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'changePassword', id: userId, newPassword: newPassword })
+        });
+    },
+
     getCourses() {
         return request('/courses.php');
     },

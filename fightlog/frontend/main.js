@@ -158,10 +158,14 @@ const app = createApp({
                                 </button>
                             </form>
                             
-                            <p style="text-align: center; margin-top: 1rem;">
+                            <!-- Registrierung nur für Admin verfügbar -->
+                            <p v-if="currentUser && currentUser.role === 'admin'" style="text-align: center; margin-top: 1rem;">
                                 <button type="button" class="btn btn-secondary" style="width:100%; border-radius:12px;" @click.prevent="showRegister = !showRegister">
                                     {{ showRegister ? t('login') : t('register') }}
                                 </button>
+                            </p>
+                            <p v-else-if="!isLoggedIn" style="text-align: center; margin-top: 1rem; color: #64748b; font-size: 0.9rem;">
+                                Registrierung nur für Administratoren verfügbar
                             </p>
                         </div>
                     </div>
@@ -1225,12 +1229,17 @@ const app = createApp({
                 <div v-else-if="currentPage === 'admin' && currentUser && currentUser.role === 'admin'">
                     <div style="padding: 2rem 0;">
                         <div class="container">
-                            <div class="page-header">
-                                <button @click="goToDashboard" class="back-btn">
-                                    <i class="fas fa-arrow-left"></i>
-                                    Zurück
+                            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <button @click="goToDashboard" class="back-btn">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Zurück
+                                    </button>
+                                    <h1 style="margin: 0;">{{ t('adminPanel') }}</h1>
+                                </div>
+                                <button @click="showCreateUserModal = true" class="btn btn-primary" style="width: auto;">
+                                    <i class="fas fa-user-plus"></i> Benutzer anlegen
                                 </button>
-                                <h1>{{ t('adminPanel') }}</h1>
                             </div>
 
                             <div class="form-container">
@@ -1264,7 +1273,36 @@ const app = createApp({
                                                         <option value="admin">Admin</option>
                                                     </select>
                                                 </div>
-                                                <div class="actions">
+                                                
+                                                <!-- Passwort-Änderung -->
+                                                <div class="form-group" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;">
+                                                        <i class="fas fa-key"></i> <strong>Passwort ändern:</strong>
+                                                    </label>
+                                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                        <input 
+                                                            type="password" 
+                                                            v-model="user._newPassword" 
+                                                            class="form-control" 
+                                                            placeholder="Neues Passwort"
+                                                            style="flex: 1; min-width: 150px;"
+                                                            @keyup.enter="changeUserPassword(user)"
+                                                        >
+                                                        <button 
+                                                            class="btn btn-secondary btn-sm" 
+                                                            @click="changeUserPassword(user)"
+                                                            :disabled="!user._newPassword || user._newPassword.length < 3"
+                                                            style="white-space: nowrap;"
+                                                        >
+                                                            <i class="fas fa-save"></i> Passwort ändern
+                                                        </button>
+                                                    </div>
+                                                    <p v-if="user._passwordChanged" style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem;">
+                                                        <i class="fas fa-check"></i> Passwort erfolgreich geändert
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="actions" style="margin-top: 1rem;">
                                                     <button class="btn btn-primary btn-sm" @click="saveUser(user)">{{ t('saveChanges') }}</button>
                                                     <button class="btn btn-danger btn-sm" @click="deleteUser(user)" aria-label="Benutzer löschen"><i class="fas fa-trash"></i></button>
                                                 </div>
@@ -1274,6 +1312,62 @@ const app = createApp({
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Benutzer erstellen (nur Admin) -->
+                <div v-if="showCreateUserModal" class="modal-overlay" @click.self="closeCreateUserModal">
+                    <div class="modal-content form-container" style="max-width: 500px; max-height: 90vh; overflow-y: auto;" @click.stop>
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2><i class="fas fa-user-plus"></i> Benutzer anlegen</h2>
+                            <button @click="closeCreateUserModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form @submit.prevent="createUser">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Vorname *</label>
+                                    <input type="text" v-model="createUserForm.firstName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nachname *</label>
+                                    <input type="text" v-model="createUserForm.lastName" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Benutzername *</label>
+                                <input type="text" v-model="createUserForm.username" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>E-Mail *</label>
+                                <input type="email" v-model="createUserForm.email" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Passwort *</label>
+                                <input type="password" v-model="createUserForm.password" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Rolle *</label>
+                                <select v-model="createUserForm.role" class="form-control" required>
+                                    <option value="schueler">Schüler</option>
+                                    <option value="trainer">Trainer</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Schule (optional)</label>
+                                <input type="text" v-model="createUserForm.school" class="form-control" placeholder="Kampfsport Akademie Berlin">
+                            </div>
+                            <div class="form-group">
+                                <label>Gürtelgrad (optional)</label>
+                                <input type="text" v-model="createUserForm.beltLevel" class="form-control" placeholder="z.B. Weißgurt">
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                                <button type="submit" class="btn btn-primary">Benutzer erstellen</button>
+                                <button type="button" class="btn btn-secondary" @click="closeCreateUserModal">Abbrechen</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </main>
@@ -1329,6 +1423,7 @@ const app = createApp({
             showRegister: false,
             showPassword: false,
             showPasskeyModal: false,
+            showCreateUserModal: false,
             
             // Navigation
             currentPage: 'dashboard',
@@ -1390,6 +1485,16 @@ const app = createApp({
             // Admin
             adminUserList: [],
             adminSearch: '',
+            createUserForm: {
+                username: '',
+                email: '',
+                password: '',
+                firstName: '',
+                lastName: '',
+                role: 'schueler',
+                school: '',
+                beltLevel: ''
+            },
             adminPermissionsList: [
                 { key: 'manage_users', label: 'Benutzer verwalten' },
                 { key: 'view_all_data', label: 'Alle Daten einsehen' },
@@ -2186,10 +2291,12 @@ const app = createApp({
         async loadUsers() {
             try {
                 const users = await apiService.getUsers();
-                // Stelle sicher, dass jeder User eine _open-Property hat
+                // Stelle sicher, dass jeder User die benötigten Properties hat
                 this.adminUserList = users.map(user => ({
                     ...user,
-                    _open: user._open || false
+                    _open: user._open || false,
+                    _newPassword: user._newPassword || '',
+                    _passwordChanged: user._passwordChanged || false
                 }));
             } catch (error) {
                 console.error('Load users error:', error);
@@ -2224,6 +2331,36 @@ const app = createApp({
                 alert('Speichern fehlgeschlagen');
             }
         },
+        closeCreateUserModal() {
+            this.showCreateUserModal = false;
+            // Formular zurücksetzen
+            this.createUserForm = {
+                username: '',
+                email: '',
+                password: '',
+                firstName: '',
+                lastName: '',
+                role: 'schueler',
+                school: '',
+                beltLevel: ''
+            };
+        },
+        async createUser() {
+            try {
+                const res = await apiService.createUser(this.createUserForm);
+                if (res.success) {
+                    alert('Benutzer erfolgreich erstellt.');
+                    this.closeCreateUserModal();
+                    // Benutzerliste neu laden
+                    await this.loadUsers();
+                } else {
+                    alert('Fehler: ' + (res.error || 'Benutzer konnte nicht erstellt werden'));
+                }
+            } catch (e) {
+                console.error('Create user error:', e);
+                alert('Fehler beim Erstellen des Benutzers');
+            }
+        },
         addPasskey(user) {
             const key = (user._newPasskey || '').trim();
             if (!key) return;
@@ -2242,6 +2379,31 @@ const app = createApp({
             // Platzhalter: entfernt den Benutzer lokal aus der Liste
             this.adminUserList = this.adminUserList.filter(u => u.id !== user.id);
             alert('Benutzer gelöscht (Platzhalter).');
+        },
+        async changeUserPassword(user) {
+            if (!user._newPassword || user._newPassword.length < 3) {
+                alert('Passwort muss mindestens 3 Zeichen lang sein');
+                return;
+            }
+            
+            try {
+                const res = await apiService.changeUserPassword(user.id, user._newPassword);
+                if (res.success) {
+                    // Erfolgs-Feedback
+                    user._passwordChanged = true;
+                    user._newPassword = ''; // Feld leeren
+                    
+                    // Nach 3 Sekunden Erfolgsmeldung ausblenden
+                    setTimeout(() => {
+                        user._passwordChanged = false;
+                    }, 3000);
+                } else {
+                    alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
+                }
+            } catch (e) {
+                console.error('Change password error:', e);
+                alert('Fehler beim Ändern des Passworts');
+            }
         },
         
         // Daten laden
