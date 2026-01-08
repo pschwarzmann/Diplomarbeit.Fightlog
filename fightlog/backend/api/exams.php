@@ -8,11 +8,9 @@ try {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
+$viewerId = auth_user_id($mysqli);
 
 if ($method === 'GET'){
-    $viewerId = auth_user_id($mysqli);
-    $viewerRole = auth_user_role($mysqli);
-
     // SQL mit JOIN für Schülername
     $baseSelect = "SELECT e.id, e.user_id as userId, e.date, e.level, e.category, e.instructor, e.comments, e.status, 
                    CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as studentName, u.username as studentUsername
@@ -22,6 +20,12 @@ if ($method === 'GET'){
     // Wenn explizit eine userId angefragt wird
     if (isset($_GET['userId']) && $_GET['userId'] !== '') {
         $userId = (int)$_GET['userId'];
+        
+        // Berechtigungsprüfung: eigene oder fremde Daten?
+        if ($userId !== $viewerId && !has_permission($mysqli, 'view_all_exams')) {
+            json_error('Keine Berechtigung für fremde Prüfungen', 403);
+        }
+        
         $stmt = $mysqli->prepare($baseSelect . " WHERE e.user_id=? ORDER BY e.date DESC, e.id DESC");
         $stmt->bind_param('i',$userId);
         $stmt->execute();
@@ -29,8 +33,15 @@ if ($method === 'GET'){
         json_ok($rows);
     }
 
-    // Schüler sehen nur eigene Prüfungen (nur wenn Rolle explizit 'schueler' ist)
-    if ($viewerRole === 'schueler' && $viewerId) {
+    // Prüfe ob Benutzer alle Prüfungen sehen darf
+    if (has_permission($mysqli, 'view_all_exams')) {
+        $res = $mysqli->query($baseSelect . " ORDER BY e.date DESC, e.id DESC");
+        if (!$res) json_error('DB-Fehler: '.$mysqli->error, 500);
+        json_ok($res->fetch_all(MYSQLI_ASSOC));
+    }
+
+    // Sonst nur eigene Prüfungen
+    if ($viewerId && has_permission($mysqli, 'view_own_exams')) {
         $stmt = $mysqli->prepare($baseSelect . " WHERE e.user_id=? ORDER BY e.date DESC, e.id DESC");
         $stmt->bind_param('i',$viewerId);
         $stmt->execute();
@@ -38,15 +49,14 @@ if ($method === 'GET'){
         json_ok($rows);
     }
 
-    // Trainer/Admin oder unbekannte Rolle: alle Prüfungen anzeigen
-    $res = $mysqli->query($baseSelect . " ORDER BY e.date DESC, e.id DESC");
-    if (!$res) json_error('DB-Fehler: '.$mysqli->error, 500);
-    json_ok($res->fetch_all(MYSQLI_ASSOC));
+    json_error('Keine Berechtigung', 403);
 }
 
 if ($method === 'POST') {
+    require_permission($mysqli, 'create_exams');
+    
     $b = body_json();
-    if (empty($b['userId'])) { $b['userId'] = auth_user_id($mysqli) ?? 1; }
+    if (empty($b['userId'])) { $b['userId'] = $viewerId ?? 1; }
     foreach (['userId','date','level','category','instructor'] as $r) {
         if (!isset($b[$r]) || $b[$r]==='') json_error('Feld fehlt: '.$r, 400);
     }
@@ -65,6 +75,20 @@ if ($method === 'POST') {
 if ($method === 'PUT') {
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
+    
+    // Prüfungsbesitzer ermitteln
+    $ownerStmt = $mysqli->prepare("SELECT user_id FROM exams WHERE id = ? LIMIT 1");
+    $ownerStmt->bind_param('i', $b['id']);
+    $ownerStmt->execute();
+    $ownerResult = $ownerStmt->get_result()->fetch_assoc();
+    if (!$ownerResult) json_error('Prüfung nicht gefunden', 404);
+    $ownerId = (int)$ownerResult['user_id'];
+    
+    // Berechtigungsprüfung
+    if (!can_edit($mysqli, $ownerId, 'edit_own_exams', 'edit_all_exams')) {
+        json_error('Keine Berechtigung zum Bearbeiten', 403);
+    }
+    
     foreach (['userId','date','level','category','instructor'] as $r) {
         if (!isset($b[$r]) || $b[$r]==='') json_error('Feld fehlt: '.$r, 400);
     }
@@ -81,6 +105,8 @@ if ($method === 'PUT') {
 
 // DELETE: Prüfung löschen
 if ($method === 'DELETE') {
+    require_permission($mysqli, 'delete_exams');
+    
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
     $stmt = $mysqli->prepare("DELETE FROM exams WHERE id=?");

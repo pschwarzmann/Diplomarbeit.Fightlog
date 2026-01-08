@@ -8,6 +8,7 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../utils/response.php';
 require_once __DIR__ . '/../utils/request.php';
 require_once __DIR__ . '/../services/AuthService.php';
+require_once __DIR__ . '/../services/PermissionService.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -68,5 +69,44 @@ function auth_user_role(mysqli $mysqli): ?string
         return $row['role'];
     }
     return null;
+}
+
+/**
+ * Prüft ob der aktuelle Benutzer eine Berechtigung hat
+ */
+function has_permission(mysqli $mysqli, string $permissionKey): bool
+{
+    $userId = auth_user_id($mysqli);
+    if (!$userId) return false;
+    return PermissionService::hasPermission($mysqli, $userId, $permissionKey);
+}
+
+/**
+ * Erfordert eine Berechtigung, gibt 403 zurück wenn nicht vorhanden
+ */
+function require_permission(mysqli $mysqli, string $permissionKey): void
+{
+    $userId = auth_user_id($mysqli);
+    PermissionService::requirePermission($mysqli, $userId, $permissionKey);
+}
+
+/**
+ * Prüft ob der Benutzer eigene oder alle Daten bearbeiten darf
+ */
+function can_edit(mysqli $mysqli, int $ownerId, string $ownPermission, string $allPermission): bool
+{
+    $userId = auth_user_id($mysqli);
+    if (!$userId) return false;
+    return PermissionService::canEditResource($mysqli, $userId, $ownerId, $ownPermission, $allPermission);
+}
+
+/**
+ * Prüft ob der Benutzer eigene oder alle Daten sehen darf
+ */
+function can_view(mysqli $mysqli, int $ownerId, string $ownPermission, string $allPermission): bool
+{
+    $userId = auth_user_id($mysqli);
+    if (!$userId) return false;
+    return PermissionService::canViewResource($mysqli, $userId, $ownerId, $ownPermission, $allPermission);
 }
 

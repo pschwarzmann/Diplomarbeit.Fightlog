@@ -209,6 +209,37 @@ export const apiService = {
 
     getCourseParticipants(courseId) {
         return request(`/courses.php?action=participants&courseId=${courseId}`);
+    },
+
+    // Gruppen
+    getGroups() {
+        return request('/groups.php');
+    },
+
+    addGroup(groupData) {
+        return request('/groups.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(groupData)
+        });
+    },
+
+    updateGroup(groupData) {
+        return request('/groups.php', {
+            method: 'PUT',
+            headers: jsonHeaders,
+            body: JSON.stringify(groupData)
+        });
+    },
+
+    deleteGroup(groupId) {
+        return request(`/groups.php?id=${groupId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    getGroupMembers(groupId) {
+        return request(`/groups.php?action=members&group_id=${groupId}`);
     }
 };
 

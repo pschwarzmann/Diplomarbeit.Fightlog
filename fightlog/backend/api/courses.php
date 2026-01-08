@@ -69,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Kurs hinzufügen (Admin/Trainer)
     if ($action === 'add') {
+        require_permission($mysqli, 'create_courses');
         require_fields($body, ['title', 'date', 'instructor', 'duration', 'max_participants', 'price']);
         $desc = isset($body['description']) ? $body['description'] : null;
         $max = (int)$body['max_participants'];
@@ -104,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Kurs aktualisieren (Admin/Trainer)
     if ($action === 'update') {
+        require_permission($mysqli, 'edit_courses');
         require_fields($body, ['id', 'title']);
         $id = (int)$body['id'];
         $title = $body['title'];
@@ -134,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Kurs löschen (Admin/Trainer)
     if ($action === 'delete') {
+        require_permission($mysqli, 'delete_courses');
         require_fields($body, ['id']);
         $stmt = $mysqli->prepare("DELETE FROM special_courses WHERE id = ?");
         $stmt->bind_param('i', $body['id']);
@@ -145,53 +148,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Schüler meldet sich für Kurs an
     if ($action === 'book') {
+        require_permission($mysqli, 'book_courses');
         require_fields($body, ['courseId']);
         $courseId = (int)$body['courseId'];
         $bookUserId = $userId; // Aktueller User
         
-        // Prüfe ob Kurs existiert und Plätze frei sind
-        $checkStmt = $mysqli->prepare("SELECT max_participants, current_participants, date FROM special_courses WHERE id = ?");
-        $checkStmt->bind_param('i', $courseId);
-        $checkStmt->execute();
-        $course = $checkStmt->get_result()->fetch_assoc();
+        // Transaktion starten für Race-Condition-Schutz
+        $mysqli->begin_transaction();
         
-        if (!$course) {
-            json_out(['success' => false, 'error' => 'Kurs nicht gefunden'], 404);
+        try {
+            // Kurs mit FOR UPDATE sperren um Race Conditions zu verhindern
+            $checkStmt = $mysqli->prepare("SELECT max_participants, current_participants, date FROM special_courses WHERE id = ? FOR UPDATE");
+            $checkStmt->bind_param('i', $courseId);
+            $checkStmt->execute();
+            $course = $checkStmt->get_result()->fetch_assoc();
+            
+            if (!$course) {
+                $mysqli->rollback();
+                json_out(['success' => false, 'error' => 'Kurs nicht gefunden'], 404);
+            }
+        
+            if ($course['current_participants'] >= $course['max_participants']) {
+                $mysqli->rollback();
+                json_out(['success' => false, 'error' => 'Keine freien Plätze mehr'], 400);
+            }
+            
+            // Prüfe ob bereits gebucht
+            $existsStmt = $mysqli->prepare("SELECT id, status FROM course_bookings WHERE course_id = ? AND user_id = ?");
+            $existsStmt->bind_param('ii', $courseId, $bookUserId);
+            $existsStmt->execute();
+            $existing = $existsStmt->get_result()->fetch_assoc();
+            
+            if ($existing && $existing['status'] !== 'cancelled') {
+                $mysqli->rollback();
+                json_out(['success' => false, 'error' => 'Bereits angemeldet'], 400);
+            }
+            
+            // Buchung erstellen oder reaktivieren
+            if ($existing) {
+                $stmt = $mysqli->prepare("UPDATE course_bookings SET status = 'confirmed', booking_date = NOW() WHERE id = ?");
+                $stmt->bind_param('i', $existing['id']);
+            } else {
+                $stmt = $mysqli->prepare("INSERT INTO course_bookings (course_id, user_id, status) VALUES (?, ?, 'confirmed')");
+                $stmt->bind_param('ii', $courseId, $bookUserId);
+            }
+            
+            if (!$stmt->execute()) {
+                $mysqli->rollback();
+                json_out(['success' => false, 'error' => 'Buchung fehlgeschlagen: ' . $stmt->error], 500);
+            }
+            
+            // Update current_participants
+            $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+            $updateStmt->bind_param('ii', $courseId, $courseId);
+            $updateStmt->execute();
+            
+            // Transaktion erfolgreich abschließen
+            $mysqli->commit();
+            json_out(['success' => true]);
+            
+        } catch (Exception $e) {
+            $mysqli->rollback();
+            json_out(['success' => false, 'error' => 'Buchung fehlgeschlagen: ' . $e->getMessage()], 500);
         }
-        
-        if ($course['current_participants'] >= $course['max_participants']) {
-            json_out(['success' => false, 'error' => 'Keine freien Plätze mehr'], 400);
-        }
-        
-        // Prüfe ob bereits gebucht
-        $existsStmt = $mysqli->prepare("SELECT id, status FROM course_bookings WHERE course_id = ? AND user_id = ?");
-        $existsStmt->bind_param('ii', $courseId, $bookUserId);
-        $existsStmt->execute();
-        $existing = $existsStmt->get_result()->fetch_assoc();
-        
-        if ($existing && $existing['status'] !== 'cancelled') {
-            json_out(['success' => false, 'error' => 'Bereits angemeldet'], 400);
-        }
-        
-        // Buchung erstellen oder reaktivieren
-        if ($existing) {
-            $stmt = $mysqli->prepare("UPDATE course_bookings SET status = 'confirmed', booking_date = NOW() WHERE id = ?");
-            $stmt->bind_param('i', $existing['id']);
-        } else {
-            $stmt = $mysqli->prepare("INSERT INTO course_bookings (course_id, user_id, status) VALUES (?, ?, 'confirmed')");
-            $stmt->bind_param('ii', $courseId, $bookUserId);
-        }
-        
-        if (!$stmt->execute()) {
-            json_out(['success' => false, 'error' => 'Buchung fehlgeschlagen: ' . $stmt->error], 500);
-        }
-        
-        // Update current_participants
-        $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
-        $updateStmt->bind_param('ii', $courseId, $courseId);
-        $updateStmt->execute();
-        
-        json_out(['success' => true]);
     }
 
     // Schüler meldet sich von Kurs ab

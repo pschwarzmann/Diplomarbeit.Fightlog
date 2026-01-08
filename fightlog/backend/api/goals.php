@@ -2,21 +2,9 @@
 require_once __DIR__ . '/../core/bootstrap.php';
 $mysqli = db();
 $method = $_SERVER['REQUEST_METHOD'];
-
-function get_user_role($mysqli, $uid){
-    if (!$uid) return null;
-    $stmt = $mysqli->prepare("SELECT role FROM users WHERE id=? LIMIT 1");
-    $stmt->bind_param('i',$uid);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) return $row['role'];
-    return null;
-}
+$viewerId = auth_user_id($mysqli);
 
 if ($method === 'GET'){
-    $viewerId = auth_user_id($mysqli);
-    $viewerRole = get_user_role($mysqli, $viewerId);
-
     // SQL mit JOIN für Benutzername/Name
     $baseSelect = "SELECT g.id, g.user_id as userId, g.title, g.target_date as targetDate, g.progress, g.category, g.status,
                    CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as ownerName, u.username as ownerUsername
@@ -25,6 +13,12 @@ if ($method === 'GET'){
 
     if (isset($_GET['userId']) && $_GET['userId'] !== '') {
         $userId = (int)$_GET['userId'];
+        
+        // Berechtigungsprüfung: eigene oder fremde Daten?
+        if ($userId !== $viewerId && !has_permission($mysqli, 'view_all_goals')) {
+            json_error('Keine Berechtigung für fremde Ziele', 403);
+        }
+        
         $stmt = $mysqli->prepare($baseSelect . " WHERE g.user_id=? AND g.status != 'cancelled' ORDER BY g.target_date DESC, g.id DESC");
         $stmt->bind_param('i',$userId);
         $stmt->execute();
@@ -32,8 +26,15 @@ if ($method === 'GET'){
         json_ok($rows);
     }
 
-    // Schüler und Trainer sehen nur ihre eigenen Ziele
-    if (($viewerRole === 'schueler' || $viewerRole === 'trainer') && $viewerId) {
+    // Prüfe ob Benutzer alle Ziele sehen darf
+    if (has_permission($mysqli, 'view_all_goals')) {
+        $res = $mysqli->query($baseSelect . " WHERE g.status != 'cancelled' ORDER BY g.target_date DESC, g.id DESC");
+        if (!$res) json_error('DB-Fehler: '.$mysqli->error, 500);
+        json_ok($res->fetch_all(MYSQLI_ASSOC));
+    }
+
+    // Sonst nur eigene Ziele
+    if ($viewerId && has_permission($mysqli, 'view_own_goals')) {
         $stmt = $mysqli->prepare($baseSelect . " WHERE g.user_id=? AND g.status != 'cancelled' ORDER BY g.target_date DESC, g.id DESC");
         $stmt->bind_param('i',$viewerId);
         $stmt->execute();
@@ -41,15 +42,21 @@ if ($method === 'GET'){
         json_ok($rows);
     }
 
-    // Admin sieht alle Ziele (außer cancelled)
-    $res = $mysqli->query($baseSelect . " WHERE g.status != 'cancelled' ORDER BY g.target_date DESC, g.id DESC");
-    if (!$res) json_error('DB-Fehler: '.$mysqli->error, 500);
-    json_ok($res->fetch_all(MYSQLI_ASSOC));
+    json_error('Keine Berechtigung', 403);
 }
 
 if ($method === 'POST'){
+    require_permission($mysqli, 'create_goals');
+    
     $b = body_json();
-    if (empty($b['userId'])) { $b['userId'] = auth_user_id($mysqli) ?? 1; }
+    // Wenn keine userId angegeben, verwende die des eingeloggten Benutzers
+    if (empty($b['userId'])) { $b['userId'] = $viewerId; }
+    
+    // Prüfen ob für sich selbst oder andere erstellt wird
+    if ((int)$b['userId'] !== $viewerId && !has_permission($mysqli, 'edit_all_goals')) {
+        json_error('Keine Berechtigung, Ziele für andere zu erstellen', 403);
+    }
+    
     foreach (['userId','title','targetDate','progress','category'] as $r) {
         if (!isset($b[$r]) || $b[$r] === '') json_error('Feld fehlt: '.$r, 400);
     }
@@ -72,6 +79,19 @@ if ($method === 'PUT') {
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
     
+    // Ziel-Besitzer ermitteln
+    $ownerStmt = $mysqli->prepare("SELECT user_id FROM goals WHERE id = ? LIMIT 1");
+    $ownerStmt->bind_param('i', $b['id']);
+    $ownerStmt->execute();
+    $ownerResult = $ownerStmt->get_result()->fetch_assoc();
+    if (!$ownerResult) json_error('Ziel nicht gefunden', 404);
+    $ownerId = (int)$ownerResult['user_id'];
+    
+    // Berechtigungsprüfung
+    if (!can_edit($mysqli, $ownerId, 'edit_own_goals', 'edit_all_goals')) {
+        json_error('Keine Berechtigung zum Bearbeiten', 403);
+    }
+    
     $progress = isset($b['progress']) ? (int)$b['progress'] : null;
     
     // Wenn progress übergeben wird, aktualisiere progress und ggf. status
@@ -91,6 +111,25 @@ if ($method === 'PUT') {
 if ($method === 'DELETE') {
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
+    
+    // Ziel-Besitzer ermitteln
+    $ownerStmt = $mysqli->prepare("SELECT user_id FROM goals WHERE id = ? LIMIT 1");
+    $ownerStmt->bind_param('i', $b['id']);
+    $ownerStmt->execute();
+    $ownerResult = $ownerStmt->get_result()->fetch_assoc();
+    if (!$ownerResult) json_error('Ziel nicht gefunden', 404);
+    $ownerId = (int)$ownerResult['user_id'];
+    
+    // Berechtigungsprüfung: eigene löschen oder alle löschen
+    if ($ownerId === $viewerId) {
+        require_permission($mysqli, 'delete_goals');
+    } else {
+        // Für fremde Ziele braucht man delete_goals UND edit_all_goals
+        if (!has_permission($mysqli, 'delete_goals') || !has_permission($mysqli, 'edit_all_goals')) {
+            json_error('Keine Berechtigung zum Löschen fremder Ziele', 403);
+        }
+    }
+    
     $stmt = $mysqli->prepare("UPDATE goals SET status='cancelled' WHERE id=?");
     $stmt->bind_param('i', $b['id']);
     if (!$stmt->execute()) json_error('Löschen fehlgeschlagen: '.$stmt->error, 500);

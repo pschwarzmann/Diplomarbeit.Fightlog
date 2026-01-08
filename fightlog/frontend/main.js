@@ -211,19 +211,19 @@ const app = createApp({
                                 />
 
                                 <nav-card
-                                    v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')"
-                                    icon="fa-sliders-h"
-                                    title="Presets"
-                                    description="Vorlagen für Urkunden, Prüfungen, Kurse"
-                                    @click="navigateTo('presets')"
-                                />
-
-                                <nav-card
                                     v-if="currentUser && currentUser.role === 'admin'"
                                     icon="fa-user-shield"
                                     :title="t('adminPanel')"
                                     description="Benutzer, Rollen &amp; Rechte verwalten"
                                     @click="navigateTo('admin')"
+                                />
+
+                                <nav-card
+                                    v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')"
+                                    icon="fa-sliders"
+                                    title="Presets"
+                                    description="Urkunden-Vorlagen &amp; Gruppen"
+                                    @click="navigateTo('presets')"
                                 />
                             </div>
                         </div>
@@ -763,24 +763,6 @@ const app = createApp({
                                     aria-controls="tab-certificates" 
                                     @click="setPresetsTab('certificates')"
                                 >Urkunden</button>
-
-                                <button 
-                                    class="tab-btn" 
-                                    :class="{ active: currentPresetsTab === 'exams' }" 
-                                    role="tab" 
-                                    :aria-selected="(currentPresetsTab === 'exams').toString()" 
-                                    aria-controls="tab-exams" 
-                                    @click="setPresetsTab('exams')"
-                                >Prüfungen</button>
-
-                                <button 
-                                    class="tab-btn" 
-                                    :class="{ active: currentPresetsTab === 'courses' }" 
-                                    role="tab" 
-                                    :aria-selected="(currentPresetsTab === 'courses').toString()" 
-                                    aria-controls="tab-courses" 
-                                    @click="setPresetsTab('courses')"
-                                >Kurse</button>
                                 
                                 <button 
                                     class="tab-btn" 
@@ -837,115 +819,61 @@ const app = createApp({
                                 </div>
                             </div>
 
-                            <div v-show="currentPresetsTab === 'exams'" id="tab-exams" class="form-container" role="tabpanel">
-                                <h2>Prüfungs-Presets</h2>
-                                <form @submit.prevent="addExamPreset">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Level</label>
-                                            <input type="text" v-model="examPresetForm.level" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Kategorie</label>
-                                            <div class="choice-group" role="group" aria-label="Prüfungs-Kategorie wählen">
-                                                <button type="button" class="choice-btn" :class="{ active: examPresetForm.category === 'Technik' }" @click="examPresetForm.category = 'Technik'" :aria-pressed="(examPresetForm.category === 'Technik').toString()">Technik</button>
-                                                <button type="button" class="choice-btn" :class="{ active: examPresetForm.category === 'Kampf' }" @click="examPresetForm.category = 'Kampf'" :aria-pressed="(examPresetForm.category === 'Kampf').toString()">Kampf</button>
-                                                <button type="button" class="choice-btn" :class="{ active: examPresetForm.category === 'Theorie' }" @click="examPresetForm.category = 'Theorie'" :aria-pressed="(examPresetForm.category === 'Theorie').toString()">Theorie</button>
-                                                <button type="button" class="choice-btn" :class="{ active: examPresetForm.category === 'Kata' }" @click="examPresetForm.category = 'Kata'" :aria-pressed="(examPresetForm.category === 'Kata').toString()">Kata</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Prüfer</label>
-                                            <input type="text" v-model="examPresetForm.instructor" class="form-control">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Preset hinzufügen</button>
-                                </form>
-
-                                <h3 style="margin:1rem 0 .25rem; color:#1e293b;">Vorhandene Presets</h3>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="p in examPresetsFiltered" :key="p.id" class="nav-card preset-card" style="text-align:left;">
-                                        <h3>{{ p.level }} - {{ p.category }}</h3>
-                                        <p v-if="p.instructor"><strong>Prüfer:</strong> {{ p.instructor }}</p>
-                                        <div style="margin-top:.5rem; display:flex; gap:.5rem;">
-                                            <button class="icon-btn" @click="editExamPreset(p)" aria-label="Preset bearbeiten"><i class="fas fa-pen"></i></button>
-                                            <button class="icon-btn" @click="removeExamPreset(p)" aria-label="Preset löschen"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-show="currentPresetsTab === 'courses'" id="tab-courses" class="form-container" role="tabpanel">
-                                <h2>Kurs-Presets</h2>
-                                <form @submit.prevent="addCoursePreset">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Titel</label>
-                                            <input type="text" v-model="coursePresetForm.title" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Trainer</label>
-                                            <input type="text" v-model="coursePresetForm.instructor" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Status</label>
-                                            <div class="choice-group" role="group" aria-label="Kurs-Status wählen">
-                                                <button type="button" class="choice-btn" :class="{ active: coursePresetForm.status === 'approved' }" @click="coursePresetForm.status = 'approved'" :aria-pressed="(coursePresetForm.status === 'approved').toString()">freigegeben</button>
-                                                <button type="button" class="choice-btn" :class="{ active: coursePresetForm.status === 'pending' }" @click="coursePresetForm.status = 'pending'" :aria-pressed="(coursePresetForm.status === 'pending').toString()">ausstehend</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Preset hinzufügen</button>
-                                </form>
-
-                                <h3 style="margin:1rem 0 .25rem; color:#1e293b;">Vorhandene Presets</h3>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="p in coursePresetsFiltered" :key="p.id" class="nav-card preset-card" style="text-align:left;">
-                                        <h3>{{ p.title }}</h3>
-                                        <p v-if="p.instructor"><strong>Trainer:</strong> {{ p.instructor }}</p>
-                                        <p><strong>Status:</strong> {{ p.status }}</p>
-                                        <div style="margin-top:.5rem; display:flex; gap:.5rem;">
-                                            <button class="icon-btn" @click="editCoursePreset(p)" aria-label="Preset bearbeiten"><i class="fas fa-pen"></i></button>
-                                            <button class="icon-btn" @click="removeCoursePreset(p)" aria-label="Preset löschen"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div v-show="currentPresetsTab === 'groups'" id="tab-groups" class="form-container" role="tabpanel">
                                 <h2>Gruppen verwalten</h2>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Gruppenname</label>
-                                        <input type="text" v-model="groupForm.name" class="form-control" placeholder="z. B. Prüfungsgruppe Mai">
+                                <form @submit.prevent="addStudentGroup()">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Gruppenname</label>
+                                            <input type="text" v-model="groupForm.name" class="form-control" placeholder="z. B. Prüfungsgruppe Mai" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Beschreibung</label>
+                                            <input type="text" v-model="groupForm.description" class="form-control" placeholder="Optionale Beschreibung">
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label>Schüler suchen</label>
-                                        <input type="text" v-model="groupForm.query" class="form-control" placeholder="Namen tippen, um vorzuschlagen">
+                                        <label>Schüler zuordnen</label>
+                                        <div style="position:relative;">
+                                            <input type="text" v-model="groupForm.query" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
+                                            <div v-if="groupForm.query" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
+                                                <div v-for="u in studentMatches(groupForm.query)" :key="u.id" style="padding:.3rem 0; cursor:pointer;" @click="tapSelectGroupStudent(u)">
+                                                    {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="groupForm.userIds.length" style="margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.35rem;">
+                                            <span v-for="sid in groupForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;">
+                                                {{ displayUserName(sid) }}
+                                                <button type="button" class="btn btn-danger btn-sm" style="margin-left:.35rem;" @click="removeGroupStudent(sid)"><i class="fas fa-times"></i></button>
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="form-container" style="padding:.35rem .75rem; max-height:220px; overflow:auto;">
-                                    <div v-for="u in studentMatches(groupForm.query)" :key="u.id" style="display:flex; align-items:center; gap:.5rem; padding:.25rem 0;">
-                                        <input type="checkbox" :id="'grp_'+u.id" :checked="groupForm.userIds.includes(u.id)" @change="toggleGroupStudent(u)">
-                                        <label :for="'grp_'+u.id" style="cursor:pointer; flex:1 1 auto;">{{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span></label>
+                                    <div style="margin-top:.75rem; display:flex; gap:.5rem;">
+                                        <button type="submit" class="btn btn-primary">Gruppe erstellen</button>
+                                        <button type="button" class="btn btn-secondary" @click="resetGroupForm()">Zurücksetzen</button>
                                     </div>
-                                </div>
-                                <div style="margin-top:.5rem; display:flex; gap:.5rem;">
-                                    <button class="btn btn-primary" @click="addStudentGroup()">Gruppe hinzufügen</button>
-                                </div>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); margin-top:1rem;">
+                                </form>
+
+                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">Vorhandene Gruppen</h3>
+                                <div v-if="studentGroups.length === 0" style="color:#64748b;">Noch keine Gruppen erstellt.</div>
+                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
                                     <div v-for="g in studentGroups" :key="g.id" class="nav-card preset-card" style="text-align:left;">
-                                        <h4>{{ g.name }}</h4>
-                                        <p style="color:#64748b;">{{ g.userIds.length }} Mitglieder</p>
-                                        <div style="margin-top:.5rem; display:flex; gap:.5rem; flex-wrap:wrap;">
-                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('cert')">Für Urkunden anwenden</button>
-                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('exam')">Für Prüfungen anwenden</button>
-                                            <button class="btn btn-secondary btn-sm" @click="applyGroupTo('course')">Für Kurse anwenden</button>
-                                            <button class="btn btn-danger btn-sm" @click="removeGroup(g)"><i class="fas fa-trash"></i></button>
+                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                            <div>
+                                                <h4 style="margin:0;">{{ g.name }}</h4>
+                                                <p v-if="g.description" style="color:#475569; margin:.15rem 0; font-size:.9rem;">{{ g.description }}</p>
+                                                <p style="color:#64748b; margin:.25rem 0;">{{ g.member_count || g.userIds.length }} Mitglieder</p>
+                                            </div>
+                                            <div style="display:flex; gap:.35rem;">
+                                                <button class="icon-btn" @click="showGroupMembers(g)" title="Mitglieder anzeigen"><i class="fas fa-users"></i></button>
+                                                <button class="icon-btn" @click="editGroup(g)" title="Bearbeiten"><i class="fas fa-pen"></i></button>
+                                                <button class="icon-btn" @click="removeGroup(g)" title="Löschen"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                        <div v-if="g._showMembers" style="margin-top:.5rem; padding:.5rem; background:#f8fafc; border-radius:6px; max-height:150px; overflow:auto;">
+                                            <div v-if="getGroupMemberNames(g).length === 0" style="color:#64748b; font-size:.85rem;">Keine Mitglieder</div>
+                                            <div v-for="name in getGroupMemberNames(g)" :key="name" style="font-size:.85rem; padding:.15rem 0;">• {{ name }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1372,6 +1300,73 @@ const app = createApp({
                 </div>
             </main>
             
+            <!-- Gruppen-Bearbeitungs-Modal -->
+            <div v-if="showGroupEditModal" class="modal-overlay" @click="closeGroupEditModal">
+                <div class="modal-content" @click.stop style="max-width: 550px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-users-cog"></i> Gruppe bearbeiten</h2>
+                        <button @click="closeGroupEditModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <form @submit.prevent="saveGroupEdit">
+                            <!-- Gruppenname -->
+                            <div class="form-group">
+                                <label>Gruppenname *</label>
+                                <input type="text" v-model="groupEditForm.name" class="form-control" required>
+                            </div>
+                            
+                            <!-- Beschreibung -->
+                            <div class="form-group">
+                                <label>Beschreibung</label>
+                                <input type="text" v-model="groupEditForm.description" class="form-control" placeholder="Optionale Beschreibung">
+                            </div>
+                            
+                            <!-- Mitglieder -->
+                            <div class="form-group">
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Mitglieder</span>
+                                    <button type="button" class="btn btn-success btn-sm" @click="groupEditForm.showAddMember = !groupEditForm.showAddMember">
+                                        <i class="fas fa-plus"></i> Hinzufügen
+                                    </button>
+                                </label>
+                                
+                                <!-- Mitglied hinzufügen -->
+                                <div v-if="groupEditForm.showAddMember" style="margin-top: 0.5rem; padding: 0.75rem; background: #f1f5f9; border-radius: 8px;">
+                                    <input type="text" v-model="groupEditForm.memberQuery" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
+                                    <div v-if="groupEditForm.memberQuery && filteredStudentsForGroupEdit.length" style="margin-top: 0.5rem; max-height: 150px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                        <div v-for="u in filteredStudentsForGroupEdit" :key="u.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9;" @click="addMemberToGroupEdit(u)">
+                                            {{ u.name }} <span style="color: #64748b;">(@{{ u.username }})</span>
+                                        </div>
+                                    </div>
+                                    <div v-if="groupEditForm.memberQuery && !filteredStudentsForGroupEdit.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Schüler gefunden</div>
+                                </div>
+                                
+                                <!-- Mitglieder-Liste -->
+                                <div style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <div v-if="groupEditForm.members.length === 0" style="color: #64748b; text-align: center; padding: 1.5rem;">
+                                        Keine Mitglieder
+                                    </div>
+                                    <div v-for="member in groupEditForm.members" :key="member.id" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;">
+                                        <span>{{ member.name }}</span>
+                                        <button type="button" @click="removeMemberFromGroupEdit(member.id)" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                                <button type="button" class="btn btn-secondary" @click="closeGroupEditModal">Abbrechen</button>
+                                <button type="submit" class="btn btn-primary">Speichern</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Passkey-Verwaltungsmodal -->
             <div v-if="showPasskeyModal" class="modal-overlay" @click="closePasskeyModal">
                 <div class="modal-content" @click.stop>
@@ -1529,14 +1524,20 @@ const app = createApp({
             // Presets
             currentPresetsTab: 'certificates',
             certificatePresets: [],
-            examPresets: [],
-            coursePresets: [],
             certificatePresetForm: { title: '', type: '', level: '', instructor: '' },
-            examPresetForm: { level: '', category: '', instructor: '' },
-            coursePresetForm: { title: '', instructor: '', status: 'approved' },
-            // Gruppen (Presets)
+            // Gruppen (aus Datenbank)
             studentGroups: [],
-            groupForm: { name: '', userIds: [], query: '' },
+            groupForm: { name: '', description: '', userIds: [], query: '' },
+            // Gruppen-Bearbeitungs-Modal
+            showGroupEditModal: false,
+            groupEditForm: {
+                id: null,
+                name: '',
+                description: '',
+                members: [],
+                memberQuery: '',
+                showAddMember: false
+            },
             // Prüfung bearbeiten Modal
             showExamEditModal: false,
             examEditForm: {
@@ -1587,16 +1588,6 @@ const app = createApp({
             if (!type) return this.certificatePresets;
             return this.certificatePresets.filter(p => (p.type || '') === type);
         },
-        examPresetsFiltered() {
-            const cat = (this.examPresetForm.category || '').trim();
-            if (!cat) return this.examPresets;
-            return this.examPresets.filter(p => (p.category || '') === cat);
-        },
-        coursePresetsFiltered() {
-            const status = (this.coursePresetForm.status || '').trim();
-            if (!status) return this.coursePresets;
-            return this.coursePresets.filter(p => (p.status || '') === status);
-        },
         // --- Schülerauswahl: All-Selected-Status je Formular ---
         allCertStudentsChecked() {
             const list = this.studentMatches(this.certificateForm.studentQuery || '');
@@ -1623,6 +1614,20 @@ const app = createApp({
                 (u.firstName || '').toLowerCase().includes(q) ||
                 (u.lastName || '').toLowerCase().includes(q)
             );
+        },
+        // Gefilterte Schüler für das Gruppen-Bearbeitungs-Modal
+        filteredStudentsForGroupEdit() {
+            const q = (this.groupEditForm.memberQuery || '').toLowerCase().trim();
+            if (!q) return [];
+            const currentIds = this.groupEditForm.members.map(m => m.id);
+            return this.adminUserList
+                .filter(u => u.role === 'schueler' && !currentIds.includes(u.id))
+                .filter(u => {
+                    const name = (u.name || '').toLowerCase();
+                    const username = (u.username || '').toLowerCase();
+                    return name.includes(q) || username.includes(q);
+                })
+                .slice(0, 20);
         },
         filteredCertificates() {
             const q = (this.certificateSearch || '').toLowerCase().trim();
@@ -2443,6 +2448,8 @@ const app = createApp({
                     break;
                 case 'presets':
                     this.loadPresets();
+                    await this.loadUsers();
+                    await this.loadGroups();
                     break;
             }
         },
@@ -2457,13 +2464,7 @@ const app = createApp({
         loadPresets() {
             try {
                 const cp = JSON.parse(localStorage.getItem('fightlog_certificatePresets') || '[]');
-                const ep = JSON.parse(localStorage.getItem('fightlog_examPresets') || '[]');
-                const kp = JSON.parse(localStorage.getItem('fightlog_coursePresets') || '[]');
-                const sg = JSON.parse(localStorage.getItem('fightlog_studentGroups') || '[]');
                 this.certificatePresets = Array.isArray(cp) ? cp : [];
-                this.examPresets = Array.isArray(ep) ? ep : [];
-                this.coursePresets = Array.isArray(kp) ? kp : [];
-                this.studentGroups = Array.isArray(sg) ? sg : [];
 
                 // Seed mit realistischen Dummy-Daten, falls leer
                 if (!this.certificatePresets.length) {
@@ -2473,68 +2474,159 @@ const app = createApp({
                         { id: Date.now() - 1001, title: 'Workshop – Selbstverteidigung', type: 'workshop', level: '', instructor: 'Anna Weber' }
                     ];
                 }
-                if (!this.examPresets.length) {
-                    this.examPresets = [
-                        { id: Date.now() - 903, level: 'Gelbgurt', category: 'Technik', instructor: 'Hans Schmidt' },
-                        { id: Date.now() - 902, level: 'Grüngurt', category: 'Kampf', instructor: 'Anna Weber' },
-                        { id: Date.now() - 901, level: 'Blaugurt', category: 'Theorie', instructor: 'Peter Braun' }
-                    ];
-                }
-                if (!this.coursePresets.length) {
-                    this.coursePresets = [
-                        { id: Date.now() - 803, title: 'Grundlagen Sparring', instructor: 'Hans Schmidt', status: 'approved' },
-                        { id: Date.now() - 802, title: 'Kata Intensiv', instructor: 'Anna Weber', status: 'pending' }
-                    ];
-                }
                 this.savePresets();
             } catch (e) {
                 console.warn('Presets parse error', e);
                 this.certificatePresets = [];
-                this.examPresets = [];
-                this.coursePresets = [];
             }
         },
         savePresets() {
             localStorage.setItem('fightlog_certificatePresets', JSON.stringify(this.certificatePresets));
-            localStorage.setItem('fightlog_examPresets', JSON.stringify(this.examPresets));
-            localStorage.setItem('fightlog_coursePresets', JSON.stringify(this.coursePresets));
-            localStorage.setItem('fightlog_studentGroups', JSON.stringify(this.studentGroups));
         },
-        // Gruppen
-        addStudentGroup() {
+        // Gruppen (Datenbank-basiert)
+        async loadGroups() {
+            try {
+                const response = await apiService.getGroups();
+                if (response.success) {
+                    this.studentGroups = response.groups.map(g => ({
+                        ...g,
+                        _showMembers: false
+                    }));
+                }
+            } catch (e) {
+                console.error('Load groups error:', e);
+            }
+        },
+        async addStudentGroup() {
             const name = (this.groupForm.name || '').trim();
+            const description = (this.groupForm.description || '').trim();
             const ids = Array.from(new Set(this.groupForm.userIds));
             if (!name) return alert('Bitte einen Gruppennamen angeben.');
             if (!ids.length) return alert('Mindestens einen Schüler auswählen.');
-            const grp = { id: Date.now(), name, userIds: ids };
-            this.studentGroups.unshift(grp);
-            this.groupForm = { name: '', userIds: [], query: '' };
-            this.savePresets();
+            
+            try {
+                const response = await apiService.addGroup({
+                    name: name,
+                    description: description,
+                    userIds: ids
+                });
+                if (response.success) {
+                    await this.loadGroups();
+                    this.resetGroupForm();
+                } else {
+                    alert(response.error || 'Fehler beim Erstellen');
+                }
+            } catch (e) {
+                console.error('Save group error:', e);
+                alert('Fehler beim Speichern der Gruppe');
+            }
         },
-        toggleGroupStudent(user) {
-            const exists = this.groupForm.userIds.includes(user.id);
-            this.groupForm.userIds = exists
-                ? this.groupForm.userIds.filter(id => id !== user.id)
-                : [...this.groupForm.userIds, user.id];
+        resetGroupForm() {
+            this.groupForm = { name: '', description: '', userIds: [], query: '' };
+        },
+        tapSelectGroupStudent(user) {
+            // Schüler zur Gruppe hinzufügen (wenn noch nicht vorhanden)
+            if (!this.groupForm.userIds.includes(user.id)) {
+                this.groupForm.userIds = [...this.groupForm.userIds, user.id];
+            }
+            this.groupForm.query = '';
+        },
+        removeGroupStudent(userId) {
+            this.groupForm.userIds = this.groupForm.userIds.filter(id => id !== userId);
+        },
+        showGroupMembers(grp) {
+            // Toggle die Mitglieder-Anzeige
+            grp._showMembers = !grp._showMembers;
+        },
+        getGroupMemberNames(grp) {
+            return (grp.userIds || []).map(id => {
+                const user = this.adminUserList.find(u => u.id === id);
+                return user ? (user.name || user.username) : `ID: ${id}`;
+            });
+        },
+        editGroup(grp) {
+            // Lade Gruppe ins Modal
+            this.groupEditForm = {
+                id: grp.id,
+                name: grp.name || '',
+                description: grp.description || '',
+                members: (grp.userIds || []).map(uid => {
+                    const user = this.adminUserList.find(u => u.id === uid);
+                    return user ? { id: user.id, name: user.name, username: user.username } : { id: uid, name: 'Unbekannt', username: '?' };
+                }),
+                memberQuery: '',
+                showAddMember: false
+            };
+            this.showGroupEditModal = true;
+        },
+        
+        closeGroupEditModal() {
+            this.showGroupEditModal = false;
+            this.groupEditForm = {
+                id: null,
+                name: '',
+                description: '',
+                members: [],
+                memberQuery: '',
+                showAddMember: false
+            };
+        },
+        
+        addMemberToGroupEdit(user) {
+            if (this.groupEditForm.members.some(m => m.id === user.id)) {
+                return; // Bereits in Liste
+            }
+            this.groupEditForm.members.push({ id: user.id, name: user.name, username: user.username });
+            this.groupEditForm.memberQuery = '';
+            this.groupEditForm.showAddMember = false;
+        },
+        
+        removeMemberFromGroupEdit(userId) {
+            this.groupEditForm.members = this.groupEditForm.members.filter(m => m.id !== userId);
+        },
+        
+        async saveGroupEdit() {
+            const name = (this.groupEditForm.name || '').trim();
+            if (!name) {
+                alert('Bitte einen Gruppennamen angeben.');
+                return;
+            }
+            
+            const userIds = this.groupEditForm.members.map(m => m.id);
+            
+            try {
+                const response = await apiService.updateGroup({
+                    id: this.groupEditForm.id,
+                    name: name,
+                    description: (this.groupEditForm.description || '').trim(),
+                    userIds: userIds
+                });
+                if (response.success) {
+                    await this.loadGroups();
+                    this.closeGroupEditModal();
+                } else {
+                    alert(response.error || 'Fehler beim Speichern');
+                }
+            } catch (e) {
+                console.error('Save group error:', e);
+                alert('Fehler beim Speichern der Gruppe');
+            }
         },
         async removeGroup(grp) {
             const ok = await notify.confirm('Gruppe löschen?');
             if (!ok) return;
-            this.studentGroups = this.studentGroups.filter(g => g.id !== grp.id);
-            this.savePresets();
-        },
-        async applyGroupTo(target) {
-            // target: 'cert' | 'exam' | 'course'
-            const arr = target === 'cert' ? this.certificateForm.userIds : target === 'exam' ? this.examForm.userIds : this.courseForm.userIds;
-            const select = await notify.prompt('Gruppenname eingeben, der angewendet werden soll:');
-            if (!select) return;
-            const grp = this.studentGroups.find(g => g.name.toLowerCase() === select.toLowerCase());
-            if (!grp) return alert('Gruppe nicht gefunden.');
-            const setIds = new Set(arr);
-            for (const id of grp.userIds) setIds.add(id);
-            if (target === 'cert') this.certificateForm.userIds = Array.from(setIds);
-            if (target === 'exam') this.examForm.userIds = Array.from(setIds);
-            if (target === 'course') this.courseForm.userIds = Array.from(setIds);
+            
+            try {
+                const response = await apiService.deleteGroup(grp.id);
+                if (response.success) {
+                    await this.loadGroups();
+                } else {
+                    alert(response.error || 'Fehler beim Löschen');
+                }
+            } catch (e) {
+                console.error('Delete group error:', e);
+                alert('Fehler beim Löschen der Gruppe');
+            }
         },
         // Certificate Presets
         addCertificatePreset() {
@@ -2559,56 +2651,6 @@ const app = createApp({
             const ok = await notify.confirm('Preset löschen?');
             if (!ok) return;
             this.certificatePresets = this.certificatePresets.filter(x => x.id !== preset.id);
-            this.savePresets();
-        },
-        // Exam Presets
-        addExamPreset() {
-            const p = { id: Date.now(), ...this.examPresetForm };
-            this.examPresets.unshift(p);
-            this.examPresetForm = { level: '', category: '', instructor: '' };
-            this.savePresets();
-        },
-        async editExamPreset(preset) {
-            const level = await notify.prompt('Level', preset.level);
-            if (level == null) return;
-            const category = await notify.prompt('Kategorie', preset.category);
-            if (category == null) return;
-            const instructor = await notify.prompt('Prüfer', preset.instructor || '');
-            if (instructor == null) return;
-            const updated = { ...preset, level, category, instructor };
-            const idx = this.examPresets.findIndex(x => x.id === preset.id);
-            if (idx !== -1) this.examPresets[idx] = updated;
-            this.savePresets();
-        },
-        async removeExamPreset(preset) {
-            const ok = await notify.confirm('Preset löschen?');
-            if (!ok) return;
-            this.examPresets = this.examPresets.filter(x => x.id !== preset.id);
-            this.savePresets();
-        },
-        // Course Presets
-        addCoursePreset() {
-            const p = { id: Date.now(), ...this.coursePresetForm };
-            this.coursePresets.unshift(p);
-            this.coursePresetForm = { title: '', instructor: '', status: 'approved' };
-            this.savePresets();
-        },
-        async editCoursePreset(preset) {
-            const title = await notify.prompt('Kurstitel', preset.title);
-            if (title == null) return;
-            const instructor = await notify.prompt('Trainer', preset.instructor || '');
-            if (instructor == null) return;
-            const status = await notify.prompt('Status (approved/pending)', preset.status || 'approved');
-            if (status == null) return;
-            const updated = { ...preset, title, instructor, status };
-            const idx = this.coursePresets.findIndex(x => x.id === preset.id);
-            if (idx !== -1) this.coursePresets[idx] = updated;
-            this.savePresets();
-        },
-        async removeCoursePreset(preset) {
-            const ok = await notify.confirm('Preset löschen?');
-            if (!ok) return;
-            this.coursePresets = this.coursePresets.filter(x => x.id !== preset.id);
             this.savePresets();
         },
         setPresetsTab(tab) {
