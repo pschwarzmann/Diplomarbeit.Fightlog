@@ -1040,8 +1040,8 @@ const app = createApp({
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Datum</label>
-                                    <input type="date" v-model="courseEditForm.date" class="form-control" required>
+                                    <label>Datum (TT.MM.JJJJ)</label>
+                                    <input type="text" v-model="courseEditForm.date" class="form-control" placeholder="z.B. 15.04.2026" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Trainer</label>
@@ -1074,32 +1074,59 @@ const app = createApp({
                     </div>
                 </div>
 
-                <!-- Teilnehmer Modal -->
-                <div v-if="showParticipantsModal" class="modal-overlay" @click.self="showParticipantsModal = false">
-                    <div class="modal-content form-container" style="max-width:500px;">
-                        <h2><i class="fas fa-users"></i> Teilnehmer</h2>
-                        <p v-if="participantsModalCourse" style="color:#64748b; margin-bottom:1rem;">{{ participantsModalCourse.title }}</p>
-                        <div v-if="participantsList.length === 0" style="color:#64748b;">
+                <!-- Teilnehmer Modal (erweitert für Admin/Trainer) -->
+                <div v-if="showParticipantsModal" class="modal-overlay" @click.self="closeParticipantsModal">
+                    <div class="modal-content form-container" style="max-width:550px;">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2><i class="fas fa-users"></i> Teilnehmer</h2>
+                            <button @click="closeParticipantsModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p v-if="participantsModalCourse" style="color:#64748b; margin-bottom:1rem;">
+                            {{ participantsModalCourse.title }} — {{ participantsList.length }} / {{ participantsModalCourse.max_participants }} Teilnehmer
+                        </p>
+                        
+                        <!-- Teilnehmer hinzufügen (Admin/Trainer) -->
+                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-weight: 600;">Teilnehmer hinzufügen:</label>
+                                <button type="button" class="btn btn-success btn-sm" @click="participantsAddMode = !participantsAddMode">
+                                    <i class="fas fa-plus"></i> Hinzufügen
+                                </button>
+                            </div>
+                            <div v-if="participantsAddMode" style="padding: 0.75rem; background: #f1f5f9; border-radius: 8px;">
+                                <input type="text" v-model="participantsSearchQuery" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
+                                <div v-if="participantsSearchQuery && filteredStudentsForCourse.length" style="margin-top: 0.5rem; max-height: 150px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                    <div v-for="u in filteredStudentsForCourse" :key="u.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9;" @click="addParticipantToCourse(u)">
+                                        {{ u.name }} <span style="color: #64748b;">(@{{ u.username }})</span>
+                                    </div>
+                                </div>
+                                <div v-if="participantsSearchQuery && !filteredStudentsForCourse.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Schüler gefunden</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Teilnehmerliste -->
+                        <div v-if="participantsList.length === 0" style="color:#64748b; text-align: center; padding: 1.5rem;">
                             Keine Teilnehmer angemeldet.
                         </div>
-                        <div v-else>
-                            <table style="width:100%; border-collapse:collapse;">
-                                <thead>
-                                    <tr style="border-bottom:2px solid #e2e8f0;">
-                                        <th style="text-align:left; padding:.5rem;">Name</th>
-                                        <th style="text-align:left; padding:.5rem;">Angemeldet am</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="p in participantsList" :key="p.id" style="border-bottom:1px solid #e2e8f0;">
-                                        <td style="padding:.5rem;">{{ p.name }} <span style="color:#64748b;">(@{{ p.username }})</span></td>
-                                        <td style="padding:.5rem;">{{ formatDateTime(p.booking_date) }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div v-else style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <div v-for="p in participantsList" :key="p.id" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;">
+                                <div>
+                                    <span style="font-weight: 500;">{{ p.name }}</span>
+                                    <span style="color: #64748b; margin-left: 0.5rem;">(@{{ p.username }})</span>
+                                    <div style="font-size: 0.8rem; color: #94a3b8;">{{ formatDateTime(p.booking_date) }}</div>
+                                </div>
+                                <button v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" 
+                                        @click="removeParticipantFromCourse(p.user_id)" 
+                                        class="btn btn-danger btn-sm" title="Entfernen">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div style="margin-top:1rem;">
-                            <button class="btn btn-secondary" @click="showParticipantsModal = false">Schließen</button>
+                        
+                        <div style="margin-top:1rem; display: flex; justify-content: flex-end;">
+                            <button class="btn btn-secondary" @click="closeParticipantsModal">Schließen</button>
                         </div>
                     </div>
                 </div>
@@ -1568,6 +1595,8 @@ const app = createApp({
             showParticipantsModal: false,
             participantsModalCourse: null,
             participantsList: [],
+            participantsAddMode: false,
+            participantsSearchQuery: '',
             // Ziel-Aufgaben Modal
             showGoalTasksModal: false,
             goalTasksModalGoal: null,
@@ -1629,6 +1658,20 @@ const app = createApp({
                 })
                 .slice(0, 20);
         },
+        // Gefilterte Schüler für Kurs-Teilnehmer hinzufügen
+        filteredStudentsForCourse() {
+            const q = (this.participantsSearchQuery || '').toLowerCase().trim();
+            if (!q) return [];
+            const currentIds = this.participantsList.map(p => p.user_id);
+            return this.adminUserList
+                .filter(u => u.role === 'schueler' && !currentIds.includes(u.id))
+                .filter(u => {
+                    const name = (u.name || '').toLowerCase();
+                    const username = (u.username || '').toLowerCase();
+                    return name.includes(q) || username.includes(q);
+                })
+                .slice(0, 20);
+        },
         filteredCertificates() {
             const q = (this.certificateSearch || '').toLowerCase().trim();
             if (!q) return this.certificates;
@@ -1659,12 +1702,20 @@ const app = createApp({
         },
         filteredCourses() {
             const q = (this.courseSearch || '').toLowerCase().trim();
-            if (!q) return this.courses;
-            return this.courses.filter(c =>
-                (c.title || '').toLowerCase().includes(q) ||
-                (c.instructor || '').toLowerCase().includes(q) ||
-                (c.description || '').toLowerCase().includes(q)
-            );
+            let courses = this.courses;
+            if (q) {
+                courses = courses.filter(c =>
+                    (c.title || '').toLowerCase().includes(q) ||
+                    (c.instructor || '').toLowerCase().includes(q) ||
+                    (c.description || '').toLowerCase().includes(q)
+                );
+            }
+            // Sortiere nach Datum (nächster Kurs zuerst)
+            return courses.slice().sort((a, b) => {
+                const dateA = a.date && a.date !== '0000-00-00' ? new Date(a.date) : new Date('9999-12-31');
+                const dateB = b.date && b.date !== '0000-00-00' ? new Date(b.date) : new Date('9999-12-31');
+                return dateA - dateB;
+            });
         },
         studentApprovedCourses() {
             if (!this.currentUser) return [];
@@ -2161,6 +2212,18 @@ const app = createApp({
                 const month = match[2].padStart(2, '0');
                 const year = match[3];
                 return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+        },
+        // ISO-Datum (2025-12-31) zu deutschem Format (31.12.2025) konvertieren
+        toGermanDate(dateStr) {
+            if (!dateStr || dateStr === '0000-00-00') return '';
+            // Bereits im deutschen Format?
+            if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateStr)) return dateStr;
+            // ISO-Format: YYYY-MM-DD
+            const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (match) {
+                return `${parseInt(match[3], 10)}.${parseInt(match[2], 10)}.${match[1]}`;
             }
             return dateStr;
         },
@@ -2701,9 +2764,13 @@ const app = createApp({
         },
         editCourse(course) {
             // Modal öffnen mit Kursdaten
-            // Ungültige Daten (0000-00-00) als leer behandeln
+            // Ungültige Daten (0000-00-00) als leer behandeln, sonst ins deutsche Format konvertieren
             let courseDate = course.date || '';
-            if (courseDate === '0000-00-00') courseDate = '';
+            if (courseDate === '0000-00-00') {
+                courseDate = '';
+            } else {
+                courseDate = this.toGermanDate(courseDate);
+            }
             
             this.courseEditForm = {
                 id: course.id,
@@ -2751,12 +2818,63 @@ const app = createApp({
         async showParticipants(course) {
             this.participantsModalCourse = course;
             this.participantsList = [];
+            this.participantsAddMode = false;
+            this.participantsSearchQuery = '';
             this.showParticipantsModal = true;
             try {
                 const participants = await apiService.getCourseParticipants(course.id);
                 this.participantsList = Array.isArray(participants) ? participants : [];
             } catch (e) {
                 console.error('Load participants error:', e);
+            }
+        },
+        
+        closeParticipantsModal() {
+            this.showParticipantsModal = false;
+            this.participantsModalCourse = null;
+            this.participantsList = [];
+            this.participantsAddMode = false;
+            this.participantsSearchQuery = '';
+        },
+        
+        async addParticipantToCourse(user) {
+            if (!this.participantsModalCourse) return;
+            try {
+                const res = await apiService.addCourseParticipant(this.participantsModalCourse.id, user.id);
+                if (res.success) {
+                    // Teilnehmerliste neu laden
+                    const participants = await apiService.getCourseParticipants(this.participantsModalCourse.id);
+                    this.participantsList = Array.isArray(participants) ? participants : [];
+                    this.participantsAddMode = false;
+                    this.participantsSearchQuery = '';
+                    // Kursliste aktualisieren für korrekte Teilnehmerzahl
+                    await this.loadCourses();
+                } else {
+                    alert(res.error || 'Fehler beim Hinzufügen');
+                }
+            } catch (e) {
+                console.error('Add participant error:', e);
+                alert('Fehler beim Hinzufügen des Teilnehmers');
+            }
+        },
+        
+        async removeParticipantFromCourse(userId) {
+            if (!this.participantsModalCourse) return;
+            const ok = await notify.confirm('Teilnehmer wirklich entfernen?');
+            if (!ok) return;
+            try {
+                const res = await apiService.removeCourseParticipant(this.participantsModalCourse.id, userId);
+                if (res.success) {
+                    // Teilnehmer aus Liste entfernen
+                    this.participantsList = this.participantsList.filter(p => p.user_id !== userId);
+                    // Kursliste aktualisieren für korrekte Teilnehmerzahl
+                    await this.loadCourses();
+                } else {
+                    alert(res.error || 'Fehler beim Entfernen');
+                }
+            } catch (e) {
+                console.error('Remove participant error:', e);
+                alert('Fehler beim Entfernen des Teilnehmers');
             }
         },
         

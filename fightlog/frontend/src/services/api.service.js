@@ -211,6 +211,22 @@ export const apiService = {
         return request(`/courses.php?action=participants&courseId=${courseId}`);
     },
 
+    addCourseParticipant(courseId, userId) {
+        return request('/courses.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'addParticipant', courseId, userId })
+        });
+    },
+
+    removeCourseParticipant(courseId, userId) {
+        return request('/courses.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'removeParticipant', courseId, userId })
+        });
+    },
+
     // Gruppen
     getGroups() {
         return request('/groups.php');
