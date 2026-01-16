@@ -1,9 +1,10 @@
 // Lightweight Custom Select Enhancer
 // Enhances native <select class="form-control"> with a rounded, animated dropdown.
 // Keeps original <select> in DOM (display:none), syncing value for forms.
+// Add class "no-custom-select" to exclude a select from being enhanced.
 
 (function(){
-    const SELECT_SELECTOR = 'select.form-control';
+    const SELECT_SELECTOR = 'select.form-control:not(.no-custom-select)';
     
     // Globaler Manager für alle offenen Dropdowns
     const openDropdowns = new Set();

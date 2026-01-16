@@ -130,27 +130,6 @@ CREATE TABLE course_bookings (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
--- Ziele-Tabelle
-CREATE TABLE goals (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    target_date DATE NOT NULL,
-    progress INT DEFAULT 0 CHECK (
-        progress >= 0
-        AND progress <= 100
-    ),
-    category VARCHAR(50) NOT NULL,
-    status ENUM(
-        'in_progress',
-        'completed',
-        'cancelled'
-    ) DEFAULT 'in_progress',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
 -- Sessions-Tabelle für Login-Management
 CREATE TABLE sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -182,6 +161,53 @@ CREATE TABLE group_members (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- Ziele-Tabelle
+CREATE TABLE goal_templates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    definition TEXT,
+    category VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Unterziele der Templates
+CREATE TABLE goal_template_subtasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    template_id INT NOT NULL,
+    definition VARCHAR(255) NOT NULL,
+    sort_order INT DEFAULT 0,
+    FOREIGN KEY (template_id) REFERENCES goal_templates (id) ON DELETE CASCADE
+);
+
+-- Zugewiesene Ziele pro User
+CREATE TABLE user_goals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    template_id INT NOT NULL,
+    target_date DATE NULL,
+    status ENUM(
+        'in_progress',
+        'completed',
+        'cancelled'
+    ) DEFAULT 'in_progress',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (template_id) REFERENCES goal_templates (id) ON DELETE CASCADE
+);
+
+-- Fortschritt bei Unterzielen
+CREATE TABLE user_goal_progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_goal_id INT NOT NULL,
+    subtask_id INT NOT NULL,
+    completed TINYINT(1) DEFAULT 0,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_goal_id) REFERENCES user_goals (id) ON DELETE CASCADE,
+    FOREIGN KEY (subtask_id) REFERENCES goal_template_subtasks (id) ON DELETE CASCADE,
+    UNIQUE KEY unique_progress (user_goal_id, subtask_id)
+);
+
 -- Indizes für Gruppen
 CREATE INDEX idx_groups_created_by ON student_groups (created_by);
 
@@ -200,8 +226,6 @@ CREATE INDEX idx_training_user_id ON training_history (user_id);
 
 CREATE INDEX idx_training_date ON training_history (date);
 
-CREATE INDEX idx_goals_user_id ON goals (user_id);
-
 CREATE INDEX idx_sessions_token ON sessions (token);
 
 CREATE INDEX idx_sessions_expires ON sessions (expires_at);
@@ -209,6 +233,23 @@ CREATE INDEX idx_sessions_expires ON sessions (expires_at);
 CREATE INDEX idx_users_first_name ON users (first_name);
 
 CREATE INDEX idx_users_last_name ON users (last_name);
+
+-- Indizes für Ziele-System
+CREATE INDEX idx_goal_templates_category ON goal_templates (category);
+
+CREATE INDEX idx_goal_subtasks_template ON goal_template_subtasks (template_id);
+
+CREATE INDEX idx_user_goals_user ON user_goals (user_id);
+
+CREATE INDEX idx_user_goals_template ON user_goals (template_id);
+
+CREATE INDEX idx_user_goals_status ON user_goals (status);
+
+CREATE INDEX idx_user_goals_target_date ON user_goals (target_date);
+
+CREATE INDEX idx_user_goal_progress_goal ON user_goal_progress (user_goal_id);
+
+CREATE INDEX idx_user_goal_progress_subtask ON user_goal_progress (subtask_id);
 
 -- Beispiel-Daten (optional)
 -- WICHTIG: Die Passwort-Hashes werden nach dem INSERT mit UPDATE-Statements gesetzt
@@ -685,40 +726,6 @@ VALUES (
     );
 
 INSERT INTO
-    goals (
-        user_id,
-        title,
-        target_date,
-        progress,
-        category,
-        status
-    )
-VALUES (
-        3,
-        'Erreichen des Orangengurts',
-        '2026-06-30',
-        50,
-        'Belt Progression',
-        'in_progress'
-    ),
-    (
-        3,
-        'Teilnahme am regionalen Turnier',
-        '2026-09-15',
-        20,
-        'Competition',
-        'in_progress'
-    ),
-    (
-        2,
-        'Verbesserung der Tritttechnik',
-        '2026-05-31',
-        80,
-        'Technique Improvement',
-        'in_progress'
-    );
-
-INSERT INTO
     student_groups (
         name,
         description,
@@ -744,6 +751,173 @@ VALUES (1, 3, NOW()),
     (1, 4, NOW()),
     (2, 5, NOW()),
     (2, 6, NOW());
+
+-- P1+2 Schlagkraft (Pratzen)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P1+2 Schlagkraft',
+        'Pratzentraining für Schlagkraft',
+        'Pratzen'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'Get Ready', 1);
+
+-- P3 Arme (Greifen)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P3 Arme',
+        'Greiftechnik für Arme',
+        'Greifen'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'nach oben', 1),
+    (
+        @template_id,
+        'zur Schulter',
+        2
+    );
+
+-- P3 Hals (Greifen)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P3 Hals',
+        'Greiftechnik für Hals',
+        'Greifen'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'eine Hand', 1),
+    (@template_id, 'beide Arme', 2);
+
+-- P3 Shirt (Greifen)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P3 Shirt',
+        'Greiftechnik am Shirt',
+        'Greifen'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'Brust', 1),
+    (@template_id, 'Arme', 2);
+
+-- P4 Pos Außen (Combat)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P4 Pos Außen',
+        'Combat Position Außen',
+        'Combat'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (
+        @template_id,
+        'Keil Handfläche',
+        1
+    );
+
+-- P4 Pos Innen (Combat)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P4 Pos Innen',
+        'Combat Position Innen',
+        'Combat'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'Faak Gam', 1);
+
+-- P4 Pos Front (Combat)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P4 Pos Front',
+        'Combat Position Front',
+        'Combat'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (@template_id, 'Djat Sao', 1);
+
+-- P4 Mix (Combat)
+INSERT INTO
+    goal_templates (title, definition, category)
+VALUES (
+        'P4 Mix',
+        'Combat Mix-Techniken',
+        'Combat'
+    );
+
+SET @template_id = LAST_INSERT_ID();
+
+INSERT INTO
+    goal_template_subtasks (
+        template_id,
+        definition,
+        sort_order
+    )
+VALUES (
+        @template_id,
+        'Faak - Fook',
+        1
+    );
 
 -- Username: admin, Passwort: admin123
 UPDATE users

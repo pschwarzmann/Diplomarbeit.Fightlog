@@ -105,32 +105,99 @@ export const apiService = {
         return request('/courses.php');
     },
 
+    // ===== ZIELE (NEU) =====
+    
+    // Ziel-Templates abrufen
+    getGoalTemplates() {
+        return request('/goals.php?action=templates');
+    },
+    
+    // Kategorien abrufen
+    getGoalCategories() {
+        return request('/goals.php?action=categories');
+    },
+    
+    // Ziele eines Users abrufen
     getGoals(userId) {
-        const suffix = userId ? `?userId=${userId}` : '';
+        const suffix = userId ? `?action=userGoals&userId=${userId}` : '?action=userGoals';
         return request(`/goals.php${suffix}`);
     },
-
-    addGoal(goalData) {
+    
+    // Fortschritt/Unterziele eines Ziels abrufen
+    getGoalProgress(userGoalId) {
+        return request(`/goals.php?action=goalProgress&userGoalId=${userGoalId}`);
+    },
+    
+    // Ziel-Template dem User zuweisen
+    assignGoal(templateId, userId = null, targetDate = null) {
+        const body = { action: 'assignGoal', templateId };
+        if (userId) body.userId = userId;
+        if (targetDate) body.targetDate = targetDate;
         return request('/goals.php', {
             method: 'POST',
             headers: jsonHeaders,
-            body: JSON.stringify(goalData)
+            body: JSON.stringify(body)
         });
     },
-
-    updateGoal(goalData) {
+    
+    // Unterziel als erledigt/nicht erledigt markieren
+    toggleSubtask(userGoalId, subtaskId, completed) {
         return request('/goals.php', {
-            method: 'PUT',
+            method: 'POST',
             headers: jsonHeaders,
-            body: JSON.stringify(goalData)
+            body: JSON.stringify({ action: 'toggleSubtask', userGoalId, subtaskId, completed: completed ? 1 : 0 })
         });
     },
-
-    deleteGoal(goalId) {
+    
+    // Ziel abbrechen
+    cancelGoal(userGoalId) {
         return request('/goals.php', {
-            method: 'DELETE',
+            method: 'POST',
             headers: jsonHeaders,
-            body: JSON.stringify({ id: goalId })
+            body: JSON.stringify({ action: 'cancelGoal', userGoalId })
+        });
+    },
+    
+    // Ziel löschen
+    deleteGoal(userGoalId) {
+        return request('/goals.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'deleteGoal', userGoalId })
+        });
+    },
+    
+    // ========== GOAL TEMPLATE CRUD ==========
+    
+    // Template-Details mit Unterzielen abrufen
+    getTemplateDetails(templateId) {
+        return request(`/goals.php?action=templateDetails&templateId=${templateId}`);
+    },
+    
+    // Neues Template erstellen
+    createGoalTemplate(title, definition, category, subtasks) {
+        return request('/goals.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'createTemplate', title, definition, category, subtasks })
+        });
+    },
+    
+    // Template aktualisieren
+    updateGoalTemplate(templateId, title, definition, category, subtasks) {
+        return request('/goals.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'updateTemplate', templateId, title, definition, category, subtasks })
+        });
+    },
+    
+    // Template löschen
+    deleteGoalTemplate(templateId) {
+        return request('/goals.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'deleteTemplate', templateId })
         });
     },
 

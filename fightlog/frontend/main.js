@@ -531,8 +531,8 @@ const app = createApp({
                                         <form @submit.prevent="saveExamEdit">
                                             <div class="form-row">
                                                 <div class="form-group">
-                                                    <label>Datum</label>
-                                                    <input type="date" v-model="examEditForm.date" class="form-control" required>
+                                                    <label>Datum (TT.MM.JJJJ)</label>
+                                                    <input type="text" v-model="examEditForm.date" class="form-control" placeholder="z.B. 15.04.2026" required>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Stufe</label>
@@ -598,7 +598,7 @@ const app = createApp({
                     </div>
                 </div>
                 
-                                 <!-- Ziele -->
+                                 <!-- Ziele (Neues Template-basiertes System) -->
                  <div v-else-if="currentPage === 'goals'">
                      <div style="padding: 2rem 0;">
                          <div class="container">
@@ -610,51 +610,63 @@ const app = createApp({
                                  <h1>{{ t('goals') }}</h1>
                              </div>
                             
-                            <!-- Neues Ziel hinzufügen (nur für Schüler und Trainer, nicht für Admins) -->
+                            <!-- Neues Ziel auswählen (nur für Schüler und Trainer) -->
                             <div v-if="currentUser && currentUser.role !== 'admin'" class="form-container">
-                                <h2>Neues Ziel hinzufügen</h2>
-                                <form @submit.prevent="addGoal">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Titel</label>
-                                            <input type="text" v-model="goalForm.title" class="form-control" required>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label>Zieldatum</label>
-                                            <input type="date" v-model="goalForm.targetDate" class="form-control" required>
-                                        </div>
+                                <h2><i class="fas fa-plus-circle" style="color: #3b82f6;"></i> Neues Ziel starten</h2>
+                                
+                                <div class="form-row">
+                                    <!-- Kategorie Dropdown -->
+                                    <div class="form-group">
+                                        <label>Kategorie</label>
+                                        <select v-model="selectedGoalCategory" class="form-control no-custom-select">
+                                            <option value="">Alle Kategorien</option>
+                                            <option v-for="cat in goalCategories" :key="cat" :value="cat">{{ cat }}</option>
+                                        </select>
                                     </div>
                                     
-                                    <div class="form-row">
-                                        <div class="form-group" style="position: relative; z-index: 100;">
-                                            <label>Kategorie</label>
-                                            <select v-model="goalForm.category" class="form-control" required>
-                                                <option value="">Kategorie wählen</option>
-                                                <option value="Gürtelprüfung">Gürtelprüfung</option>
-                                                <option value="Wettkampf">Wettkampf</option>
-                                                <option value="Karriere">Karriere</option>
-                                                <option value="Training">Training</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label>Fortschritt (%)</label>
-                                            <input type="number" v-model="goalForm.progress" class="form-control" min="0" max="100" required>
-                                        </div>
+                                    <!-- Ziel Dropdown -->
+                                    <div class="form-group">
+                                        <label>Ziel auswählen</label>
+                                        <select v-model="selectedTemplateId" class="form-control no-custom-select" :disabled="filteredGoalTemplates.length === 0">
+                                            <option :value="null">-- Ziel wählen --</option>
+                                            <option v-for="template in filteredGoalTemplates" :key="template.id" :value="template.id">
+                                                {{ template.title }} ({{ template.subtask_count }} Unterziele)
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <!-- Zieldatum -->
+                                    <div class="form-group">
+                                        <label>Zieldatum (optional)</label>
+                                        <input type="date" v-model="goalTargetDate" class="form-control">
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-primary">
-                                        Ziel hinzufügen
-                                    </button>
-                                </form>
+                                    <!-- Info zum ausgewählten Ziel -->
+                                    <div class="form-group" v-if="selectedGoalTemplate">
+                                        <label>Beschreibung</label>
+                                        <div style="padding: 0.5rem; background: #f8fafc; border-radius: 6px; color: #64748b; font-size: 0.9rem;">
+                                            {{ selectedGoalTemplate.definition || 'Keine Beschreibung' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    class="btn btn-primary" 
+                                    style="margin-top: 1rem;"
+                                    :disabled="!selectedTemplateId"
+                                    @click="assignGoalToSelf"
+                                >
+                                    <i class="fas fa-plus"></i> Ziel starten
+                                </button>
                             </div>
                             
-                            <!-- Ausstehende Ziele -->
+                            <!-- Aktive Ziele (In Bearbeitung) -->
                             <div class="form-container" style="margin-top: 1.5rem;">
-                                <h2><i class="fas fa-clock" style="color: #f59e0b;"></i> Ausstehende Ziele</h2>
+                                <h2><i class="fas fa-clock" style="color: #f59e0b;"></i> Aktive Ziele</h2>
                                 <div v-if="pendingGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
-                                    Keine ausstehenden Ziele vorhanden.
+                                    Keine aktiven Ziele. Wähle oben ein Ziel aus, um zu starten!
                                 </div>
                                 <div class="nav-grid" v-else>
                                     <div 
@@ -662,34 +674,46 @@ const app = createApp({
                                         :key="goal.id" 
                                         class="nav-card"
                                         style="text-align: left; cursor: pointer;"
-                                        @click="openGoalTasks(goal)"
+                                        @click="openGoalDetails(goal)"
                                     >
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                            <h3>{{ goal.title }}</h3>
-                                            <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <button class="btn btn-sm" @click.stop="cancelGoal(goal)" title="Ziel abbrechen" style="width: auto; padding: 0.25rem 0.5rem; background: #f59e0b; color: white;">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <p v-if="currentUser && currentUser.role === 'admin'" style="color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                                            <i class="fas fa-user"></i> {{ goal.ownerName || 'Unbekannt' }} <span v-if="goal.ownerUsername">(@{{ goal.ownerUsername }})</span>
+                                        <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
+                                        <p style="color: #94a3b8; font-size: 0.8rem;">
+                                            <i class="fas fa-folder"></i> {{ goal.category }}
+                                            <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
                                         </p>
-                                        <p><strong>Kategorie:</strong> {{ goal.category }}</p>
-                                        <p><strong>Zieldatum:</strong> {{ formatDate(goal.targetDate) }}</p>
                                         
                                         <div style="margin-top: 1rem;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                                <span style="font-size: 0.85rem; color: #64748b;">Fortschritt</span>
+                                                <span style="font-size: 0.85rem; font-weight: 600; color: #3b82f6;">
+                                                    {{ goal.completed_subtasks }}/{{ goal.total_subtasks }} ({{ goal.progress }}%)
+                                                </span>
+                                            </div>
                                             <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
                                                 <div 
                                                     :style="{ 
                                                         background: '#3b82f6', 
-                                                        width: Math.min(goal.progress, 100) + '%', 
-                                                        height: '100%' 
+                                                        width: goal.progress + '%', 
+                                                        height: '100%',
+                                                        transition: 'width 0.3s ease'
                                                     }"
                                                 ></div>
                                             </div>
-                                            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                                                {{ goal.progress }}% abgeschlossen
-                                            </p>
                                         </div>
+                                        <p style="color: #3b82f6; font-size: 0.8rem; margin-top: 0.75rem;">
+                                            <i class="fas fa-hand-pointer"></i> Klicken um Unterziele zu bearbeiten
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -708,35 +732,115 @@ const app = createApp({
                                         style="text-align: left; border-left: 4px solid #10b981;"
                                     >
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                            <h3>{{ goal.title }}</h3>
+                                            <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
                                             <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
-                                        <p v-if="currentUser && currentUser.role === 'admin'" style="color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                                            <i class="fas fa-user"></i> {{ goal.ownerName || 'Unbekannt' }} <span v-if="goal.ownerUsername">(@{{ goal.ownerUsername }})</span>
+                                        <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
+                                        <p style="color: #94a3b8; font-size: 0.8rem;">
+                                            <i class="fas fa-folder"></i> {{ goal.category }}
                                         </p>
-                                        <p><strong>Kategorie:</strong> {{ goal.category }}</p>
-                                        <p><strong>Zieldatum:</strong> {{ formatDate(goal.targetDate) }}</p>
-                                        <p><strong>Status:</strong> <span style="color: #10b981;"><i class="fas fa-check"></i> Erreicht</span></p>
+                                        <p style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem;">
+                                            <i class="fas fa-trophy"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
+                                        </p>
                                         
                                         <div style="margin-top: 1rem;">
                                             <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                                                <div 
-                                                    :style="{ 
-                                                        background: '#10b981', 
-                                                        width: '100%', 
-                                                        height: '100%' 
-                                                    }"
-                                                ></div>
+                                                <div style="background: #10b981; width: 100%; height: 100%;"></div>
                                             </div>
                                             <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #10b981;">
-                                                <i class="fas fa-trophy"></i> 100% abgeschlossen
+                                                <i class="fas fa-check"></i> Alle {{ goal.total_subtasks }} Unterziele erledigt
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Abgebrochene Ziele (zusammengeklappt) -->
+                            <div v-if="cancelledGoals.length > 0" class="form-container" style="margin-top: 1.5rem;">
+                                <h2 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
+                                    @click="showCancelledGoals = !showCancelledGoals">
+                                    <span><i class="fas fa-times-circle" style="color: #ef4444;"></i> Abgebrochene Ziele ({{ cancelledGoals.length }})</span>
+                                    <i :class="showCancelledGoals ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" style="color: #94a3b8;"></i>
+                                </h2>
+                                <div v-if="showCancelledGoals" class="nav-grid">
+                                    <div 
+                                        v-for="goal in cancelledGoals" 
+                                        :key="goal.id" 
+                                        class="nav-card"
+                                        style="text-align: left; border-left: 4px solid #ef4444; opacity: 0.7;"
+                                    >
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <h3 style="margin: 0 0 0.5rem 0; text-decoration: line-through;">{{ goal.title }}</h3>
+                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <p style="color: #94a3b8; font-size: 0.8rem;">
+                                            <i class="fas fa-folder"></i> {{ goal.category }}
+                                        </p>
+                                        <p style="color: #ef4444; font-size: 0.85rem;">
+                                            <i class="fas fa-ban"></i> Abgebrochen
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ziel-Details Modal -->
+                <div v-if="showGoalDetailsModal" class="modal-overlay" @click.self="showGoalDetailsModal = false">
+                    <div class="modal-content form-container" style="max-width:500px;">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2><i class="fas fa-bullseye" style="color: #3b82f6;"></i> Unterziele</h2>
+                            <button @click="showGoalDetailsModal = false" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div v-if="goalDetailsData">
+                            <h3 style="margin: 0 0 0.5rem 0;">{{ goalDetailsData.title }}</h3>
+                            <p style="color: #64748b; margin-bottom: 1rem;">{{ goalDetailsData.definition }}</p>
+                            
+                            <div v-if="goalSubtasks.length === 0" style="color:#64748b; padding: 1rem 0;">
+                                Keine Unterziele vorhanden.
+                            </div>
+                            <div v-else>
+                                <div v-for="subtask in goalSubtasks" :key="subtask.id" 
+                                     style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; cursor: pointer;"
+                                     @click="toggleSubtask(subtask)">
+                                    <div :style="{
+                                        width: '24px', height: '24px', borderRadius: '6px', 
+                                        border: subtask.completed ? 'none' : '2px solid #cbd5e1',
+                                        background: subtask.completed ? '#10b981' : 'transparent',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        flexShrink: 0
+                                    }">
+                                        <i v-if="subtask.completed" class="fas fa-check" style="color: white; font-size: 0.75rem;"></i>
+                                    </div>
+                                    <span :style="{ textDecoration: subtask.completed ? 'line-through' : 'none', color: subtask.completed ? '#94a3b8' : '#1e293b' }">
+                                        {{ subtask.definition }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <span style="font-weight: 600;">Fortschritt:</span>
+                                    <span :style="{ color: goalDetailsProgress >= 100 ? '#10b981' : '#3b82f6', fontWeight: 600 }">
+                                        {{ goalSubtasks.filter(s => s.completed).length }}/{{ goalSubtasks.length }} ({{ goalDetailsProgress }}%)
+                                    </span>
+                                </div>
+                                <div style="background: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden;">
+                                    <div :style="{ background: goalDetailsProgress >= 100 ? '#10b981' : '#3b82f6', width: goalDetailsProgress + '%', height: '100%', transition: 'width 0.3s ease' }"></div>
+                                </div>
+                                <p v-if="goalDetailsProgress >= 100" style="color: #10b981; text-align: center; margin-top: 1rem; font-weight: 600;">
+                                    <i class="fas fa-trophy"></i> Ziel erreicht!
+                                </p>
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary" @click="showGoalDetailsModal = false">Schließen</button>
                         </div>
                     </div>
                 </div>
@@ -772,6 +876,15 @@ const app = createApp({
                                     aria-controls="tab-groups" 
                                     @click="setPresetsTab('groups')"
                                 >Gruppen</button>
+                                
+                                <button 
+                                    class="tab-btn" 
+                                    :class="{ active: currentPresetsTab === 'goals' }" 
+                                    role="tab" 
+                                    :aria-selected="(currentPresetsTab === 'goals').toString()" 
+                                    aria-controls="tab-goals" 
+                                    @click="setPresetsTab('goals')"
+                                >Ziele</button>
                             </div>
 
                             <div v-show="currentPresetsTab === 'certificates'" id="tab-certificates" class="form-container" role="tabpanel">
@@ -874,6 +987,82 @@ const app = createApp({
                                         <div v-if="g._showMembers" style="margin-top:.5rem; padding:.5rem; background:#f8fafc; border-radius:6px; max-height:150px; overflow:auto;">
                                             <div v-if="getGroupMemberNames(g).length === 0" style="color:#64748b; font-size:.85rem;">Keine Mitglieder</div>
                                             <div v-for="name in getGroupMemberNames(g)" :key="name" style="font-size:.85rem; padding:.15rem 0;">• {{ name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab: Ziele (Goal Templates) -->
+                            <div v-show="currentPresetsTab === 'goals'" id="tab-goals" class="form-container" role="tabpanel">
+                                <h2><i class="fas fa-bullseye" style="color:#10b981;"></i> Ziel-Vorlagen</h2>
+                                
+                                <!-- Formular für neues Ziel -->
+                                <form @submit.prevent="saveGoalTemplate">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Titel *</label>
+                                            <input type="text" v-model="goalTemplateForm.title" class="form-control" placeholder="z.B. Gelber Gürtel" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Kategorie</label>
+                                            <input type="text" v-model="goalTemplateForm.category" class="form-control" placeholder="z.B. Gürtelprüfung" list="goal-categories">
+                                            <datalist id="goal-categories">
+                                                <option v-for="cat in goalCategories" :key="cat" :value="cat"></option>
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Beschreibung</label>
+                                        <textarea v-model="goalTemplateForm.definition" class="form-control" rows="2" placeholder="Optionale Beschreibung des Ziels"></textarea>
+                                    </div>
+                                    
+                                    <!-- Unterziele -->
+                                    <div class="form-group">
+                                        <label>Unterziele</label>
+                                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                            <div v-for="(subtask, index) in goalTemplateForm.subtasks" :key="index" style="display:flex; gap:0.5rem; align-items:center;">
+                                                <span style="color:#64748b; min-width:24px;">{{ index + 1 }}.</span>
+                                                <input type="text" v-model="goalTemplateForm.subtasks[index]" class="form-control" placeholder="Unterziel eingeben...">
+                                                <button type="button" class="btn btn-danger btn-sm" @click="removeGoalSubtask(index)" title="Entfernen">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary btn-sm" @click="addGoalSubtask" style="align-self:flex-start;">
+                                                <i class="fas fa-plus"></i> Unterziel hinzufügen
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> {{ goalTemplateForm.id ? 'Aktualisieren' : 'Erstellen' }}
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" @click="resetGoalTemplateForm" v-if="goalTemplateForm.id">
+                                            Abbrechen
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Vorhandene Ziel-Vorlagen -->
+                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">Vorhandene Ziel-Vorlagen</h3>
+                                <div v-if="goalTemplates.length === 0" style="color:#64748b;">Noch keine Ziel-Vorlagen erstellt.</div>
+                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                                    <div v-for="t in goalTemplates" :key="t.id" class="nav-card preset-card" style="text-align:left;">
+                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                            <div style="flex:1;">
+                                                <h4 style="margin:0; color:#1e293b;">{{ t.title }}</h4>
+                                                <p v-if="t.category" style="color:#10b981; margin:0.25rem 0; font-size:0.85rem;">
+                                                    <i class="fas fa-tag"></i> {{ t.category }}
+                                                </p>
+                                                <p v-if="t.definition" style="color:#64748b; margin:0.25rem 0; font-size:0.9rem;">{{ t.definition }}</p>
+                                                <p style="color:#64748b; margin:0.25rem 0; font-size:0.85rem;">
+                                                    <i class="fas fa-list-check"></i> {{ t.subtask_count || 0 }} Unterziel(e)
+                                                </p>
+                                            </div>
+                                            <div style="display:flex; gap:0.35rem;">
+                                                <button class="icon-btn" @click="editGoalTemplate(t)" title="Bearbeiten"><i class="fas fa-pen"></i></button>
+                                                <button class="icon-btn" @click="deleteGoalTemplate(t)" title="Löschen"><i class="fas fa-trash"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1127,55 +1316,6 @@ const app = createApp({
                         
                         <div style="margin-top:1rem; display: flex; justify-content: flex-end;">
                             <button class="btn btn-secondary" @click="closeParticipantsModal">Schließen</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ziel-Aufgaben Modal -->
-                <div v-if="showGoalTasksModal" class="modal-overlay" @click.self="showGoalTasksModal = false">
-                    <div class="modal-content form-container" style="max-width:500px;">
-                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h2><i class="fas fa-tasks" style="color: #3b82f6;"></i> Aufgaben</h2>
-                            <button @click="showGoalTasksModal = false" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <p v-if="goalTasksModalGoal" style="color:#64748b; margin-bottom:1rem;">
-                            <strong>{{ goalTasksModalGoal.title }}</strong> - {{ goalTasksModalGoal.category }}
-                        </p>
-                        <div v-if="goalTasks.length === 0" style="color:#64748b; padding: 1rem 0;">
-                            Keine Aufgaben für dieses Ziel definiert.
-                        </div>
-                        <div v-else>
-                            <div v-for="(task, index) in goalTasks" :key="index" 
-                                 style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; cursor: pointer;"
-                                 @click="toggleGoalTask(index)">
-                                <div :style="{
-                                    width: '24px', height: '24px', borderRadius: '6px', 
-                                    border: task.completed ? 'none' : '2px solid #cbd5e1',
-                                    background: task.completed ? '#10b981' : 'transparent',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0
-                                }">
-                                    <i v-if="task.completed" class="fas fa-check" style="color: white; font-size: 0.75rem;"></i>
-                                </div>
-                                <span :style="{ textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? '#94a3b8' : '#1e293b' }">
-                                    {{ task.title }}
-                                </span>
-                            </div>
-                        </div>
-                        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 600;">Fortschritt:</span>
-                                <span style="color: #3b82f6; font-weight: 600;">{{ calculateGoalProgress() }}%</span>
-                            </div>
-                            <div style="background: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden;">
-                                <div :style="{ background: calculateGoalProgress() >= 100 ? '#10b981' : '#3b82f6', width: calculateGoalProgress() + '%', height: '100%', transition: 'width 0.3s ease' }"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:1rem; display: flex; gap: 0.5rem;">
-                            <button class="btn btn-primary" @click="saveGoalTasks">Speichern</button>
-                            <button class="btn btn-secondary" @click="showGoalTasksModal = false">Abbrechen</button>
                         </div>
                     </div>
                 </div>
@@ -1489,12 +1629,17 @@ const app = createApp({
                 selectedStudents: []
             },
             
-            goalForm: {
-                title: '',
-                targetDate: '',
-                category: '',
-                progress: 0
-            },
+            // Neues Ziele-System (Template-basiert)
+            goalTemplates: [],
+            goalCategories: [],
+            selectedGoalCategory: '',
+            selectedTemplateId: null,
+            // Ziel-Details Modal
+            showGoalDetailsModal: false,
+            goalDetailsData: null,
+            goalSubtasks: [],
+            showCancelledGoals: false,
+            goalTargetDate: '',
             
             // Daten
             certificates: [],
@@ -1555,6 +1700,14 @@ const app = createApp({
             // Gruppen (aus Datenbank)
             studentGroups: [],
             groupForm: { name: '', description: '', userIds: [], query: '' },
+            // Ziel-Vorlagen Formular
+            goalTemplateForm: {
+                id: null,
+                title: '',
+                definition: '',
+                category: '',
+                subtasks: []
+            },
             // Gruppen-Bearbeitungs-Modal
             showGroupEditModal: false,
             groupEditForm: {
@@ -1596,11 +1749,7 @@ const app = createApp({
             participantsModalCourse: null,
             participantsList: [],
             participantsAddMode: false,
-            participantsSearchQuery: '',
-            // Ziel-Aufgaben Modal
-            showGoalTasksModal: false,
-            goalTasksModalGoal: null,
-            goalTasks: []
+            participantsSearchQuery: ''
         }
     },
     
@@ -1741,6 +1890,28 @@ const app = createApp({
         // Erreichte Ziele (completed)
         completedGoals() {
             return this.goals.filter(g => g.status === 'completed');
+        },
+        // Abgebrochene Ziele (cancelled)
+        cancelledGoals() {
+            return this.goals.filter(g => g.status === 'cancelled');
+        },
+        // Gefilterte Ziel-Templates basierend auf Kategorie
+        filteredGoalTemplates() {
+            if (!this.selectedGoalCategory) {
+                return this.goalTemplates;
+            }
+            return this.goalTemplates.filter(t => t.category === this.selectedGoalCategory);
+        },
+        // Aktuell ausgewähltes Ziel-Template
+        selectedGoalTemplate() {
+            if (!this.selectedTemplateId) return null;
+            return this.goalTemplates.find(t => t.id === this.selectedTemplateId);
+        },
+        // Fortschritt für Modal berechnen
+        goalDetailsProgress() {
+            if (!this.goalSubtasks || this.goalSubtasks.length === 0) return 0;
+            const completed = this.goalSubtasks.filter(s => s.completed).length;
+            return Math.round((completed / this.goalSubtasks.length) * 100);
         }
     },
     
@@ -2128,7 +2299,7 @@ const app = createApp({
         editExam(exam) {
             this.examEditForm = {
                 id: exam.id,
-                date: exam.date,
+                date: this.toGermanDate(exam.date),
                 level: exam.level,
                 category: exam.category,
                 instructor: exam.instructor,
@@ -2150,10 +2321,12 @@ const app = createApp({
         },
         async saveExamEdit() {
             try {
+                // Konvertiere deutsches Datum zu ISO
+                const isoDate = this.toISODate(this.examEditForm.date);
+                
                 // Prüfe ob Datum in der Zukunft liegt
-                if (this.examEditForm.date) {
-                    // Parse als lokales Datum (YYYY-MM-DD)
-                    const parts = this.examEditForm.date.split('-');
+                if (isoDate) {
+                    const parts = isoDate.split('-');
                     const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                     examDate.setHours(0, 0, 0, 0);
                     const today = new Date();
@@ -2166,7 +2339,7 @@ const app = createApp({
                 const res = await apiService.updateExam({
                     id: this.examEditForm.id,
                     userId: this.examEditForm.userId,
-                    date: this.examEditForm.date,
+                    date: isoDate,
                     level: this.examEditForm.level,
                     category: this.examEditForm.category,
                     instructor: this.examEditForm.instructor,
@@ -2249,111 +2422,145 @@ const app = createApp({
             }
         },
         
-        // Ziele
-        async addGoal() {
+        // ========== NEUES ZIELE-SYSTEM (Template-basiert) ==========
+        
+        // Lade alle Ziel-Templates
+        async loadGoalTemplates() {
             try {
-                const response = await apiService.addGoal(this.goalForm);
-                if (response.success) {
-                    alert('Ziel erfolgreich hinzugefügt!');
-                    this.goalForm = {
-                        title: '',
-                        targetDate: '',
-                        category: '',
-                        progress: 0
-                    };
-                    this.loadGoals();
-                }
+                const templatesRes = await apiService.getGoalTemplates();
+                this.goalTemplates = Array.isArray(templatesRes.templates) ? [...templatesRes.templates] : [];
+                
+                const categoriesRes = await apiService.getGoalCategories();
+                this.goalCategories = Array.isArray(categoriesRes.categories) ? [...categoriesRes.categories] : [];
             } catch (error) {
-                console.error('Add goal error:', error);
-                alert('Ziel hinzufügen fehlgeschlagen');
+                console.error('Load goal templates error:', error);
             }
         },
         
-        async deleteGoal(goal) {
-            const ok = await notify.confirm('Dieses Ziel wirklich löschen?');
-            if (!ok) return;
-            try {
-                const res = await apiService.deleteGoal(goal.id);
-                if (res.success) {
-                    this.goals = this.goals.filter(g => g.id !== goal.id);
-                } else {
-                    alert('Fehler beim Löschen: ' + (res.error || 'Unbekannt'));
-                }
-            } catch (e) {
-                console.error('Delete goal error:', e);
-                alert('Fehler beim Löschen des Ziels');
-            }
-        },
-        
-        // Ziel-Aufgaben Modal öffnen
-        openGoalTasks(goal) {
-            this.goalTasksModalGoal = goal;
-            // Lade gespeicherte Aufgaben aus localStorage oder erstelle leere Liste
-            const savedTasks = localStorage.getItem(`fightlog_goal_tasks_${goal.id}`);
-            if (savedTasks) {
-                this.goalTasks = JSON.parse(savedTasks);
-            } else {
-                // Leere Aufgabenliste - wird später mit konkreten Aufgaben gefüllt
-                this.goalTasks = [];
-            }
-            this.showGoalTasksModal = true;
-        },
-        
-        // Aufgabe toggle
-        toggleGoalTask(index) {
-            this.goalTasks[index].completed = !this.goalTasks[index].completed;
-        },
-        
-        // Fortschritt berechnen basierend auf erledigten Aufgaben
-        calculateGoalProgress() {
-            if (!this.goalTasks || this.goalTasks.length === 0) return 0;
-            const completed = this.goalTasks.filter(t => t.completed).length;
-            return Math.round((completed / this.goalTasks.length) * 100);
-        },
-        
-        // Aufgaben speichern und Progress aktualisieren
-        async saveGoalTasks() {
-            if (!this.goalTasksModalGoal) return;
-            
-            const goalId = this.goalTasksModalGoal.id;
-            const newProgress = this.calculateGoalProgress();
-            
-            // Speichere Aufgaben lokal
-            localStorage.setItem(`fightlog_goal_tasks_${goalId}`, JSON.stringify(this.goalTasks));
-            
-            // Aktualisiere Progress im Backend
-            try {
-                const res = await apiService.updateGoal({ id: goalId, progress: newProgress });
-                if (res.success) {
-                    // Aktualisiere lokale Ziele-Liste
-                    const goalIndex = this.goals.findIndex(g => g.id === goalId);
-                    if (goalIndex !== -1) {
-                        this.goals[goalIndex].progress = newProgress;
-                        // Wenn 100% erreicht, Status auf completed setzen
-                        if (newProgress >= 100) {
-                            this.goals[goalIndex].status = 'completed';
-                        }
-                    }
-                    this.showGoalTasksModal = false;
-                    // Lade Ziele neu um sicherzustellen dass alles synchron ist
-                    await this.loadGoals();
-                } else {
-                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
-                }
-            } catch (e) {
-                console.error('Save goal tasks error:', e);
-                alert('Fehler beim Speichern der Aufgaben');
-            }
-        },
-        
+        // Lade User-Ziele
         async loadGoals() {
             try {
-                // Alle Rollen (auch Trainer) laden jetzt nur ihre eigenen Ziele - Backend regelt das
-                this.goals = await apiService.getGoals();
+                const userId = this.currentUser ? this.currentUser.id : null;
+                const res = await apiService.getGoals(userId);
+                this.goals = res.goals || [];
             } catch (error) {
                 console.error('Load goals error:', error);
             }
         },
+        
+        // Ziel einem User zuweisen (sich selbst)
+        async assignGoalToSelf() {
+            if (!this.selectedTemplateId || !this.currentUser) return;
+            
+            try {
+                // Datum von DD.MM.YYYY zu YYYY-MM-DD konvertieren (falls vom Datepicker)
+                let targetDate = null;
+                if (this.goalTargetDate) {
+                    const match = this.goalTargetDate.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+                    if (match) {
+                        // Deutsches Format DD.MM.YYYY -> ISO Format YYYY-MM-DD
+                        targetDate = `${match[3]}-${match[2]}-${match[1]}`;
+                    } else {
+                        // Falls bereits ISO Format oder anderes
+                        targetDate = this.goalTargetDate;
+                    }
+                }
+                const res = await apiService.assignGoal(this.selectedTemplateId, this.currentUser.id, targetDate);
+                if (res.success) {
+                    this.selectedTemplateId = null;
+                    this.goalTargetDate = '';
+                    await this.loadGoals();
+                    notify.alert('Ziel erfolgreich gestartet!');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Assign goal error:', error);
+                notify.alert('Fehler beim Starten des Ziels');
+            }
+        },
+        
+        // Ziel-Details Modal öffnen
+        async openGoalDetails(goal) {
+            this.goalDetailsData = goal;
+            try {
+                const res = await apiService.getGoalProgress(goal.id);
+                this.goalSubtasks = res.subtasks || [];
+                this.showGoalDetailsModal = true;
+            } catch (error) {
+                console.error('Load goal progress error:', error);
+                notify.alert('Fehler beim Laden der Unterziele');
+            }
+        },
+        
+        // Unterziel toggle (erledigt/nicht erledigt)
+        async toggleSubtask(subtask) {
+            if (!this.goalDetailsData) return;
+            
+            try {
+                const newCompleted = !subtask.completed;
+                const res = await apiService.toggleSubtask(this.goalDetailsData.id, subtask.subtask_id, newCompleted);
+                
+                if (res.success) {
+                    // Lokal aktualisieren
+                    subtask.completed = newCompleted;
+                    
+                    // Prüfen ob Ziel jetzt abgeschlossen ist
+                    if (res.goalCompleted) {
+                        notify.alert('Glückwunsch! Ziel erreicht! 🎉');
+                        this.showGoalDetailsModal = false;
+                    }
+                    
+                    // Ziele-Liste neu laden
+                    await this.loadGoals();
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Toggle subtask error:', error);
+                notify.alert('Fehler beim Aktualisieren');
+            }
+        },
+        
+        // Ziel abbrechen
+        async cancelGoal(goal) {
+            const ok = await notify.confirm('Dieses Ziel wirklich abbrechen?');
+            if (!ok) return;
+            
+            try {
+                const res = await apiService.cancelGoal(goal.id);
+                if (res.success) {
+                    await this.loadGoals();
+                    notify.alert('Ziel abgebrochen');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Cancel goal error:', error);
+                notify.alert('Fehler beim Abbrechen des Ziels');
+            }
+        },
+        
+        // Ziel löschen
+        async deleteGoal(goal) {
+            const ok = await notify.confirm('Dieses Ziel wirklich löschen? Dies kann nicht rückgängig gemacht werden.');
+            if (!ok) return;
+            
+            try {
+                const res = await apiService.deleteGoal(goal.id);
+                if (res.success) {
+                    this.goals = this.goals.filter(g => g.id !== goal.id);
+                    notify.alert('Ziel gelöscht');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Delete goal error:', error);
+                notify.alert('Fehler beim Löschen des Ziels');
+            }
+        },
+        
+        // ========== ENDE ZIELE-SYSTEM ==========
         
         // Admin
         async loadUsers() {
@@ -2486,6 +2693,7 @@ const app = createApp({
                     await this.loadUsers();
                     break;
                 case 'goals':
+                    await this.loadGoalTemplates();
                     await this.loadGoals();
                     break;
                 case 'trainingHistory':
@@ -2721,6 +2929,97 @@ const app = createApp({
             // Optional: Scroll to top on mobile for better UX
             try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
         },
+        
+        // ========== GOAL TEMPLATE CRUD ==========
+        
+        addGoalSubtask() {
+            this.goalTemplateForm.subtasks.push('');
+        },
+        
+        removeGoalSubtask(index) {
+            this.goalTemplateForm.subtasks.splice(index, 1);
+        },
+        
+        resetGoalTemplateForm() {
+            this.goalTemplateForm = {
+                id: null,
+                title: '',
+                definition: '',
+                category: '',
+                subtasks: []
+            };
+        },
+        
+        async saveGoalTemplate() {
+            const { id, title, definition, category, subtasks } = this.goalTemplateForm;
+            
+            // Leere Unterziele herausfiltern
+            const validSubtasks = subtasks.filter(s => s && s.trim());
+            
+            try {
+                let res;
+                if (id) {
+                    // Aktualisieren
+                    res = await apiService.updateGoalTemplate(id, title, definition, category, validSubtasks);
+                } else {
+                    // Neu erstellen
+                    res = await apiService.createGoalTemplate(title, definition, category, validSubtasks);
+                }
+                
+                if (res.success) {
+                    this.resetGoalTemplateForm();
+                    await this.loadGoalTemplates();
+                    notify.alert(id ? 'Ziel-Vorlage aktualisiert!' : 'Ziel-Vorlage erstellt!');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Save goal template error:', error);
+                notify.alert('Fehler beim Speichern');
+            }
+        },
+        
+        async editGoalTemplate(template) {
+            try {
+                // Details mit Unterzielen laden
+                const res = await apiService.getTemplateDetails(template.id);
+                if (res.success && res.template) {
+                    this.goalTemplateForm = {
+                        id: res.template.id,
+                        title: res.template.title,
+                        definition: res.template.definition || '',
+                        category: res.template.category || '',
+                        subtasks: (res.template.subtasks || []).map(s => s.definition)
+                    };
+                    // Scroll zum Formular
+                    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                } else {
+                    notify.alert('Fehler beim Laden der Vorlage');
+                }
+            } catch (error) {
+                console.error('Edit goal template error:', error);
+                notify.alert('Fehler beim Laden');
+            }
+        },
+        
+        async deleteGoalTemplate(template) {
+            const ok = await notify.confirm(`Ziel-Vorlage "${template.title}" wirklich löschen?`);
+            if (!ok) return;
+            
+            try {
+                const res = await apiService.deleteGoalTemplate(template.id);
+                if (res.success) {
+                    notify.alert('Ziel-Vorlage gelöscht!');
+                    await this.loadGoalTemplates();
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Delete goal template error:', error);
+                notify.alert('Fehler beim Löschen');
+            }
+        },
+        
         clearCourseSearch() {
             this.courseSearch = '';
         },
