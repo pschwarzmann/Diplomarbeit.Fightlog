@@ -40,6 +40,47 @@ if ($method === 'GET') {
         json_out(['success' => true, 'subtasks' => $subtasks]);
     }
     
+    // ALLE Ziele aller User abrufen (nur Admin/Trainer)
+    if ($action === 'allGoals') {
+        if ($userRole === 'schueler') {
+            json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
+        }
+        
+        $sql = "
+            SELECT ug.id, ug.user_id, ug.template_id, ug.target_date, ug.status, ug.created_at, ug.completed_at,
+                   gt.title, gt.definition, gt.category,
+                   u.username, u.first_name, u.last_name,
+                   (SELECT COUNT(*) FROM goal_template_subtasks WHERE template_id = gt.id) AS total_subtasks,
+                   (SELECT COUNT(*) FROM user_goal_progress ugp 
+                    JOIN goal_template_subtasks gts ON ugp.subtask_id = gts.id 
+                    WHERE ugp.user_goal_id = ug.id AND ugp.completed = 1) AS completed_subtasks
+            FROM user_goals ug
+            JOIN goal_templates gt ON ug.template_id = gt.id
+            JOIN users u ON ug.user_id = u.id
+            ORDER BY 
+                CASE ug.status 
+                    WHEN 'in_progress' THEN 1 
+                    WHEN 'completed' THEN 2 
+                    WHEN 'cancelled' THEN 3 
+                END,
+                u.last_name, u.first_name,
+                ug.created_at DESC
+        ";
+        $res = $mysqli->query($sql);
+        if (!$res) json_out(['success' => false, 'error' => 'DB-Fehler: ' . $mysqli->error], 500);
+        $goals = $res->fetch_all(MYSQLI_ASSOC);
+        
+        // Progress berechnen und User-Name zusammensetzen
+        foreach ($goals as &$goal) {
+            $total = (int)$goal['total_subtasks'];
+            $completed = (int)$goal['completed_subtasks'];
+            $goal['progress'] = $total > 0 ? round(($completed / $total) * 100) : 0;
+            $goal['user_name'] = trim($goal['first_name'] . ' ' . $goal['last_name']) ?: $goal['username'];
+        }
+        
+        json_out(['success' => true, 'goals' => $goals]);
+    }
+    
     // Ziele eines Users mit Fortschritt abrufen
     if ($action === 'userGoals') {
         $targetUserId = isset($_GET['userId']) ? (int)$_GET['userId'] : $userId;
@@ -280,9 +321,11 @@ if ($method === 'POST') {
         
         if (!$templateId) json_out(['success' => false, 'error' => 'templateId erforderlich'], 400);
         
-        // Berechtigungsprüfung
-        if ($targetUserId !== $userId && $userRole === 'schueler') {
-            json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
+        // Berechtigungsprüfung: Nur der eigene Benutzer kann sich Ziele zuweisen
+        // Trainer und Schüler dürfen nur für sich selbst Ziele erstellen
+        // Nur Admins dürfen Ziele für andere Benutzer erstellen
+        if ($targetUserId !== $userId && $userRole !== 'admin') {
+            json_out(['success' => false, 'error' => 'Ziele können nur für sich selbst erstellt werden'], 403);
         }
         
         // Prüfen ob Template existiert

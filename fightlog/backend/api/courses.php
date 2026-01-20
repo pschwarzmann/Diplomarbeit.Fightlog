@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                (SELECT cb.status FROM course_bookings cb 
                 WHERE cb.course_id = sc.id AND cb.user_id = ? AND cb.status != 'cancelled'
                 LIMIT 1) AS booking_status
-        FROM special_courses sc
+        FROM courses sc
         ORDER BY sc.date ASC, sc.id DESC
     ";
     $stmt = $mysqli->prepare($sql);
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $duration = $body['duration'];
         
         $stmt = $mysqli->prepare("
-            INSERT INTO special_courses (title, instructor, date, duration, max_participants, current_participants, price, description) 
+            INSERT INTO courses (title, instructor, date, duration, max_participants, current_participants, price, description) 
             VALUES (?, ?, ?, ?, ?, 0, ?, ?)
         ");
         $stmt->bind_param('ssssiss', $body['title'], $body['instructor'], $body['date'], $duration, $max, $price, $desc);
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bookStmt->execute();
             }
             // Update current_participants
-            $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+            $updateStmt = $mysqli->prepare("UPDATE courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
             $updateStmt->bind_param('ii', $courseId, $courseId);
             $updateStmt->execute();
         }
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $desc = isset($body['description']) ? $body['description'] : null;
         
         $stmt = $mysqli->prepare("
-            UPDATE special_courses 
+            UPDATE courses 
             SET title = ?, 
                 instructor = COALESCE(?, instructor), 
                 date = COALESCE(?, date),
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete') {
         require_permission($mysqli, 'delete_courses');
         require_fields($body, ['id']);
-        $stmt = $mysqli->prepare("DELETE FROM special_courses WHERE id = ?");
+        $stmt = $mysqli->prepare("DELETE FROM courses WHERE id = ?");
         $stmt->bind_param('i', $body['id']);
         if (!$stmt->execute()) {
             json_out(['success' => false, 'error' => 'Delete fehlgeschlagen: ' . $stmt->error], 500);
@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         try {
             // Kurs mit FOR UPDATE sperren um Race Conditions zu verhindern
-            $checkStmt = $mysqli->prepare("SELECT max_participants, current_participants, date FROM special_courses WHERE id = ? FOR UPDATE");
+            $checkStmt = $mysqli->prepare("SELECT max_participants, current_participants, date FROM courses WHERE id = ? FOR UPDATE");
             $checkStmt->bind_param('i', $courseId);
             $checkStmt->execute();
             $course = $checkStmt->get_result()->fetch_assoc();
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Update current_participants
-            $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+            $updateStmt = $mysqli->prepare("UPDATE courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
             $updateStmt->bind_param('ii', $courseId, $courseId);
             $updateStmt->execute();
             
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bookUserId = $userId;
         
         // Prüfe Kursdatum (Abmeldung nur bis 1 Tag vorher)
-        $checkStmt = $mysqli->prepare("SELECT date FROM special_courses WHERE id = ?");
+        $checkStmt = $mysqli->prepare("SELECT date FROM courses WHERE id = ?");
         $checkStmt->bind_param('i', $courseId);
         $checkStmt->execute();
         $course = $checkStmt->get_result()->fetch_assoc();
@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Update current_participants
-        $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+        $updateStmt = $mysqli->prepare("UPDATE courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
         $updateStmt->bind_param('ii', $courseId, $courseId);
         $updateStmt->execute();
         
@@ -287,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Update current_participants
-        $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+        $updateStmt = $mysqli->prepare("UPDATE courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
         $updateStmt->bind_param('ii', $courseId, $courseId);
         $updateStmt->execute();
         
@@ -309,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Update current_participants
-        $updateStmt = $mysqli->prepare("UPDATE special_courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
+        $updateStmt = $mysqli->prepare("UPDATE courses SET current_participants = (SELECT COUNT(*) FROM course_bookings WHERE course_id = ? AND status != 'cancelled') WHERE id = ?");
         $updateStmt->bind_param('ii', $courseId, $courseId);
         $updateStmt->execute();
         

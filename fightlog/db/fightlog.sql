@@ -100,8 +100,8 @@ CREATE TABLE training_history (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
--- Sonderkurse-Tabelle
-CREATE TABLE special_courses (
+-- Kurse-Tabelle
+CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     instructor VARCHAR(100) NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE course_bookings (
         'pending',
         'cancelled'
     ) DEFAULT 'pending',
-    FOREIGN KEY (course_id) REFERENCES special_courses (id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
@@ -633,7 +633,7 @@ WHERE
     AND rp.role = 'schueler';
 
 INSERT INTO
-    special_courses (
+    courses (
         title,
         instructor,
         date,

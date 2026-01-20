@@ -48,6 +48,18 @@ export const apiService = {
         });
     },
 
+    logout() {
+        return request('/logout.php', {
+            method: 'POST',
+            headers: jsonHeaders
+        });
+    },
+
+    // Eigene Profil-Daten abrufen
+    getOwnProfile() {
+        return request('/users.php?action=profile');
+    },
+
     register(userData) {
         return request('/register.php', {
             method: 'POST',
@@ -101,10 +113,6 @@ export const apiService = {
         return request('/training.php');
     },
 
-    getSpecialCourses() {
-        return request('/courses.php');
-    },
-
     // ===== ZIELE (NEU) =====
     
     // Ziel-Templates abrufen
@@ -121,6 +129,11 @@ export const apiService = {
     getGoals(userId) {
         const suffix = userId ? `?action=userGoals&userId=${userId}` : '?action=userGoals';
         return request(`/goals.php${suffix}`);
+    },
+    
+    // ALLE Ziele aller User abrufen (Admin/Trainer)
+    getAllGoals() {
+        return request('/goals.php?action=allGoals');
     },
     
     // Fortschritt/Unterziele eines Ziels abrufen
@@ -323,6 +336,23 @@ export const apiService = {
 
     getGroupMembers(groupId) {
         return request(`/groups.php?action=members&group_id=${groupId}`);
+    },
+
+    // Profil
+    updateProfile(profileData) {
+        return request('/users.php', {
+            method: 'PUT',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'updateProfile', ...profileData })
+        });
+    },
+
+    changeOwnPassword(currentPassword, newPassword) {
+        return request('/users.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'changeOwnPassword', currentPassword, newPassword })
+        });
     }
 };
 

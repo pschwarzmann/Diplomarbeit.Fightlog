@@ -182,6 +182,13 @@ const app = createApp({
                             
                             <div class="nav-grid">
                                 <nav-card
+                                    icon="fa-user"
+                                    title="Profil"
+                                    description="Profil bearbeiten & Passwort ändern"
+                                    @click="navigateTo('profile')"
+                                />
+                                
+                                <nav-card
                                     icon="fa-certificate"
                                     :title="t('certificates')"
                                     description="Urkunden verwalten"
@@ -610,6 +617,100 @@ const app = createApp({
                                  <h1>{{ t('goals') }}</h1>
                              </div>
                             
+                            <!-- ADMIN-ANSICHT: Alle Ziele aller User -->
+                            <div v-if="currentUser && currentUser.role === 'admin'">
+                                <div class="form-container">
+                                    <h2><i class="fas fa-users" style="color: #8b5cf6;"></i> Alle Schüler-Ziele</h2>
+                                    <p style="color: #64748b; margin-bottom: 1rem;">Übersicht aller Ziele aller Schüler</p>
+                                    
+                                    <!-- Filter nach Status -->
+                                    <div class="form-row" style="margin-bottom: 1rem;">
+                                        <div class="form-group">
+                                            <label>Status filtern</label>
+                                            <select v-model="adminGoalStatusFilter" class="form-control no-custom-select">
+                                                <option value="">Alle</option>
+                                                <option value="in_progress">In Bearbeitung</option>
+                                                <option value="completed">Abgeschlossen</option>
+                                                <option value="cancelled">Abgebrochen</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Schüler suchen</label>
+                                            <input type="text" v-model="adminGoalSearch" class="form-control" placeholder="Name eingeben...">
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="filteredAllUsersGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
+                                        Keine Ziele gefunden.
+                                    </div>
+                                    
+                                    <div class="nav-grid" v-else>
+                                        <div 
+                                            v-for="goal in filteredAllUsersGoals" 
+                                            :key="goal.id" 
+                                            class="nav-card"
+                                            style="text-align: left;"
+                                            :style="{
+                                                borderLeft: goal.status === 'completed' ? '4px solid #10b981' : 
+                                                           goal.status === 'cancelled' ? '4px solid #ef4444' : 
+                                                           '4px solid #3b82f6'
+                                            }"
+                                        >
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                                <div>
+                                                    <span style="background: #8b5cf6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.5rem; display: inline-block;">
+                                                        {{ goal.user_name }}
+                                                    </span>
+                                                    <h3 style="margin: 0.25rem 0 0.5rem 0;">{{ goal.title }}</h3>
+                                                </div>
+                                                <span :style="{
+                                                    padding: '0.15rem 0.5rem', 
+                                                    borderRadius: '4px', 
+                                                    fontSize: '0.75rem',
+                                                    background: goal.status === 'completed' ? '#dcfce7' : 
+                                                               goal.status === 'cancelled' ? '#fee2e2' : '#dbeafe',
+                                                    color: goal.status === 'completed' ? '#166534' : 
+                                                          goal.status === 'cancelled' ? '#991b1b' : '#1e40af'
+                                                }">
+                                                    {{ goal.status === 'completed' ? 'Abgeschlossen' : 
+                                                       goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
+                                                </span>
+                                            </div>
+                                            <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
+                                            <p style="color: #94a3b8; font-size: 0.8rem;">
+                                                <i class="fas fa-folder"></i> {{ goal.category }}
+                                                <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
+                                            </p>
+                                            
+                                            <div style="margin-top: 0.75rem;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                                    <span style="font-size: 0.85rem; color: #64748b;">Fortschritt</span>
+                                                    <span style="font-size: 0.85rem; font-weight: 600;" :style="{ color: goal.status === 'completed' ? '#10b981' : '#3b82f6' }">
+                                                        {{ goal.completed_subtasks }}/{{ goal.total_subtasks }} ({{ goal.progress }}%)
+                                                    </span>
+                                                </div>
+                                                <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                    <div 
+                                                        :style="{ 
+                                                            background: goal.status === 'completed' ? '#10b981' : '#3b82f6', 
+                                                            width: goal.progress + '%', 
+                                                            height: '100%'
+                                                        }"
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p v-if="goal.completed_at" style="color: #10b981; font-size: 0.8rem; margin-top: 0.5rem;">
+                                                <i class="fas fa-trophy"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- NORMALE USER-ANSICHT (Schüler/Trainer) -->
+                            <div v-else>
+                            
                             <!-- Neues Ziel auswählen (nur für Schüler und Trainer) -->
                             <div v-if="currentUser && currentUser.role !== 'admin'" class="form-container">
                                 <h2><i class="fas fa-plus-circle" style="color: #3b82f6;"></i> Neues Ziel starten</h2>
@@ -786,6 +887,8 @@ const app = createApp({
                                     </div>
                                 </div>
                             </div>
+                            
+                            </div><!-- Ende v-else normale User-Ansicht -->
                         </div>
                     </div>
                 </div>
@@ -1043,27 +1146,28 @@ const app = createApp({
                                     </div>
                                 </form>
                                 
-                                <!-- Vorhandene Ziel-Vorlagen -->
-                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">Vorhandene Ziel-Vorlagen</h3>
+                                <!-- Vorhandene Ziel-Vorlagen als kompakte Tags -->
+                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">
+                                    Vorhandene Ziel-Vorlagen 
+                                    <span style="color:#64748b; font-weight:normal; font-size:0.9rem;">({{ goalTemplates.length }})</span>
+                                </h3>
                                 <div v-if="goalTemplates.length === 0" style="color:#64748b;">Noch keine Ziel-Vorlagen erstellt.</div>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="t in goalTemplates" :key="t.id" class="nav-card preset-card" style="text-align:left;">
-                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                            <div style="flex:1;">
-                                                <h4 style="margin:0; color:#1e293b;">{{ t.title }}</h4>
-                                                <p v-if="t.category" style="color:#10b981; margin:0.25rem 0; font-size:0.85rem;">
-                                                    <i class="fas fa-tag"></i> {{ t.category }}
-                                                </p>
-                                                <p v-if="t.definition" style="color:#64748b; margin:0.25rem 0; font-size:0.9rem;">{{ t.definition }}</p>
-                                                <p style="color:#64748b; margin:0.25rem 0; font-size:0.85rem;">
-                                                    <i class="fas fa-list-check"></i> {{ t.subtask_count || 0 }} Unterziel(e)
-                                                </p>
-                                            </div>
-                                            <div style="display:flex; gap:0.35rem;">
-                                                <button class="icon-btn" @click="editGoalTemplate(t)" title="Bearbeiten"><i class="fas fa-pen"></i></button>
-                                                <button class="icon-btn" @click="deleteGoalTemplate(t)" title="Löschen"><i class="fas fa-trash"></i></button>
-                                            </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                                    <div 
+                                        v-for="t in goalTemplates" 
+                                        :key="t.id" 
+                                        style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:0.9rem;"
+                                        :style="{ background: goalTemplateForm.id === t.id ? '#dcfce7' : '#f0fdf4', borderColor: goalTemplateForm.id === t.id ? '#22c55e' : '#bbf7d0' }"
+                                    >
+                                        <div style="flex:1; min-width:0;">
+                                            <span style="font-weight:600; color:#166534;">{{ t.title }}</span>
+                                            <span v-if="t.category" style="color:#64748b; margin-left:0.35rem; font-size:0.8rem;">({{ t.category }})</span>
+                                            <span style="color:#94a3b8; margin-left:0.25rem; font-size:0.75rem;">
+                                                <i class="fas fa-list-check"></i> {{ t.subtask_count || 0 }}
+                                            </span>
                                         </div>
+                                        <button class="icon-btn" @click="editGoalTemplate(t)" title="Bearbeiten" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-pen"></i></button>
+                                        <button class="icon-btn" @click="deleteGoalTemplate(t)" title="Löschen" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-trash"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -1410,6 +1514,91 @@ const app = createApp({
                     </div>
                 </div>
 
+                <!-- Profil-Seite -->
+                <div v-else-if="currentPage === 'profile' && currentUser">
+                    <div style="padding: 2rem 0;">
+                        <div class="container">
+                            <div class="page-header">
+                                <button @click="goToDashboard" class="back-btn">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Zurück
+                                </button>
+                                <h1><i class="fas fa-user"></i> Mein Profil</h1>
+                            </div>
+
+                            <div class="form-container" style="max-width: 600px;">
+                                <form @submit.prevent="saveProfile">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Vorname *</label>
+                                            <input type="text" v-model="profileForm.firstName" class="form-control" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nachname *</label>
+                                            <input type="text" v-model="profileForm.lastName" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Benutzername</label>
+                                        <input type="text" :value="currentUser.username" class="form-control" disabled style="background: #f1f5f9;">
+                                        <small style="color: #64748b;">Benutzername kann nicht geändert werden</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>E-Mail *</label>
+                                        <input type="email" v-model="profileForm.email" class="form-control" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Telefon</label>
+                                        <input type="tel" v-model="profileForm.phone" class="form-control" placeholder="+49 123 456789">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Schule</label>
+                                        <input type="text" v-model="profileForm.school" class="form-control" placeholder="z.B. Kampfsport Akademie Berlin">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Gürtelgrad</label>
+                                        <input type="text" v-model="profileForm.beltLevel" class="form-control" placeholder="z.B. Weißgurt">
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+                                        <i class="fas fa-save"></i> Profil speichern
+                                    </button>
+                                </form>
+                                
+                                <!-- Passwort ändern -->
+                                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+                                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-key"></i> Passwort ändern</h3>
+                                    <form @submit.prevent="changePassword">
+                                        <div class="form-group">
+                                            <label>Aktuelles Passwort *</label>
+                                            <input type="password" v-model="passwordForm.currentPassword" class="form-control" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Neues Passwort *</label>
+                                            <input type="password" v-model="passwordForm.newPassword" class="form-control" required minlength="4">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Neues Passwort bestätigen *</label>
+                                            <input type="password" v-model="passwordForm.confirmPassword" class="form-control" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary" :disabled="!passwordForm.currentPassword || !passwordForm.newPassword || passwordForm.newPassword !== passwordForm.confirmPassword">
+                                            <i class="fas fa-lock"></i> Passwort ändern
+                                        </button>
+                                        <p v-if="passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword" style="color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem;">
+                                            Passwörter stimmen nicht überein
+                                        </p>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Modal: Benutzer erstellen (nur Admin) -->
                 <div v-if="showCreateUserModal" class="modal-overlay" @click.self="closeCreateUserModal">
                     <div class="modal-content form-container" style="max-width: 500px; max-height: 90vh; overflow-y: auto;" @click.stop>
@@ -1640,13 +1829,16 @@ const app = createApp({
             goalSubtasks: [],
             showCancelledGoals: false,
             goalTargetDate: '',
+            // Admin Ziele-Filter
+            adminGoalStatusFilter: '',
+            adminGoalSearch: '',
             
             // Daten
             certificates: [],
             exams: [],
             trainingHistory: [],
-            specialCourses: [],
             goals: [],
+            allUsersGoals: [], // Alle Ziele aller User (für Admin)
             courses: []
             ,
             // Admin
@@ -1661,6 +1853,21 @@ const app = createApp({
                 role: 'schueler',
                 school: '',
                 beltLevel: ''
+            },
+            // Profil-Formular
+            profileForm: {
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                school: '',
+                beltLevel: ''
+            },
+            // Passwort-Änderung
+            passwordForm: {
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
             },
             adminPermissionsList: [
                 { key: 'manage_users', label: 'Benutzer verwalten' },
@@ -1912,6 +2119,27 @@ const app = createApp({
             if (!this.goalSubtasks || this.goalSubtasks.length === 0) return 0;
             const completed = this.goalSubtasks.filter(s => s.completed).length;
             return Math.round((completed / this.goalSubtasks.length) * 100);
+        },
+        // Gefilterte Ziele aller User (für Admin)
+        filteredAllUsersGoals() {
+            let filtered = this.allUsersGoals;
+            
+            // Nach Status filtern
+            if (this.adminGoalStatusFilter) {
+                filtered = filtered.filter(g => g.status === this.adminGoalStatusFilter);
+            }
+            
+            // Nach Name suchen
+            if (this.adminGoalSearch) {
+                const search = this.adminGoalSearch.toLowerCase();
+                filtered = filtered.filter(g => 
+                    (g.user_name && g.user_name.toLowerCase().includes(search)) ||
+                    (g.username && g.username.toLowerCase().includes(search)) ||
+                    (g.title && g.title.toLowerCase().includes(search))
+                );
+            }
+            
+            return filtered;
         }
     },
     
@@ -2103,7 +2331,14 @@ const app = createApp({
             }
         },
         
-        logout() {
+        async logout() {
+            // Backend-Logout aufrufen (Session löschen)
+            try {
+                await apiService.logout();
+            } catch (e) {
+                console.warn('Logout API error:', e);
+            }
+            
             clearUsernameCache();
             clearAuthState();
 
@@ -2437,12 +2672,21 @@ const app = createApp({
             }
         },
         
-        // Lade User-Ziele
+        // Lade User-Ziele (oder alle Ziele für Admin)
         async loadGoals() {
             try {
-                const userId = this.currentUser ? this.currentUser.id : null;
-                const res = await apiService.getGoals(userId);
-                this.goals = res.goals || [];
+                if (this.currentUser && this.currentUser.role === 'admin') {
+                    // Admin sieht alle Ziele aller User
+                    const res = await apiService.getAllGoals();
+                    this.allUsersGoals = res.goals || [];
+                    this.goals = [];
+                } else {
+                    // Normale User sehen nur ihre eigenen
+                    const userId = this.currentUser ? this.currentUser.id : null;
+                    const res = await apiService.getGoals(userId);
+                    this.goals = res.goals || [];
+                    this.allUsersGoals = [];
+                }
             } catch (error) {
                 console.error('Load goals error:', error);
             }
@@ -2566,6 +2810,12 @@ const app = createApp({
         async loadUsers() {
             try {
                 const users = await apiService.getUsers();
+                // Prüfen ob es ein Array ist (bei 403 kommt ein Fehler-Objekt)
+                if (!Array.isArray(users)) {
+                    // Schüler haben keine Berechtigung - leere Liste ist OK
+                    this.adminUserList = [];
+                    return;
+                }
                 // Stelle sicher, dass jeder User die benötigten Properties hat
                 this.adminUserList = users.map(user => ({
                     ...user,
@@ -2574,7 +2824,8 @@ const app = createApp({
                     _passwordChanged: user._passwordChanged || false
                 }));
             } catch (error) {
-                console.error('Load users error:', error);
+                // Bei 403 (keine Berechtigung) ist das OK - Schüler brauchen keine User-Liste
+                this.adminUserList = [];
             }
         },
         toggleUserCard(user) {
@@ -2681,6 +2932,61 @@ const app = createApp({
             }
         },
         
+        // Profil speichern
+        async saveProfile() {
+            try {
+                const res = await apiService.updateProfile(this.profileForm);
+                if (res.success) {
+                    // Lokale User-Daten aktualisieren
+                    this.currentUser = {
+                        ...this.currentUser,
+                        ...this.profileForm
+                    };
+                    // LocalStorage aktualisieren
+                    persistAuthState(this.currentUser);
+                    await notify.alert('Profil erfolgreich gespeichert!');
+                } else {
+                    await notify.alert('Fehler: ' + (res.error || 'Profil konnte nicht gespeichert werden'));
+                }
+            } catch (e) {
+                console.error('Save profile error:', e);
+                await notify.alert('Fehler beim Speichern des Profils');
+            }
+        },
+        
+        // Eigenes Passwort ändern
+        async changePassword() {
+            if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+                await notify.alert('Die Passwörter stimmen nicht überein');
+                return;
+            }
+            if (this.passwordForm.newPassword.length < 4) {
+                await notify.alert('Das neue Passwort muss mindestens 4 Zeichen lang sein');
+                return;
+            }
+            
+            try {
+                const res = await apiService.changeOwnPassword(
+                    this.passwordForm.currentPassword,
+                    this.passwordForm.newPassword
+                );
+                if (res.success) {
+                    // Formular zurücksetzen
+                    this.passwordForm = {
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: ''
+                    };
+                    await notify.alert('Passwort erfolgreich geändert!');
+                } else {
+                    await notify.alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
+                }
+            } catch (e) {
+                console.error('Change password error:', e);
+                await notify.alert('Fehler beim Ändern des Passworts');
+            }
+        },
+        
         // Daten laden
         async loadPageData() {
             switch (this.currentPage) {
@@ -2690,7 +2996,10 @@ const app = createApp({
                     break;
                 case 'exams':
                     await this.loadExams();
-                    await this.loadUsers();
+                    // Nur für Admin/Trainer Users laden (für Schüler nicht nötig)
+                    if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
+                        await this.loadUsers();
+                    }
                     break;
                 case 'goals':
                     await this.loadGoalTemplates();
@@ -2703,16 +3012,12 @@ const app = createApp({
                         console.error('Load training history error:', error);
                     }
                     break;
-                case 'specialCourses':
-                    try {
-                        this.specialCourses = await apiService.getSpecialCourses();
-                    } catch (error) {
-                        console.error('Load special courses error:', error);
-                    }
-                    break;
                 case 'courses':
                     await this.loadCourses();
-                    await this.loadUsers();
+                    // Nur für Admin/Trainer Users laden
+                    if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
+                        await this.loadUsers();
+                    }
                     break;
                 case 'admin':
                     await this.loadUsers();
@@ -2721,6 +3026,36 @@ const app = createApp({
                     this.loadPresets();
                     await this.loadUsers();
                     await this.loadGroups();
+                    await this.loadGoalTemplates();
+                    break;
+                case 'profile':
+                    // Profil-Daten frisch aus der Datenbank laden
+                    try {
+                        const res = await apiService.getOwnProfile();
+                        if (res.success && res.user) {
+                            this.profileForm = {
+                                firstName: res.user.firstName || '',
+                                lastName: res.user.lastName || '',
+                                email: res.user.email || '',
+                                phone: res.user.phone || '',
+                                school: res.user.school || '',
+                                beltLevel: res.user.beltLevel || ''
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Load profile error:', e);
+                        // Fallback: currentUser verwenden
+                        if (this.currentUser) {
+                            this.profileForm = {
+                                firstName: this.currentUser.firstName || '',
+                                lastName: this.currentUser.lastName || '',
+                                email: this.currentUser.email || '',
+                                phone: this.currentUser.phone || '',
+                                school: this.currentUser.school || '',
+                                beltLevel: this.currentUser.beltLevel || ''
+                            };
+                        }
+                    }
                     break;
             }
         },

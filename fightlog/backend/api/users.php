@@ -8,7 +8,22 @@ $currentUserId = auth_user_id($mysqli);
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    // Berechtigungsprüfung: view_all_users für alle Benutzer
+    $action = isset($_GET['action']) ? $_GET['action'] : '';
+    
+    // Eigenes Profil abrufen - keine Berechtigung nötig
+    if ($action === 'profile') {
+        $stmt = $mysqli->prepare("SELECT id, username, email, role, name, first_name as firstName, last_name as lastName, phone, school, belt_level as beltLevel FROM users WHERE id = ?");
+        $stmt->bind_param('i', $currentUserId);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        if (!$user) {
+            json_out(['success'=>false, 'error'=>'Benutzer nicht gefunden'], 404);
+        }
+        $user['id'] = (int)$user['id'];
+        json_out(['success'=>true, 'user'=>$user]);
+    }
+    
+    // Alle Benutzer abrufen - nur mit Berechtigung
     if (!has_permission($mysqli, 'view_all_users') && !has_permission($mysqli, 'manage_users')) {
         json_error('Keine Berechtigung', 403);
     }
@@ -121,8 +136,69 @@ if ($method === 'POST') {
         json_out(['success'=>true, 'message'=>'Passwort erfolgreich geändert']);
     }
 
+    if ($action === 'changeOwnPassword') {
+        // Jeder eingeloggte Benutzer kann sein eigenes Passwort ändern
+        require_fields($body, ['currentPassword', 'newPassword']);
+        
+        // Aktuellen Benutzer und sein Passwort abrufen
+        $stmt = $mysqli->prepare("SELECT password_hash FROM users WHERE id = ? LIMIT 1");
+        $stmt->bind_param('i', $currentUserId);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        if (!$user) {
+            json_out(['success'=>false, 'error'=>'Benutzer nicht gefunden'], 404);
+        }
+        
+        // Aktuelles Passwort prüfen
+        if (!password_verify($body['currentPassword'], $user['password_hash'])) {
+            json_out(['success'=>false, 'error'=>'Aktuelles Passwort ist falsch'], 401);
+        }
+        
+        // Neues Passwort hashen und speichern
+        $hash = password_hash($body['newPassword'], PASSWORD_BCRYPT);
+        $updateStmt = $mysqli->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        $updateStmt->bind_param('si', $hash, $currentUserId);
+        if (!$updateStmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Passwort-Update fehlgeschlagen'], 500);
+        }
+        json_out(['success'=>true, 'message'=>'Passwort erfolgreich geändert']);
+    }
+
     json_out(['success'=>false, 'error'=>'Unbekannte Aktion'], 400);
 }
 
-json_out(['success'=>false, 'error'=>'Nur GET/POST erlaubt'], 405);
+// PUT für Profil-Updates
+if ($method === 'PUT') {
+    $body = read_json_body();
+    $action = isset($body['action']) ? $body['action'] : '';
+    
+    if ($action === 'updateProfile') {
+        // Jeder eingeloggte Benutzer kann sein eigenes Profil aktualisieren
+        $firstName = isset($body['firstName']) ? trim($body['firstName']) : '';
+        $lastName = isset($body['lastName']) ? trim($body['lastName']) : '';
+        $email = isset($body['email']) ? trim($body['email']) : '';
+        $phone = isset($body['phone']) ? trim($body['phone']) : '';
+        $school = isset($body['school']) ? trim($body['school']) : '';
+        $beltLevel = isset($body['beltLevel']) ? trim($body['beltLevel']) : '';
+        
+        // Name zusammensetzen
+        $name = trim($firstName . ' ' . $lastName);
+        
+        // E-Mail-Validierung (optional, wenn angegeben)
+        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE users SET first_name=?, last_name=?, name=?, email=?, phone=?, school=?, belt_level=? WHERE id=?");
+        $stmt->bind_param('sssssssi', $firstName, $lastName, $name, $email, $phone, $school, $beltLevel, $currentUserId);
+        if (!$stmt->execute()) {
+            json_out(['success'=>false, 'error'=>'Profil-Update fehlgeschlagen: '.$stmt->error], 500);
+        }
+        json_out(['success'=>true, 'message'=>'Profil erfolgreich aktualisiert']);
+    }
+    
+    json_out(['success'=>false, 'error'=>'Unbekannte Aktion'], 400);
+}
+
+json_out(['success'=>false, 'error'=>'Nur GET/POST/PUT erlaubt'], 405);
 ?>
