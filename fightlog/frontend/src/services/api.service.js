@@ -35,16 +35,47 @@ function getAuthHeaders() {
 async function request(path, options = {}) {
     // Merge Auth-Headers mit bestehenden Headers
     options.headers = { ...getAuthHeaders(), ...(options.headers || {}) };
+    
+    // Credentials für Cookies/Sessions mitsenden
+    options.credentials = options.credentials || 'include';
+    
     const response = await fetch(`${BASE_URL}${path}`, options);
+    
+    // Prüfe Content-Type
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        // Wenn nicht JSON, Text lesen für besseres Error-Handling
+        const text = await response.text();
+        console.error('Non-JSON response:', {
+            status: response.status,
+            statusText: response.statusText,
+            contentType: contentType,
+            url: `${BASE_URL}${path}`,
+            body: text.substring(0, 500)
+        });
+        
+        // Versuche trotzdem JSON zu parsen (falls Content-Type falsch gesetzt wurde)
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Server returned non-JSON response (${response.status}): ${text.substring(0, 100)}`);
+        }
+    }
+    
     return response.json();
 }
 
 export const apiService = {
     login(credentials) {
+        // Unterstütze sowohl 'identifier' als auch 'username' für Rückwärtskompatibilität
+        const loginData = {
+            identifier: credentials.identifier || credentials.username,
+            password: credentials.password
+        };
         return request('/login.php', {
             method: 'POST',
             headers: jsonHeaders,
-            body: JSON.stringify(credentials)
+            body: JSON.stringify(loginData)
         });
     },
 
@@ -226,6 +257,14 @@ export const apiService = {
         });
     },
 
+    deleteUser(userId) {
+        return request('/users.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'delete', id: userId })
+        });
+    },
+
     createUser(userData) {
         return request('/register.php', {
             method: 'POST',
@@ -352,6 +391,60 @@ export const apiService = {
             method: 'POST',
             headers: jsonHeaders,
             body: JSON.stringify({ action: 'changeOwnPassword', currentPassword, newPassword })
+        });
+    },
+    
+    // Passkey APIs
+    passkeyRegister() {
+        return request('/passkeys.php', {
+            method: 'POST',
+            body: JSON.stringify({ action: 'register' })
+        });
+    },
+    
+    passkeyVerify(credential, challenge, friendlyName) {
+        return request('/passkeys.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'verify',
+                credential: credential,
+                challenge: challenge,
+                friendlyName: friendlyName
+            })
+        });
+    },
+    
+    passkeyAuthenticate(credentialId = null) {
+        return request('/passkeys.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'authenticate',
+                credentialId: credentialId
+            })
+        });
+    },
+    
+    passkeyVerifyAuth(credential, challenge) {
+        return request('/passkeys.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'verifyAuth',
+                credential: credential,
+                challenge: challenge
+            })
+        });
+    },
+    
+    getPasskeys() {
+        return request('/passkeys.php', {
+            method: 'GET'
+        });
+    },
+    
+    deletePasskey(passkeyId) {
+        return request('/passkeys.php', {
+            method: 'DELETE',
+            body: JSON.stringify({ id: passkeyId })
         });
     }
 };

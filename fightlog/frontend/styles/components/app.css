@@ -1692,13 +1692,19 @@ input[type="date"].form-control {
     color: #ef4444;
     border: 1px solid #e2e8f0;
     box-shadow: none;
+    transition: all 0.2s ease;
 }
+/* Wird von spezifischen Regeln für .actions .btn-sm.btn-danger überschrieben */
 .btn-danger:hover {
-    background: #f8fafc;
+    background: #fee2e2;
     color: #dc2626;
-    border-color: #e2e8f0;
-    box-shadow: none;
-    transform: none;
+    border-color: #fecaca;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+    transform: translateY(-1px);
+}
+.btn-danger:active {
+    transform: translateY(0);
+    background: #fecaca;
 }
 /* Kein Sheen/Glow für Danger */
 .btn-danger::after { content: none !important; }
@@ -1712,7 +1718,10 @@ input[type="date"].form-control {
     min-height: 32px;
     line-height: 1;
     transition: all 0.2s ease;
+    /* Wird von spezifischen Regeln für .actions überschrieben */
 }
+
+/* Allgemeine btn-sm.btn-danger Regeln - werden von spezifischen Regeln am Ende der Datei überschrieben */
 .btn-sm.btn-danger:hover {
     background: #fee2e2 !important;
     color: #dc2626 !important;
@@ -1835,59 +1844,602 @@ input[type="date"].form-control {
     filter: saturate(1.05) contrast(1.02) brightness(1.01);
 }
 
-/* Admin-User-Karten sollen neutral bleiben */
-.admin-user-card { 
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    height: auto; /* Eigene Höhe basierend auf Inhalt */
-    min-height: auto; /* Keine Mindesthöhe */
-    align-self: start; /* Oben ausrichten im Grid */
-    overflow: visible; /* Dropdown-Menü soll nicht abgeschnitten werden */
-    position: relative; /* Für z-index Kontext */
-    z-index: 1; /* Basis z-index */
+/* Admin-User-Karten Grid - Responsive */
+.admin-users-grid,
+div.admin-users-grid,
+.admin-panel .admin-users-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)) !important;
+    gap: 2rem !important;
+    margin-top: 2rem !important;
 }
+
+@media (min-width: 640px) {
+    .admin-users-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-users-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+/* Admin-User-Karten */
+.admin-user-card,
+div.admin-user-card,
+.admin-users-grid .admin-user-card { 
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 16px !important;
+    padding: 1.75rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+    overflow: visible !important;
+    position: relative !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
 .admin-user-card:hover {
-    transform: none;
-    box-shadow: 0 8px 14px rgba(0,0,0,0.06);
-    filter: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
 }
+
+.admin-user-card.open {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
 .admin-user-card::after { content: none !important; }
 
-/* Collapsible Admin-User-Karten */
+/* Collapsible Header */
 .collapsible { 
     cursor: pointer; 
-    align-self: start; /* Jede Karte hat ihre eigene Höhe */
-    min-height: auto; /* Keine Mindesthöhe */
 }
-.collapsible-header {
-    display: grid;
-    grid-template-columns: 40px 1fr 20px;
+
+.collapsible-header,
+.admin-user-card .collapsible-header,
+div.collapsible-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 1rem 0 !important;
+    gap: 1rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
+
+.user-header-content {
+    display: flex;
     align-items: center;
-    gap: .75rem;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0; /* Für Text-Overflow */
 }
-.role-emoji { font-size: 1.6rem; line-height: 1; }
-.header-text .name { font-weight: 600; color: #1f2937; }
-.header-text .subtitle { color: #64748b; font-size: .9rem; }
-.caret { color: #64748b; transition: transform .2s ease; display:flex; justify-content:center; }
+
+.role-emoji { 
+    font-size: 1.75rem; 
+    line-height: 1; 
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+}
+
+.header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-text .name { 
+    font-weight: 600; 
+    color: #1f2937; 
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-text .subtitle { 
+    color: #64748b; 
+    font-size: 0.875rem; 
+}
+
+.caret { 
+    color: #64748b; 
+    transition: transform .2s ease; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
 .caret.open { transform: rotate(180deg); }
-.collapsible-body { 
-    padding-top: .75rem; 
-    display: block; /* Explizit block setzen */
-    overflow: visible; /* Dropdown-Menü soll nicht abgeschnitten werden */
-    position: relative; /* Für z-index Kontext */
+
+/* Collapsible Body */
+.collapsible-body,
+.admin-user-card .collapsible-body,
+div.collapsible-body { 
+    padding-top: 1.75rem !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
+    border-top: 1px solid #e2e8f0 !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
-/* Wenn geschlossen, soll der Body wirklich keinen Platz einnehmen (v-if entfernt das Element, aber zur Sicherheit) */
+
 .collapsible:not(.open) .collapsible-body {
     display: none;
 }
-.collapsible-body p { margin: 0.5rem 0 0.9rem; }
+
+/* Benutzer-Informationen */
+.user-info-section,
+.collapsible-body .user-info-section,
+.admin-user-card .user-info-section {
+    margin-bottom: 1.5rem !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+}
+
+.info-row,
+.user-info-section .info-row,
+.collapsible-body .info-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.info-row:first-child {
+    padding-top: 0 !important;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.info-label i {
+    width: 16px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.info-value {
+    color: #1f2937;
+    font-size: 0.875rem;
+    flex: 1;
+    word-break: break-word;
+}
+
+.info-value .empty-value {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Form-Labels */
+.form-label {
+    display: block;
+    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-label i {
+    color: #64748b;
+    width: 16px;
+}
+
+.collapsible-body .form-group {
+    margin-top: 2rem !important;
+    margin-bottom: 0 !important;
+}
+
+.collapsible-body .form-group:first-of-type {
+    margin-top: 0 !important;
+}
+
 .collapsible-body .form-control { 
     margin-top: 0;
     width: 100%;
+    font-size: 0.9rem;
 }
-.collapsible-body .form-group {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+
+/* Select-Element im Admin-Panel */
+.collapsible-body select.form-control.no-custom-select,
+.admin-user-card select.form-control.no-custom-select,
+.modal-content select.form-control.no-custom-select,
+.form-container select.form-control.no-custom-select {
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+    -moz-appearance: menulist !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    padding-right: 2.5rem !important;
+    min-height: 44px !important;
+    font-size: 0.9375rem !important;
+    color: #1d1d1f !important;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.875rem center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
 }
+
+.collapsible-body select.form-control.no-custom-select:hover,
+.admin-user-card select.form-control.no-custom-select:hover,
+.modal-content select.form-control.no-custom-select:hover,
+.form-container select.form-control.no-custom-select:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.05) !important;
+}
+
+.collapsible-body select.form-control.no-custom-select:focus,
+.admin-user-card select.form-control.no-custom-select:focus,
+.modal-content select.form-control.no-custom-select:focus,
+.form-container select.form-control.no-custom-select:focus {
+    outline: none !important;
+    border-color: #007aff !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* Passwort-Sektion */
+.password-section,
+.collapsible-body .password-section,
+.admin-user-card .password-section {
+    margin-top: 2rem !important;
+    padding-top: 2rem !important;
+    padding-bottom: 0 !important;
+    border-top: 1px solid #e2e8f0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.password-input-group,
+.password-section .password-input-group,
+.collapsible-body .password-input-group {
+    display: flex !important;
+    gap: 1rem !important;
+    flex-wrap: wrap !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.password-input-group .form-control {
+    flex: 1;
+    min-width: 150px;
+}
+
+.password-change-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.password-success {
+    color: #10b981;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-success i {
+    font-size: 0.9rem;
+}
+
+/* Aktions-Buttons */
+.collapsible .actions,
+.admin-user-card .actions,
+.collapsible-body .actions,
+div.actions {
+    margin-top: 2rem !important;
+    padding-top: 2rem !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    gap: 1.25rem !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.actions .btn,
+.collapsible .actions .btn,
+.admin-user-card .actions .btn,
+div.actions .btn {
+    flex: 1 !important;
+    min-width: 120px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0.75rem 1.5rem !important;
+    min-height: 44px !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+    flex-direction: row !important;
+}
+
+.actions .btn i,
+.collapsible .actions .btn i,
+.admin-user-card .actions .btn i,
+div.actions .btn i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.actions .btn .btn-text,
+.collapsible .actions .btn .btn-text,
+.admin-user-card .actions .btn .btn-text,
+div.actions .btn .btn-text {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    white-space: nowrap !important;
+}
+
+/* Spezifische Styles für Speichern-Button im Admin-Panel */
+.actions .btn-primary,
+.collapsible .actions .btn-primary,
+.admin-user-card .actions .btn-primary {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+.actions .btn-primary:hover,
+.collapsible .actions .btn-primary:hover,
+.admin-user-card .actions .btn-primary:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+.actions .btn-primary:active,
+.collapsible .actions .btn-primary:active,
+.admin-user-card .actions .btn-primary:active {
+    transform: translateY(0) scale(0.99) !important;
+    background: #1d4ed8 !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25) !important;
+}
+
+.btn-text {
+    display: inline;
+}
+
+/* Edit-Toggle Button Animation */
+.edit-toggle-btn {
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.edit-toggle-btn.btn-primary {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+}
+
+.edit-toggle-btn.saving {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.edit-toggle-btn .btn-text {
+    transition: opacity 0.2s ease;
+}
+
+/* Error Messages */
+.error-message {
+    display: block;
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.form-control.error,
+input.form-control.error,
+select.form-control.error,
+textarea.form-control.error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    background-color: #fef2f2 !important;
+}
+
+.form-control.error:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Smooth transition für Edit-Mode */
+.user-info-section {
+    transition: all 0.3s ease;
+}
+
+.user-info-section .form-group {
+    margin-bottom: 1.25rem !important;
+}
+
+.user-info-section .form-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Mobile-Optimierung */
+@media (max-width: 640px) {
+    .admin-users-grid {
+        gap: 1.5rem !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    .admin-user-card {
+        padding: 1.5rem !important;
+    }
+    
+    .collapsible-header {
+        padding: 0.875rem 0 !important;
+    }
+    
+    .collapsible-body {
+        padding-top: 1.5rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    .user-info-section {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .info-row {
+        padding: 0.75rem 0 !important;
+        gap: 0.5rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .info-row .info-label {
+        min-width: auto !important;
+        width: 100% !important;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-row .info-value {
+        width: 100% !important;
+        padding-left: 0 !important;
+    }
+    
+    .collapsible-body .form-group {
+        margin-top: 1.5rem !important;
+    }
+    
+    .password-section {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+    }
+    
+    .password-input-group {
+        gap: 0.875rem !important;
+        margin-top: 0.875rem !important;
+    }
+    
+    .collapsible .actions {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+        gap: 1rem !important;
+    }
+    
+    .role-emoji {
+        font-size: 1.5rem;
+        width: 36px;
+    }
+    
+    .header-text .name {
+        font-size: 0.95rem;
+    }
+    
+    .header-text .subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .info-label {
+        min-width: 100px;
+        font-size: 0.8rem;
+    }
+    
+    .info-value {
+        font-size: 0.85rem;
+    }
+    
+    .password-input-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .password-input-group .form-control {
+        min-width: 100%;
+    }
+    
+    .password-change-btn {
+        width: 100%;
+    }
+    
+    .actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .actions .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .btn-text {
+        display: inline;
+    }
+}
+
 /* Kleinere Dropdown-Größe für Admin-Panel */
 .collapsible-body .cs-trigger {
     padding: 10px 36px 10px 14px;
@@ -1906,12 +2458,6 @@ input[type="date"].form-control {
 .collapsible-body .cs-option {
     padding: 8px 14px;
     font-size: 0.9rem;
-}
-.collapsible .actions {
-    margin-top: 1.1rem;
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
 }
 
 /* sanfte Ein-/Ausblendung mit v-if */
@@ -2296,6 +2842,158 @@ input[type="date"].form-control {
 .passkey-item:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
+}
+
+/* ===== WICHTIG: Spezifische Styles für Löschen-Button im Admin-Panel - muss am Ende stehen ===== */
+/* Diese Regeln müssen nach allen anderen btn-danger Regeln kommen, damit sie Priorität haben */
+/* Verwende die GLEICHEN Werte wie beim Speichern-Button für konsistente Ausrichtung */
+.admin-user-card .actions .btn.btn-danger.btn-sm,
+.admin-user-card .actions .btn.btn-sm.btn-danger,
+.collapsible .actions .btn.btn-danger.btn-sm,
+.collapsible .actions .btn.btn-sm.btn-danger,
+.actions .btn.btn-danger.btn-sm,
+.actions .btn.btn-sm.btn-danger,
+div.admin-user-card .actions .btn.btn-danger.btn-sm,
+div.admin-user-card .actions .btn.btn-sm.btn-danger {
+    /* Gleiche Werte wie .actions .btn - keine Überschreibung der Flex-Eigenschaften */
+    background: #ef4444 !important;
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border: 1px solid #ef4444 !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25) !important;
+    /* Flex-Eigenschaften werden von .actions .btn übernommen - nicht überschreiben! */
+}
+
+/* Sheen-Effekt für Löschen-Button aktivieren */
+.admin-user-card .actions .btn.btn-danger.btn-sm::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger::after,
+.collapsible .actions .btn.btn-danger.btn-sm::after,
+.collapsible .actions .btn.btn-sm.btn-danger::after,
+.actions .btn.btn-danger.btn-sm::after,
+.actions .btn.btn-sm.btn-danger::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -150% !important;
+    width: 130% !important;
+    height: 100% !important;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 30%,
+        rgba(255,255,255,0) 60%) !important;
+    transform: skewX(-20deg) translateX(0) !important;
+    transition: transform 0.9s ease, opacity 0.1s ease !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    opacity: 0 !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:hover::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger:hover::after,
+.collapsible .actions .btn.btn-danger.btn-sm:hover::after,
+.collapsible .actions .btn.btn-sm.btn-danger:hover::after,
+.actions .btn.btn-danger.btn-sm:hover::after,
+.actions .btn.btn-sm.btn-danger:hover::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:hover::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:hover::after {
+    transform: translateX(250%) skewX(-20deg) !important;
+    opacity: 1 !important;
+    transition: transform 0.9s ease, opacity 0.1s ease !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger:not(:hover)::after,
+.collapsible .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.collapsible .actions .btn.btn-sm.btn-danger:not(:hover)::after,
+.actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.actions .btn.btn-sm.btn-danger:not(:hover)::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0) !important;
+    opacity: 0 !important;
+    transition: transform 0s ease, opacity 0.1s ease !important;
+}
+
+/* Z-Index für Icon und Text, damit sie über dem Sheen-Effekt liegen */
+.admin-user-card .actions .btn.btn-danger.btn-sm > *,
+.admin-user-card .actions .btn.btn-sm.btn-danger > *,
+.collapsible .actions .btn.btn-danger.btn-sm > *,
+.collapsible .actions .btn.btn-sm.btn-danger > *,
+.actions .btn.btn-danger.btn-sm > *,
+.actions .btn.btn-sm.btn-danger > *,
+div.admin-user-card .actions .btn.btn-danger.btn-sm > *,
+div.admin-user-card .actions .btn.btn-sm.btn-danger > * {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm i,
+.admin-user-card .actions .btn.btn-sm.btn-danger i,
+.collapsible .actions .btn.btn-danger.btn-sm i,
+.collapsible .actions .btn.btn-sm.btn-danger i,
+.actions .btn.btn-danger.btn-sm i,
+.actions .btn.btn-sm.btn-danger i,
+div.admin-user-card .actions .btn.btn-danger.btn-sm i,
+div.admin-user-card .actions .btn.btn-sm.btn-danger i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm .btn-text,
+.admin-user-card .actions .btn.btn-sm.btn-danger .btn-text,
+.collapsible .actions .btn.btn-danger.btn-sm .btn-text,
+.collapsible .actions .btn.btn-sm.btn-danger .btn-text,
+.actions .btn.btn-danger.btn-sm .btn-text,
+.actions .btn.btn-sm.btn-danger .btn-text,
+div.admin-user-card .actions .btn.btn-danger.btn-sm .btn-text,
+div.admin-user-card .actions .btn.btn-sm.btn-danger .btn-text {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    white-space: nowrap !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:hover,
+.admin-user-card .actions .btn.btn-sm.btn-danger:hover,
+.collapsible .actions .btn.btn-danger.btn-sm:hover,
+.collapsible .actions .btn.btn-sm.btn-danger:hover,
+.actions .btn.btn-danger.btn-sm:hover,
+.actions .btn.btn-sm.btn-danger:hover,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:hover,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:hover {
+    background: #dc2626 !important;
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:active,
+.admin-user-card .actions .btn.btn-sm.btn-danger:active,
+.collapsible .actions .btn.btn-danger.btn-sm:active,
+.collapsible .actions .btn.btn-sm.btn-danger:active,
+.actions .btn.btn-danger.btn-sm:active,
+.actions .btn.btn-sm.btn-danger:active,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:active,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:active {
+    transform: translateY(0) scale(0.99) !important;
+    background: #b91c1c !important;
+    background-color: #b91c1c !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25) !important;
 }
 
 .passkey-info {

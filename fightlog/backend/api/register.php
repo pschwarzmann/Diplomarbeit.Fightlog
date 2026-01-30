@@ -35,15 +35,38 @@ $role = isset($body['role']) && in_array($body['role'], ['schueler', 'trainer', 
     : 'schueler';
 
 $name = trim($body['firstName'].' '.$body['lastName']);
-$school = isset($body['school']) ? $body['school'] : 'Kampfsport Akademie Berlin';
-$belt = isset($body['beltLevel']) ? $body['beltLevel'] : 'Weißgurt';
-$phone = isset($body['phone']) ? $body['phone'] : null;
+$school = isset($body['school']) && $body['school'] !== '' ? $body['school'] : null;
+$belt = isset($body['beltLevel']) && $body['beltLevel'] !== '' ? $body['beltLevel'] : null;
+$phone = isset($body['phone']) && $body['phone'] !== '' ? $body['phone'] : null;
+$verifiedTrainer = isset($body['verifiedTrainer']) ? (int)!!$body['verifiedTrainer'] : 0;
+
+// E-Mail Validierung
+if (!filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
+    json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
+}
 
 // Passwort sicher hashen
+// WICHTIG: Erwarte Klartext-Passwort vom Frontend, hashe genau einmal serverseitig
+// Prüfe dass Passwort nicht leer ist
+if (empty($body['password']) || $body['password'] === '') {
+    json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
+}
+
+// Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
+// Bcrypt-Hashes beginnen mit $2y$, $2a$ oder $2b$
+if (preg_match('/^\$2[ayb]\$/', $body['password'])) {
+    json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
+}
+
 $hash = password_hash($body['password'], PASSWORD_BCRYPT);
 
-$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, belt_level, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)");
-$stmt->bind_param('ssssssssss', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $belt);
+// Verifiziere dass Hash erfolgreich generiert wurde
+if (!$hash || strlen($hash) === 0) {
+    json_out(['success'=>false, 'error'=>'Passwort-Hash konnte nicht generiert werden'], 500);
+}
+
+$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, belt_level, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param('ssssssssssi', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $belt, $verifiedTrainer);
 
 if (!$stmt->execute()) {
     json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);

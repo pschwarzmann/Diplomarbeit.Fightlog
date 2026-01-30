@@ -12,10 +12,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $userId = auth_user_id($mysqli);
 
 if ($userId) {
-    // Alle Sessions des Users löschen
-    $stmt = $mysqli->prepare("DELETE FROM sessions WHERE user_id = ?");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
+    // Token aus Header extrahieren
+    $token = bearer_token();
+    
+    if ($token) {
+        // Spezifische Session löschen
+        $stmt = $mysqli->prepare("DELETE FROM sessions WHERE token = ?");
+        if ($stmt) {
+            $stmt->bind_param('s', $token);
+            $stmt->execute();
+        }
+    } else {
+        // Fallback: Alle Sessions des Users löschen
+        $stmt = $mysqli->prepare("DELETE FROM sessions WHERE user_id = ?");
+        if ($stmt) {
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+        }
+    }
 }
 
 json_out(['success' => true, 'message' => 'Erfolgreich abgemeldet']);

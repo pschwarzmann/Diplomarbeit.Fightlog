@@ -727,14 +727,14 @@
             
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="username">Benutzername</label>
-                    <input type="text" id="username" name="username" value="admin" required>
+                    <label for="identifier">Benutzername oder E-Mail</label>
+                    <input type="text" id="identifier" name="identifier" placeholder="Benutzername oder E-Mail" required autocomplete="username">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Passwort</label>
                     <div class="password-container">
-                        <input type="password" id="password" name="password" value="admin123" required>
+                        <input type="password" id="password" name="password" placeholder="Passwort" required autocomplete="current-password">
                         <button type="button" onclick="togglePasswordVisibility()" class="password-toggle">
                             <i id="passwordToggleIcon" class="fas fa-eye"></i>
                         </button>
@@ -841,6 +841,9 @@
     </div>
 
     <script>
+        // API Base URL - absolut ab Root, funktioniert von überall
+        const API_BASE = '/fightlog/backend/api';
+        
         // Prüfe ob bereits authentifiziert
         function checkExistingAuth() {
             const isAuthenticated = localStorage.getItem('fightlog_authenticated');
@@ -881,32 +884,93 @@
                 button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Passkey wird überprüft...';
                 button.disabled = true;
                 
-                // Prüfe verfügbare Passkeys
-                const availablePasskeys = window.passkeyManager.listPasskeys();
-                if (availablePasskeys.length === 0) {
-                    throw new Error('Keine Passkeys registriert. Bitte registrieren Sie zuerst einen Passkey.');
+                // Starte Passkey-Authentifizierung über API
+                const authResponse = await fetch(`${API_BASE}/passkeys.php?action=authenticate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Server-Fehler bei Passkey-Authentifizierung');
                 }
                 
-                // Verwende den ersten verfügbaren Passkey (in echter App würde Benutzer auswählen)
-                const username = availablePasskeys[0];
+                const contentType = authResponse.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await authResponse.text();
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned non-JSON response');
+                }
                 
-                // Führe echte WebAuthn-Authentifizierung durch
-                const result = await window.passkeyManager.authenticateWithPasskey(username);
+                const authData = await authResponse.json();
                 
-                if (result.success) {
-                    // Speichere Authentifizierung
+                if (!authData.success || !authData.options) {
+                    throw new Error(authData.error || 'Keine Passkeys registriert');
+                }
+                
+                // Erstelle Passkey-Assertion mit WebAuthn
+                const assertion = await navigator.credentials.get({
+                    publicKey: authData.options
+                });
+                
+                // Verifiziere Passkey-Authentifizierung beim Server
+                const verifyResponse = await fetch(`${API_BASE}/passkeys.php?action=verifyAuth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        credential: {
+                            id: assertion.id,
+                            rawId: Array.from(new Uint8Array(assertion.rawId)),
+                            response: {
+                                authenticatorData: Array.from(new Uint8Array(assertion.response.authenticatorData)),
+                                clientDataJSON: Array.from(new Uint8Array(assertion.response.clientDataJSON)),
+                                signature: Array.from(new Uint8Array(assertion.response.signature)),
+                                userHandle: assertion.response.userHandle ? Array.from(new Uint8Array(assertion.response.userHandle)) : null
+                            },
+                            type: assertion.type
+                        }
+                    })
+                });
+                
+                if (!verifyResponse.ok) {
+                    throw new Error('Server-Fehler bei Passkey-Verifizierung');
+                }
+                
+                const verifyContentType = verifyResponse.headers.get('content-type') || '';
+                if (!verifyContentType.includes('application/json')) {
+                    const text = await verifyResponse.text();
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                const verifyData = await verifyResponse.json();
+                
+                if (verifyData.success && verifyData.user) {
+                    // Session-Token speichern (falls vorhanden)
+                    if (verifyData.token) {
+                        localStorage.setItem('fightlog_token', verifyData.token);
+                    }
+                    
+                    // User-Daten speichern
                     localStorage.setItem('fightlog_authenticated', 'true');
                     localStorage.setItem('fightlog_user', JSON.stringify({
-                        id: 1, // Admin ID
-                        username: username,
-                        role: 'admin', // Standardrolle für Passkey-Benutzer
+                        id: verifyData.user.id,
+                        username: verifyData.user.username,
+                        email: verifyData.user.email,
+                        role: verifyData.user.role,
                         authMethod: 'passkey'
                     }));
-                    const roleLabel = 'Admin';
+                    
+                    const roleLabel = verifyData.user.role === 'admin' ? 'Admin' : verifyData.user.role === 'trainer' ? 'Trainer' : 'Schüler';
                     await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
                     navigateWithFade('index.html');
                 } else {
-                    throw new Error('Passkey-Authentifizierung fehlgeschlagen');
+                    throw new Error(verifyData.error || 'Passkey-Verifizierung fehlgeschlagen');
                 }
                 
             } catch (error) {
@@ -921,48 +985,103 @@
         
         // Registriere neuen Passkey
         async function registerPasskey() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            // Prüfe ob User bereits eingeloggt ist (Token vorhanden)
+            const token = localStorage.getItem('fightlog_token');
+            const userData = localStorage.getItem('fightlog_user');
             
-            // Prüfe zuerst registrierte Benutzer
-            const registeredUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
-            const registeredUser = registeredUsers[username];
-            
-            let validUser = null;
-            
-            if (registeredUser && registeredUser.password === password) {
-                validUser = registeredUser;
-            } else {
-                // Fallback zu Test-Logins
-                const validLogins = [
-                    { username: 'admin', password: 'admin123', role: 'admin' },
-                    { username: 'trainer', password: 'trainer123', role: 'trainer' },
-                    { username: 'schueler', password: 'schueler123', role: 'schueler' }
-                ];
-                
-                const validLogin = validLogins.find(login => 
-                    login.username === username && login.password === password
-                );
-                
-                if (validLogin) {
-                    validUser = validLogin;
-                }
-            }
-            
-            if (!validUser) {
+            if (!token || !userData) {
                 await notify.alert('Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.');
                 return;
             }
             
+            let user;
             try {
-                const result = await window.passkeyManager.registerPasskey(username);
+                user = JSON.parse(userData);
+            } catch (e) {
+                await notify.alert('Fehler beim Lesen der Benutzerdaten. Bitte melden Sie sich erneut an.');
+                return;
+            }
+            
+            const username = user.username || user.email;
+            
+            if (!username) {
+                await notify.alert('Benutzername nicht gefunden. Bitte melden Sie sich erneut an.');
+                return;
+            }
+            
+            try {
+                // Starte Passkey-Registrierung über API
+                const registerResponse = await fetch(`${API_BASE}/passkeys.php?action=register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include'
+                });
                 
-                if (result.success) {
+                if (!registerResponse.ok) {
+                    throw new Error('Server-Fehler bei Passkey-Registrierung');
+                }
+                
+                const contentType = registerResponse.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await registerResponse.text();
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                const registerData = await registerResponse.json();
+                
+                if (!registerData.success || !registerData.options) {
+                    throw new Error(registerData.error || 'Passkey-Registrierung fehlgeschlagen');
+                }
+                
+                // Erstelle Passkey mit WebAuthn
+                const credential = await navigator.credentials.create({
+                    publicKey: registerData.options
+                });
+                
+                // Verifiziere Passkey-Registrierung beim Server
+                const verifyResponse = await fetch(`${API_BASE}/passkeys.php?action=verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        credential: {
+                            id: credential.id,
+                            rawId: Array.from(new Uint8Array(credential.rawId)),
+                            response: {
+                                attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+                                clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+                            },
+                            type: credential.type
+                        }
+                    })
+                });
+                
+                if (!verifyResponse.ok) {
+                    throw new Error('Server-Fehler bei Passkey-Verifizierung');
+                }
+                
+                const verifyContentType = verifyResponse.headers.get('content-type') || '';
+                if (!verifyContentType.includes('application/json')) {
+                    const text = await verifyResponse.text();
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                const verifyData = await verifyResponse.json();
+                
+                if (verifyData.success) {
                     await notify.alert('Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.');
                     // Aktualisiere UI
                     checkPasskeyAvailability();
                 } else {
-                    throw new Error('Passkey-Registrierung fehlgeschlagen');
+                    throw new Error(verifyData.error || 'Passkey-Verifizierung fehlgeschlagen');
                 }
                 
             } catch (error) {
@@ -974,54 +1093,79 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
+            const identifier = document.getElementById('identifier').value.trim();
             const password = document.getElementById('password').value;
             
-            // Prüfe zuerst registrierte Benutzer
-            const registeredUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
-            const registeredUser = registeredUsers[username];
-            
-            if (registeredUser && registeredUser.password === password) {
-                // Registrierter Benutzer gefunden
-                localStorage.setItem('fightlog_authenticated', 'true');
-                localStorage.setItem('fightlog_user', JSON.stringify({
-                    id: registeredUser.id || null,
-                    username: registeredUser.username,
-                    role: registeredUser.role,
-                    email: registeredUser.email,
-                    authMethod: 'password'
-                }));
-                const roleLabel = registeredUser.role === 'admin' ? 'Admin' : registeredUser.role === 'trainer' ? 'Trainer' : 'Schüler';
-                await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                navigateWithFade('index.html');
+            if (!identifier || !password) {
+                await notify.alert('Bitte geben Sie Benutzername oder E-Mail und Passwort ein.');
                 return;
             }
             
-            // Fallback zu Test-Logins
-            const validLogins = [
-                { username: 'admin', password: 'admin123', role: 'admin', id: 1 },
-                { username: 'trainer', password: 'trainer123', role: 'trainer', id: 2 },
-                { username: 'schueler', password: 'schueler123', role: 'schueler', id: 3 }
-            ];
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...';
             
-            const validLogin = validLogins.find(login => 
-                login.username === username && login.password === password
-            );
-            
-            if (validLogin) {
-                // Speichere Authentifizierung
-                localStorage.setItem('fightlog_authenticated', 'true');
-                localStorage.setItem('fightlog_user', JSON.stringify({
-                    id: validLogin.id,
-                    username: validLogin.username,
-                    role: validLogin.role,
-                    authMethod: 'password'
-                }));
-                const roleLabel = validLogin.role === 'admin' ? 'Admin' : validLogin.role === 'trainer' ? 'Trainer' : 'Schüler';
-                await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                navigateWithFade('index.html');
-            } else {
-                await notify.alert('Falsche Anmeldedaten! Verwende einen der Test-Logins oder registriere einen neuen Account.');
+            try {
+                // API-Login mit Username ODER Email - KEINE Hardcodings!
+                // Absoluter Pfad ab Root, funktioniert von überall
+                const response = await fetch(`${API_BASE}/login.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        identifier: identifier,
+                        password: password
+                    })
+                });
+                
+                // Prüfe Content-Type
+                const contentType = response.headers.get('content-type') || '';
+                let data;
+                
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', {
+                        status: response.status,
+                        contentType: contentType,
+                        body: text.substring(0, 500)
+                    });
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                if (data.success && data.user) {
+                    // Session-Token speichern (falls vorhanden)
+                    if (data.token) {
+                        localStorage.setItem('fightlog_token', data.token);
+                    }
+                    
+                    // User-Daten speichern
+                    localStorage.setItem('fightlog_authenticated', 'true');
+                    localStorage.setItem('fightlog_user', JSON.stringify({
+                        id: data.user.id,
+                        username: data.user.username,
+                        email: data.user.email,
+                        role: data.user.role,
+                        authMethod: 'password'
+                    }));
+                    
+                    const roleLabel = data.user.role === 'admin' ? 'Admin' : data.user.role === 'trainer' ? 'Trainer' : 'Schüler';
+                    await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
+                    navigateWithFade('index.html');
+                } else {
+                    // Allgemeine Fehlermeldung (keine Account-Enumeration)
+                    await notify.alert('Login-Daten ungültig. Bitte überprüfen Sie Ihre Eingaben.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                await notify.alert('Fehler beim Anmelden. Bitte versuchen Sie es erneut.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         });
         

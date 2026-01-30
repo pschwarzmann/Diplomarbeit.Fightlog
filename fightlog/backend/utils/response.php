@@ -3,9 +3,25 @@
 
 function json_out(array $data, int $code = 200): void
 {
-    http_response_code($code);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    // Output-Buffer leeren falls vorhanden
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+    
+    // Headers setzen (falls noch nicht gesetzt)
+    if (!headers_sent()) {
+        http_response_code($code);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    
+    // JSON ausgeben
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+    
+    // Output-Buffer flushen und beenden
+    if (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    
     exit;
 }
 

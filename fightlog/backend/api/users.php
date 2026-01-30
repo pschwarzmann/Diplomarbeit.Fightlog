@@ -62,10 +62,17 @@ if ($method === 'POST') {
         $last  = isset($body['lastName']) ? $body['lastName'] : null;
         $email = isset($body['email']) ? $body['email'] : null;
         $phone = isset($body['phone']) ? $body['phone'] : null;
+        $school = isset($body['school']) ? $body['school'] : null;
+        $beltLevel = isset($body['beltLevel']) ? $body['beltLevel'] : null;
         $role  = $body['role'];
         
-        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=?, phone=? WHERE id=?");
-        $stmt->bind_param('sisssssi', $role, $verified, $name, $first, $last, $email, $phone, $body['id']);
+        // E-Mail Validierung
+        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=?, phone=?, school=?, belt_level=? WHERE id=?");
+        $stmt->bind_param('sisssssssi', $role, $verified, $name, $first, $last, $email, $phone, $school, $beltLevel, $body['id']);
         if (!$stmt->execute()) {
             json_out(['success'=>false, 'error'=>'Update fehlgeschlagen: '.$stmt->error], 500);
         }
@@ -125,9 +132,23 @@ if ($method === 'POST') {
         }
         
         // Passwort sicher hashen
+        // WICHTIG: Erwarte Klartext-Passwort, hashe genau einmal
+        if (empty($body['newPassword']) || $body['newPassword'] === '') {
+            json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
+        }
+        
+        // Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
+        if (preg_match('/^\$2[ayb]\$/', $body['newPassword'])) {
+            json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
+        }
+        
         $hash = password_hash($body['newPassword'], PASSWORD_BCRYPT);
         
-        // Passwort in Datenbank aktualisieren
+        if (!$hash || strlen($hash) === 0) {
+            json_out(['success'=>false, 'error'=>'Passwort-Hash konnte nicht generiert werden'], 500);
+        }
+        
+        // Passwort in Datenbank aktualisieren (NUR password_hash Feld)
         $stmt = $mysqli->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
         $stmt->bind_param('si', $hash, $body['id']);
         if (!$stmt->execute()) {
@@ -155,7 +176,23 @@ if ($method === 'POST') {
         }
         
         // Neues Passwort hashen und speichern
+        // WICHTIG: Erwarte Klartext-Passwort, hashe genau einmal
+        if (empty($body['newPassword']) || $body['newPassword'] === '') {
+            json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
+        }
+        
+        // Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
+        if (preg_match('/^\$2[ayb]\$/', $body['newPassword'])) {
+            json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
+        }
+        
         $hash = password_hash($body['newPassword'], PASSWORD_BCRYPT);
+        
+        if (!$hash || strlen($hash) === 0) {
+            json_out(['success'=>false, 'error'=>'Passwort-Hash konnte nicht generiert werden'], 500);
+        }
+        
+        // NUR password_hash Feld updaten, sonst nichts
         $updateStmt = $mysqli->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
         $updateStmt->bind_param('si', $hash, $currentUserId);
         if (!$updateStmt->execute()) {

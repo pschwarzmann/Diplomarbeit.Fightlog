@@ -1448,62 +1448,219 @@ const app = createApp({
                                     <input type="text" v-model="adminSearch" class="form-control" placeholder="Benutzer suchen (Name, Benutzername, E-Mail)">
                                 </div>
 
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="user in adminFilteredUsers" :key="user.id" class="nav-card admin-user-card collapsible" :class="{ open: user._open }" style="text-align: left;">
+                                <div class="admin-users-grid">
+                                    <div v-for="user in adminFilteredUsers" :key="user.id" class="admin-user-card collapsible" :class="{ open: user._open }">
                                         <div class="collapsible-header" @click.stop="toggleUserCard(user)">
-                                            <div class="role-emoji" aria-hidden="true">{{ roleEmoji(user.role) }}</div>
-                                            <div class="header-text">
-                                                <div class="name">{{ user.name }}</div>
-                                                <div class="subtitle">{{ roleLabel(user.role) }}</div>
+                                            <div class="user-header-content">
+                                                <div class="role-emoji" aria-hidden="true">{{ roleEmoji(user.role) }}</div>
+                                                <div class="header-text">
+                                                    <div class="name">{{ user.name }}</div>
+                                                    <div class="subtitle">{{ roleLabel(user.role) }}</div>
+                                                </div>
                                             </div>
                                             <div class="caret" :class="{ open: user._open }"><i class="fas fa-chevron-down"></i></div>
                                         </div>
                                         <transition name="collapse">
                                             <div v-if="user._open" class="collapsible-body" @click.stop>
-                                                <p><strong>Benutzername:</strong> {{ user.username }}</p>
-                                                <p><strong>E-Mail:</strong> {{ user.email }}</p>
-                                                <p><strong>{{ t('phone') }}:</strong> {{ user.phone || '-' }}</p>
-                                                <!-- Passkeys bewusst ausgeblendet -->
-                                                <div class="form-group" style="margin-top: 0.5rem;">
-                                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;"><strong>Rolle:</strong></label>
-                                                    <select v-model="user.role" class="form-control">
-                                                        <option value="schueler">Schüler</option>
-                                                        <option value="trainer">Trainer</option>
-                                                        <option value="admin">Admin</option>
-                                                    </select>
+                                                <!-- Benutzer-Informationen -->
+                                                <div class="user-info-section">
+                                                    <!-- Read-Only Mode -->
+                                                    <template v-if="!user._isEditing">
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-user"></i> Benutzername:</span>
+                                                            <span class="info-value">
+                                                                {{ user.username }}
+                                                                <i class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-envelope"></i> E-Mail:</span>
+                                                            <span class="info-value">
+                                                                {{ user.email }}
+                                                                <i class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-user-tag"></i> Rolle:</span>
+                                                            <span class="info-value">{{ roleLabel(user.role) }}</span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-signature"></i> Vorname:</span>
+                                                            <span class="info-value">
+                                                                <span :class="{ 'empty-value': !user.firstName }">{{ user.firstName || '—' }}</span>
+                                                                <i v-if="user.firstName" class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-signature"></i> Nachname:</span>
+                                                            <span class="info-value">
+                                                                <span :class="{ 'empty-value': !user.lastName }">{{ user.lastName || '—' }}</span>
+                                                                <i v-if="user.lastName" class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row" v-if="user.name">
+                                                            <span class="info-label"><i class="fas fa-id-card"></i> Vollständiger Name:</span>
+                                                            <span class="info-value">{{ user.name }}</span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-phone"></i> Telefon:</span>
+                                                            <span class="info-value">
+                                                                <span :class="{ 'empty-value': !user.phone }">{{ user.phone || '—' }}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-school"></i> Schule:</span>
+                                                            <span class="info-value">
+                                                                <span :class="{ 'empty-value': !user.school }">{{ user.school || '—' }}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-medal"></i> Gürtelgrad:</span>
+                                                            <span class="info-value">
+                                                                <span :class="{ 'empty-value': !user.beltLevel }">{{ user.beltLevel || '—' }}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="info-label"><i class="fas fa-certificate"></i> Verifizierter Trainer:</span>
+                                                            <span class="info-value">
+                                                                <span v-if="user.verifiedTrainer" style="color: #10b981; font-weight: 600;">
+                                                                    <i class="fas fa-check-circle"></i> Ja
+                                                                </span>
+                                                                <span v-else style="color: #64748b;">
+                                                                    <i class="fas fa-times-circle"></i> Nein
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    </template>
+                                                    
+                                                    <!-- Edit Mode -->
+                                                    <template v-else>
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-envelope"></i> E-Mail *</label>
+                                                            <input 
+                                                                type="email" 
+                                                                v-model="user._editForm.email" 
+                                                                class="form-control"
+                                                                :class="{ 'error': user._validationErrors.email }"
+                                                                placeholder="E-Mail-Adresse"
+                                                            >
+                                                            <span v-if="user._validationErrors.email" class="error-message">{{ user._validationErrors.email }}</span>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-signature"></i> Vorname</label>
+                                                            <input 
+                                                                type="text" 
+                                                                v-model="user._editForm.firstName" 
+                                                                class="form-control"
+                                                                placeholder="Vorname"
+                                                            >
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-signature"></i> Nachname</label>
+                                                            <input 
+                                                                type="text" 
+                                                                v-model="user._editForm.lastName" 
+                                                                class="form-control"
+                                                                placeholder="Nachname"
+                                                            >
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-phone"></i> Telefon</label>
+                                                            <input 
+                                                                type="tel" 
+                                                                v-model="user._editForm.phone" 
+                                                                class="form-control"
+                                                                placeholder="Telefonnummer"
+                                                            >
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-school"></i> Schule</label>
+                                                            <input 
+                                                                type="text" 
+                                                                v-model="user._editForm.school" 
+                                                                class="form-control"
+                                                                placeholder="Schule"
+                                                            >
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
+                                                            <input 
+                                                                type="text" 
+                                                                v-model="user._editForm.beltLevel" 
+                                                                class="form-control"
+                                                                placeholder="Gürtelgrad"
+                                                            >
+                                                        </div>
+                                                        
+                                                        <!-- Passwort-Änderung (über Rolle) -->
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-key"></i> Passwort ändern (optional)</label>
+                                                            <input 
+                                                                type="password" 
+                                                                v-model="user._editForm.newPassword" 
+                                                                class="form-control"
+                                                                :class="{ 'error': user._validationErrors.newPassword }"
+                                                                placeholder="Neues Passwort (leer lassen, um nicht zu ändern)"
+                                                            >
+                                                            <span v-if="user._validationErrors.newPassword" class="error-message">{{ user._validationErrors.newPassword }}</span>
+                                                            <small style="color: #64748b; font-size: 0.8rem;">Mindestens 6 Zeichen, wenn angegeben</small>
+                                                        </div>
+                                                        
+                                                        <!-- Rolle ändern -->
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-user-tag"></i> Rolle *</label>
+                                                            <select v-model="user._editForm.role" class="form-control no-custom-select" :class="{ 'error': user._validationErrors.role }">
+                                                                <option value="schueler">Schüler</option>
+                                                                <option value="trainer">Trainer</option>
+                                                                <option value="admin">Admin</option>
+                                                            </select>
+                                                            <span v-if="user._validationErrors.role" class="error-message">{{ user._validationErrors.role }}</span>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label class="form-label"><i class="fas fa-certificate"></i> Verifizierter Trainer</label>
+                                                            <select v-model="user._editForm.verifiedTrainer" class="form-control no-custom-select">
+                                                                <option :value="false">Nein</option>
+                                                                <option :value="true">Ja</option>
+                                                            </select>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                                 
-                                                <!-- Passwort-Änderung -->
-                                                <div class="form-group" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;">
-                                                        <i class="fas fa-key"></i> <strong>Passwort ändern:</strong>
-                                                    </label>
-                                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                                        <input 
-                                                            type="password" 
-                                                            v-model="user._newPassword" 
-                                                            class="form-control" 
-                                                            placeholder="Neues Passwort"
-                                                            style="flex: 1; min-width: 150px;"
-                                                            @keyup.enter="changeUserPassword(user)"
-                                                        >
-                                                        <button 
-                                                            class="btn btn-secondary btn-sm" 
-                                                            @click="changeUserPassword(user)"
-                                                            :disabled="!user._newPassword || user._newPassword.length < 3"
-                                                            style="white-space: nowrap;"
-                                                        >
-                                                            <i class="fas fa-save"></i> Passwort ändern
-                                                        </button>
-                                                    </div>
-                                                    <p v-if="user._passwordChanged" style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem;">
-                                                        <i class="fas fa-check"></i> Passwort erfolgreich geändert
-                                                    </p>
-                                                </div>
-                                                
-                                                <div class="actions" style="margin-top: 1rem;">
-                                                    <button class="btn btn-primary btn-sm" @click="saveUser(user)">{{ t('saveChanges') }}</button>
-                                                    <button class="btn btn-danger btn-sm" @click="deleteUser(user)" aria-label="Benutzer löschen"><i class="fas fa-trash"></i></button>
+                                                <!-- Aktions-Buttons -->
+                                                <div class="actions">
+                                                    <button 
+                                                        class="btn btn-secondary btn-sm edit-toggle-btn" 
+                                                        :class="{ 'btn-primary': user._isEditing, 'saving': user._isSaving }"
+                                                        @click="user._isEditing ? saveUser(user) : startEditUser(user)"
+                                                        :disabled="user._isSaving"
+                                                    >
+                                                        <i v-if="user._isSaving" class="fas fa-spinner fa-spin"></i>
+                                                        <i v-else-if="user._isEditing" class="fas fa-save"></i>
+                                                        <i v-else class="fas fa-edit"></i>
+                                                        <span class="btn-text">{{ user._isSaving ? 'Speichert...' : (user._isEditing ? 'Speichern' : 'Ändern') }}</span>
+                                                    </button>
+                                                    <button 
+                                                        v-if="user._isEditing" 
+                                                        class="btn btn-secondary btn-sm" 
+                                                        @click="cancelEditUser(user)"
+                                                        :disabled="user._isSaving"
+                                                    >
+                                                        <i class="fas fa-times"></i> <span class="btn-text">Abbrechen</span>
+                                                    </button>
+                                                    <button 
+                                                        class="btn btn-danger btn-sm" 
+                                                        @click="deleteUser(user)" 
+                                                        aria-label="Benutzer löschen"
+                                                        :disabled="user._isEditing || user._isSaving"
+                                                    >
+                                                        <i class="fas fa-trash"></i> <span class="btn-text">Löschen</span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </transition>
@@ -1609,47 +1766,150 @@ const app = createApp({
                             </button>
                         </div>
                         <form @submit.prevent="createUser">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Vorname *</label>
-                                    <input type="text" v-model="createUserForm.firstName" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nachname *</label>
-                                    <input type="text" v-model="createUserForm.lastName" class="form-control" required>
-                                </div>
-                            </div>
+                            <!-- Benutzername -->
                             <div class="form-group">
-                                <label>Benutzername *</label>
-                                <input type="text" v-model="createUserForm.username" class="form-control" required>
+                                <label class="form-label"><i class="fas fa-user"></i> Benutzername *</label>
+                                <input 
+                                    type="text" 
+                                    v-model="createUserForm.username" 
+                                    class="form-control"
+                                    :class="{ 'error': createUserForm._validationErrors?.username }"
+                                    placeholder="Benutzername"
+                                    required
+                                >
+                                <span v-if="createUserForm._validationErrors?.username" class="error-message">{{ createUserForm._validationErrors.username }}</span>
                             </div>
+                            
+                            <!-- E-Mail -->
                             <div class="form-group">
-                                <label>E-Mail *</label>
-                                <input type="email" v-model="createUserForm.email" class="form-control" required>
+                                <label class="form-label"><i class="fas fa-envelope"></i> E-Mail *</label>
+                                <input 
+                                    type="email" 
+                                    v-model="createUserForm.email" 
+                                    class="form-control"
+                                    :class="{ 'error': createUserForm._validationErrors?.email }"
+                                    placeholder="E-Mail-Adresse"
+                                    required
+                                >
+                                <span v-if="createUserForm._validationErrors?.email" class="error-message">{{ createUserForm._validationErrors.email }}</span>
                             </div>
+                            
+                            <!-- Passwort (über Rolle) -->
                             <div class="form-group">
-                                <label>Passwort *</label>
-                                <input type="password" v-model="createUserForm.password" class="form-control" required>
+                                <label class="form-label"><i class="fas fa-key"></i> Passwort *</label>
+                                <input 
+                                    type="password" 
+                                    v-model="createUserForm.password" 
+                                    class="form-control"
+                                    :class="{ 'error': createUserForm._validationErrors?.password }"
+                                    placeholder="Passwort"
+                                    required
+                                >
+                                <span v-if="createUserForm._validationErrors?.password" class="error-message">{{ createUserForm._validationErrors.password }}</span>
+                                <small style="color: #64748b; font-size: 0.8rem;">Mindestens 6 Zeichen</small>
                             </div>
+                            
+                            <!-- Rolle -->
                             <div class="form-group">
-                                <label>Rolle *</label>
-                                <select v-model="createUserForm.role" class="form-control" required>
+                                <label class="form-label"><i class="fas fa-user-tag"></i> Rolle *</label>
+                                <select 
+                                    v-model="createUserForm.role" 
+                                    class="form-control no-custom-select"
+                                    :class="{ 'error': createUserForm._validationErrors?.role }"
+                                    required
+                                >
                                     <option value="schueler">Schüler</option>
                                     <option value="trainer">Trainer</option>
                                     <option value="admin">Admin</option>
                                 </select>
+                                <span v-if="createUserForm._validationErrors?.role" class="error-message">{{ createUserForm._validationErrors.role }}</span>
                             </div>
+                            
+                            <!-- Vorname -->
                             <div class="form-group">
-                                <label>Schule (optional)</label>
-                                <input type="text" v-model="createUserForm.school" class="form-control" placeholder="Kampfsport Akademie Berlin">
+                                <label class="form-label"><i class="fas fa-signature"></i> Vorname</label>
+                                <input 
+                                    type="text" 
+                                    v-model="createUserForm.firstName" 
+                                    class="form-control"
+                                    placeholder="Vorname"
+                                >
                             </div>
+                            
+                            <!-- Nachname -->
                             <div class="form-group">
-                                <label>Gürtelgrad (optional)</label>
-                                <input type="text" v-model="createUserForm.beltLevel" class="form-control" placeholder="z.B. Weißgurt">
+                                <label class="form-label"><i class="fas fa-signature"></i> Nachname</label>
+                                <input 
+                                    type="text" 
+                                    v-model="createUserForm.lastName" 
+                                    class="form-control"
+                                    placeholder="Nachname"
+                                >
                             </div>
+                            
+                            <!-- Telefon -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-phone"></i> Telefon</label>
+                                <input 
+                                    type="tel" 
+                                    v-model="createUserForm.phone" 
+                                    class="form-control"
+                                    placeholder="Telefonnummer"
+                                >
+                            </div>
+                            
+                            <!-- Schule -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-school"></i> Schule</label>
+                                <input 
+                                    type="text" 
+                                    v-model="createUserForm.school" 
+                                    class="form-control"
+                                    placeholder="Schule"
+                                >
+                            </div>
+                            
+                            <!-- Gürtelgrad -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
+                                <input 
+                                    type="text" 
+                                    v-model="createUserForm.beltLevel" 
+                                    class="form-control"
+                                    placeholder="Gürtelgrad"
+                                >
+                            </div>
+                            
+                            <!-- Verifizierter Trainer -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-certificate"></i> Verifizierter Trainer</label>
+                                <select 
+                                    v-model="createUserForm.verifiedTrainer" 
+                                    class="form-control no-custom-select"
+                                >
+                                    <option :value="false">Nein</option>
+                                    <option :value="true">Ja</option>
+                                </select>
+                            </div>
+                            
                             <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
-                                <button type="submit" class="btn btn-primary">Benutzer erstellen</button>
-                                <button type="button" class="btn btn-secondary" @click="closeCreateUserModal">Abbrechen</button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary"
+                                    :disabled="createUserForm._isSaving"
+                                >
+                                    <i v-if="createUserForm._isSaving" class="fas fa-spinner fa-spin"></i>
+                                    <i v-else class="fas fa-save"></i>
+                                    <span class="btn-text">{{ createUserForm._isSaving ? 'Speichert...' : 'Speichern' }}</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-secondary" 
+                                    @click="closeCreateUserModal"
+                                    :disabled="createUserForm._isSaving"
+                                >
+                                    Abbrechen
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -1850,9 +2110,13 @@ const app = createApp({
                 password: '',
                 firstName: '',
                 lastName: '',
+                phone: '',
                 role: 'schueler',
                 school: '',
-                beltLevel: ''
+                beltLevel: '',
+                verifiedTrainer: false,
+                _validationErrors: {},
+                _isSaving: false
             },
             // Profil-Formular
             profileForm: {
@@ -2820,8 +3084,12 @@ const app = createApp({
                 this.adminUserList = users.map(user => ({
                     ...user,
                     _open: user._open || false,
+                    _isEditing: user._isEditing || false,
+                    _editForm: user._editForm || null,
+                    _isSaving: user._isSaving || false,
                     _newPassword: user._newPassword || '',
-                    _passwordChanged: user._passwordChanged || false
+                    _passwordChanged: user._passwordChanged || false,
+                    _validationErrors: user._validationErrors || {}
                 }));
             } catch (error) {
                 // Bei 403 (keine Berechtigung) ist das OK - Schüler brauchen keine User-Liste
@@ -2844,18 +3112,158 @@ const app = createApp({
                 user.permissions = [...user.permissions, permKey];
             }
         },
-        async saveUser(user) {
-            try {
-                const res = await apiService.updateUser(user);
-                if (res.success) {
-                    alert('Benutzer gespeichert.');
-                } else {
-                    alert('Speichern fehlgeschlagen');
+        startEditUser(user) {
+            // Erstelle Kopie der aktuellen Daten für Edit-Form
+            user._editForm = {
+                email: user.email || '',
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                phone: user.phone || '',
+                school: user.school || '',
+                beltLevel: user.beltLevel || '',
+                role: user.role || 'schueler',
+                verifiedTrainer: user.verifiedTrainer || false,
+                newPassword: ''
+            };
+            user._isEditing = true;
+            user._validationErrors = {};
+        },
+        cancelEditUser(user) {
+            user._isEditing = false;
+            user._editForm = null;
+            user._validationErrors = {};
+        },
+        validateUserForm(user) {
+            const errors = {};
+            const form = user._editForm;
+            
+            // E-Mail Validierung
+            if (!form.email || form.email.trim() === '') {
+                errors.email = 'E-Mail ist erforderlich';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+                errors.email = 'Ungültige E-Mail-Adresse';
+            }
+            
+            // Rolle Validierung
+            if (!form.role || !['schueler', 'trainer', 'admin'].includes(form.role)) {
+                errors.role = 'Ungültige Rolle';
+            }
+            
+            // Passwort Validierung (nur wenn angegeben)
+            if (form.newPassword && form.newPassword.trim() !== '') {
+                if (form.newPassword.length < 6) {
+                    errors.newPassword = 'Passwort muss mindestens 6 Zeichen lang sein';
                 }
+            }
+            
+            user._validationErrors = errors;
+            return Object.keys(errors).length === 0;
+        },
+        async saveUser(user) {
+            if (!user._isEditing) {
+                return;
+            }
+            
+            // Validierung
+            if (!this.validateUserForm(user)) {
+                await window.notify.alert('Bitte korrigieren Sie die Fehler in den Feldern.');
+                return;
+            }
+            
+            user._isSaving = true;
+            
+            try {
+                const form = user._editForm;
+                const updateData = {
+                    id: user.id,
+                    email: form.email.trim(),
+                    firstName: form.firstName.trim() || null,
+                    lastName: form.lastName.trim() || null,
+                    phone: form.phone.trim() || null,
+                    school: form.school.trim() || null,
+                    beltLevel: form.beltLevel.trim() || null,
+                    role: form.role,
+                    verifiedTrainer: form.verifiedTrainer
+                };
+                
+                // Name zusammensetzen
+                const name = [form.firstName, form.lastName].filter(Boolean).join(' ').trim() || null;
+                updateData.name = name;
+                
+                // Update User-Daten
+                const res = await apiService.updateUser(updateData);
+                
+                if (!res.success) {
+                    throw new Error(res.error || 'Speichern fehlgeschlagen');
+                }
+                
+                // Passwort ändern, falls angegeben
+                if (form.newPassword && form.newPassword.trim() !== '') {
+                    const passwordRes = await apiService.changeUserPassword(user.id, form.newPassword.trim());
+                    if (!passwordRes.success) {
+                        throw new Error(passwordRes.error || 'Passwort konnte nicht geändert werden');
+                    }
+                }
+                
+                // UI aktualisieren mit neuen Daten
+                Object.assign(user, {
+                    email: updateData.email,
+                    firstName: updateData.firstName,
+                    lastName: updateData.lastName,
+                    phone: updateData.phone,
+                    school: updateData.school,
+                    beltLevel: updateData.beltLevel,
+                    role: updateData.role,
+                    verifiedTrainer: updateData.verifiedTrainer,
+                    name: updateData.name
+                });
+                
+                // Edit-Mode beenden
+                user._isEditing = false;
+                user._editForm = null;
+                user._validationErrors = {};
+                
+                await window.notify.alert('Benutzer erfolgreich gespeichert.');
+                
             } catch (e) {
                 console.error('Save user error:', e);
-                alert('Speichern fehlgeschlagen');
+                await window.notify.alert('Fehler beim Speichern: ' + (e.message || 'Unbekannter Fehler'));
+            } finally {
+                user._isSaving = false;
             }
+        },
+        validateCreateUserForm() {
+            const errors = {};
+            const form = this.createUserForm;
+            
+            // Benutzername Validierung
+            if (!form.username || form.username.trim() === '') {
+                errors.username = 'Benutzername ist erforderlich';
+            } else if (form.username.trim().length < 3) {
+                errors.username = 'Benutzername muss mindestens 3 Zeichen lang sein';
+            }
+            
+            // E-Mail Validierung
+            if (!form.email || form.email.trim() === '') {
+                errors.email = 'E-Mail ist erforderlich';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+                errors.email = 'Ungültige E-Mail-Adresse';
+            }
+            
+            // Passwort Validierung (beim Create erforderlich)
+            if (!form.password || form.password.trim() === '') {
+                errors.password = 'Passwort ist erforderlich';
+            } else if (form.password.length < 6) {
+                errors.password = 'Passwort muss mindestens 6 Zeichen lang sein';
+            }
+            
+            // Rolle Validierung
+            if (!form.role || !['schueler', 'trainer', 'admin'].includes(form.role)) {
+                errors.role = 'Ungültige Rolle';
+            }
+            
+            this.createUserForm._validationErrors = errors;
+            return Object.keys(errors).length === 0;
         },
         closeCreateUserModal() {
             this.showCreateUserModal = false;
@@ -2866,25 +3274,77 @@ const app = createApp({
                 password: '',
                 firstName: '',
                 lastName: '',
+                phone: '',
                 role: 'schueler',
                 school: '',
-                beltLevel: ''
+                beltLevel: '',
+                verifiedTrainer: false,
+                _validationErrors: {},
+                _isSaving: false
             };
         },
         async createUser() {
+            // Client-Validierung
+            if (!this.validateCreateUserForm()) {
+                await window.notify.alert('Bitte korrigieren Sie die Fehler in den Feldern.');
+                return;
+            }
+            
+            this.createUserForm._isSaving = true;
+            
             try {
-                const res = await apiService.createUser(this.createUserForm);
-                if (res.success) {
-                    alert('Benutzer erfolgreich erstellt.');
-                    this.closeCreateUserModal();
-                    // Benutzerliste neu laden
-                    await this.loadUsers();
-                } else {
-                    alert('Fehler: ' + (res.error || 'Benutzer konnte nicht erstellt werden'));
+                const form = this.createUserForm;
+                
+                // Name zusammensetzen
+                const name = [form.firstName, form.lastName].filter(Boolean).join(' ').trim() || null;
+                
+                // Daten für API vorbereiten
+                const userData = {
+                    username: form.username.trim(),
+                    email: form.email.trim(),
+                    password: form.password,
+                    firstName: form.firstName.trim() || null,
+                    lastName: form.lastName.trim() || null,
+                    name: name,
+                    phone: form.phone.trim() || null,
+                    role: form.role,
+                    school: form.school.trim() || null,
+                    beltLevel: form.beltLevel.trim() || null,
+                    verifiedTrainer: form.verifiedTrainer || false
+                };
+                
+                // API-Call
+                const res = await apiService.createUser(userData);
+                
+                if (!res.success) {
+                    // Server-Validierung: Prüfe auf spezifische Fehler
+                    if (res.error && res.error.toLowerCase().includes('bereits vorhanden')) {
+                        if (res.error.toLowerCase().includes('benutzername')) {
+                            this.createUserForm._validationErrors = { username: 'Dieser Benutzername ist bereits vergeben' };
+                        } else if (res.error.toLowerCase().includes('e-mail') || res.error.toLowerCase().includes('email')) {
+                            this.createUserForm._validationErrors = { email: 'Diese E-Mail-Adresse ist bereits vergeben' };
+                        } else {
+                            this.createUserForm._validationErrors = { username: res.error };
+                        }
+                        await window.notify.alert('Bitte korrigieren Sie die Fehler in den Feldern.');
+                        return;
+                    }
+                    throw new Error(res.error || 'Benutzer konnte nicht erstellt werden');
                 }
+                
+                // Erfolg: Modal schließen und Liste neu laden
+                this.closeCreateUserModal();
+                
+                // Benutzerliste neu laden, damit neue Kartei sofort erscheint
+                await this.loadUsers();
+                
+                await window.notify.alert('Benutzer erfolgreich erstellt.');
+                
             } catch (e) {
                 console.error('Create user error:', e);
-                alert('Fehler beim Erstellen des Benutzers');
+                await window.notify.alert('Fehler beim Erstellen des Benutzers: ' + (e.message || 'Unbekannter Fehler'));
+            } finally {
+                this.createUserForm._isSaving = false;
             }
         },
         addPasskey(user) {
@@ -2900,11 +3360,20 @@ const app = createApp({
             user.passkeys = current.filter(k => k !== key);
         },
         async deleteUser(user) {
-            const ok = await notify.confirm('Benutzer wirklich löschen?');
+            const ok = await window.notify.confirm('Benutzer wirklich löschen?');
             if (!ok) return;
-            // Platzhalter: entfernt den Benutzer lokal aus der Liste
-            this.adminUserList = this.adminUserList.filter(u => u.id !== user.id);
-            alert('Benutzer gelöscht (Platzhalter).');
+            try {
+                const res = await apiService.deleteUser(user.id);
+                if (res.success) {
+                    this.adminUserList = this.adminUserList.filter(u => u.id !== user.id);
+                    await window.notify.alert('Benutzer erfolgreich gelöscht.');
+                } else {
+                    await window.notify.alert('Fehler beim Löschen: ' + (res.error || 'Unbekannter Fehler'));
+                }
+            } catch (e) {
+                console.error('Delete user error:', e);
+                await window.notify.alert('Fehler beim Löschen des Benutzers');
+            }
         },
         async changeUserPassword(user) {
             if (!user._newPassword || user._newPassword.length < 3) {
