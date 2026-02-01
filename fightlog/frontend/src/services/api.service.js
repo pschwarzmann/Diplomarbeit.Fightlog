@@ -110,6 +110,34 @@ export const apiService = {
     getCertificates() {
         return request('/certificates.php');
     },
+    
+    getCertificateSettings() {
+        return request('/certificates.php?action=settings');
+    },
+    
+    saveCertificateSettings(settings) {
+        return request('/certificates.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'saveSettings', settings })
+        });
+    },
+    
+    createManualCertificate(data) {
+        return request('/certificates.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'create', ...data })
+        });
+    },
+    
+    deleteCertificate(id) {
+        return request('/certificates.php', {
+            method: 'DELETE',
+            headers: jsonHeaders,
+            body: JSON.stringify({ id })
+        });
+    },
 
     addExam(examData) {
         return request('/exams.php', {
@@ -199,6 +227,15 @@ export const apiService = {
             method: 'POST',
             headers: jsonHeaders,
             body: JSON.stringify({ action: 'cancelGoal', userGoalId })
+        });
+    },
+    
+    // Ziel wiederaufnehmen
+    resumeGoal(userGoalId) {
+        return request('/goals.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'resumeGoal', userGoalId })
         });
     },
     
@@ -445,6 +482,40 @@ export const apiService = {
         return request('/passkeys.php', {
             method: 'DELETE',
             body: JSON.stringify({ id: passkeyId })
+        });
+    },
+
+    // ===== GRADE (Gürtelgrade) =====
+    
+    // Alle Grade abrufen
+    getGrades() {
+        return request('/grades.php?action=list');
+    },
+    
+    // Grad erstellen (nur Admin)
+    createGrade(name, sortOrder, color) {
+        return request('/grades.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'create', name, sort_order: sortOrder, color })
+        });
+    },
+    
+    // Grad aktualisieren (nur Admin)
+    updateGrade(id, name, sortOrder, color) {
+        return request('/grades.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'update', id, name, sort_order: sortOrder, color })
+        });
+    },
+    
+    // Grad löschen (nur Admin)
+    deleteGrade(id) {
+        return request('/grades.php', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ action: 'delete', id })
         });
     }
 };

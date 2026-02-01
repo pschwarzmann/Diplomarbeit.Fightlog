@@ -12,7 +12,7 @@ if ($method === 'GET') {
     
     // Eigenes Profil abrufen - keine Berechtigung nötig
     if ($action === 'profile') {
-        $stmt = $mysqli->prepare("SELECT id, username, email, role, name, first_name as firstName, last_name as lastName, phone, school, belt_level as beltLevel FROM users WHERE id = ?");
+        $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.name, u.first_name as firstName, u.last_name as lastName, u.phone, u.school, u.grade_id, g.name as beltLevel FROM users u LEFT JOIN grade g ON u.grade_id = g.id WHERE u.id = ?");
         $stmt->bind_param('i', $currentUserId);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -28,7 +28,7 @@ if ($method === 'GET') {
         json_error('Keine Berechtigung', 403);
     }
     
-    $res = $mysqli->query("SELECT id, username, email, role, name, first_name as firstName, last_name as lastName, phone, school, belt_level as beltLevel, verified_trainer as verifiedTrainer FROM users ORDER BY id ASC");
+    $res = $mysqli->query("SELECT u.id, u.username, u.email, u.role, u.name, u.first_name as firstName, u.last_name as lastName, u.phone, u.school, u.grade_id, g.name as beltLevel, u.verified_trainer as verifiedTrainer FROM users u LEFT JOIN grade g ON u.grade_id = g.id ORDER BY u.id ASC");
     $list = [];
     while ($row = $res->fetch_assoc()) {
         $row['id'] = (int)$row['id'];
@@ -71,8 +71,20 @@ if ($method === 'POST') {
             json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
         }
         
-        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=?, phone=?, school=?, belt_level=? WHERE id=?");
-        $stmt->bind_param('sisssssssi', $role, $verified, $name, $first, $last, $email, $phone, $school, $beltLevel, $body['id']);
+        // Grade-ID aus dem Namen ermitteln
+        $gradeId = null;
+        if ($beltLevel) {
+            $gradeStmt = $mysqli->prepare("SELECT id FROM grade WHERE name = ? LIMIT 1");
+            $gradeStmt->bind_param('s', $beltLevel);
+            $gradeStmt->execute();
+            $gradeRes = $gradeStmt->get_result()->fetch_assoc();
+            if ($gradeRes) {
+                $gradeId = (int)$gradeRes['id'];
+            }
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=?, phone=?, school=?, grade_id=? WHERE id=?");
+        $stmt->bind_param('sissssssii', $role, $verified, $name, $first, $last, $email, $phone, $school, $gradeId, $body['id']);
         if (!$stmt->execute()) {
             json_out(['success'=>false, 'error'=>'Update fehlgeschlagen: '.$stmt->error], 500);
         }
@@ -226,8 +238,20 @@ if ($method === 'PUT') {
             json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
         }
         
-        $stmt = $mysqli->prepare("UPDATE users SET first_name=?, last_name=?, name=?, email=?, phone=?, school=?, belt_level=? WHERE id=?");
-        $stmt->bind_param('sssssssi', $firstName, $lastName, $name, $email, $phone, $school, $beltLevel, $currentUserId);
+        // Grade-ID aus dem Namen ermitteln
+        $gradeId = null;
+        if ($beltLevel) {
+            $gradeStmt = $mysqli->prepare("SELECT id FROM grade WHERE name = ? LIMIT 1");
+            $gradeStmt->bind_param('s', $beltLevel);
+            $gradeStmt->execute();
+            $gradeRes = $gradeStmt->get_result()->fetch_assoc();
+            if ($gradeRes) {
+                $gradeId = (int)$gradeRes['id'];
+            }
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE users SET first_name=?, last_name=?, name=?, email=?, phone=?, school=?, grade_id=? WHERE id=?");
+        $stmt->bind_param('ssssssis', $firstName, $lastName, $name, $email, $phone, $school, $gradeId, $currentUserId);
         if (!$stmt->execute()) {
             json_out(['success'=>false, 'error'=>'Profil-Update fehlgeschlagen: '.$stmt->error], 500);
         }

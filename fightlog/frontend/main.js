@@ -228,9 +228,9 @@ const app = createApp({
                                 <nav-card
                                     v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')"
                                     icon="fa-sliders"
-                                    title="Presets"
+                                    title="Settings"
                                     description="Urkunden-Vorlagen &amp; Gruppen"
-                                    @click="navigateTo('presets')"
+                                    @click="navigateTo('settings')"
                                 />
                             </div>
                         </div>
@@ -246,150 +246,188 @@ const app = createApp({
                                      <i class="fas fa-arrow-left"></i>
                                      Zurück
                                  </button>
-                                 <h1>{{ t('certificates') }}</h1>
+                                 <h1><i class="fas fa-certificate"></i> Meine Urkunden</h1>
                              </div>
                             
-                            <!-- Admin/Trainer: Upload + Suche/Bearbeiten -->
-                            <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
-                                <div class="form-container">
-                                    <h2>{{ t('uploadCertificate') }}</h2>
-                                    <form @submit.prevent="uploadCertificate">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>{{ t('certificateTitle') }}</label>
-                                                <input type="text" v-model="certificateForm.title" class="form-control" required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>{{ t('certificateType') }}</label>
-                                                <select v-model="certificateForm.type" class="form-control" required>
-                                                    <option value="">{{ t('certificateType') }}</option>
-                                                    <option value="belt_exam">Gürtelprüfung</option>
-                                                    <option value="tournament">Turnier</option>
-                                                    <option value="workshop">Workshop</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>{{ t('certificateDate') }}</label>
-                                                <input type="date" v-model="certificateForm.date" class="form-control" required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>{{ t('certificateLevel') }}</label>
-                                                <select v-model="certificateForm.level" class="form-control" required>
-                                                    <option value="">{{ t('certificateLevel') }}</option>
-                                                    <option value="Weißgurt">Weißgurt</option>
-                                                    <option value="Gelbgurt">Gelbgurt</option>
-                                                    <option value="Orangegurt">Orangegurt</option>
-                                                    <option value="Grüngurt">Grüngurt</option>
-                                                    <option value="Blaugurt">Blaugurt</option>
-                                                    <option value="Braungurt">Braungurt</option>
-                                                    <option value="Schwarzgurt">Schwarzgurt</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label>{{ t('certificateInstructor') }}</label>
-                                            <input type="text" v-model="certificateForm.instructor" class="form-control" required>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label>Schüler zuordnen</label>
-                                            <div style="position:relative;">
-                                                <input type="text" v-model="certificateForm.studentQuery" class="form-control" placeholder="Schüler suchen (Tippe z. B. 'p' oder 'pa')">
-                                                <div v-if="certificateForm.studentQuery && studentMatches(certificateForm.studentQuery).length" class="form-container" style="position:absolute; left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; z-index:1000; max-height:220px; overflow:auto;">
-                                                    <div v-for="u in studentMatches(certificateForm.studentQuery)" :key="u.id" style="padding:.4rem 1rem; cursor:pointer;" @click="selectStudentForCertificate(u)">
-                                                        {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div v-if="certificateForm.studentSelectedName" style="margin-top:.25rem; color:#64748b; font-size:.9rem;">Ausgewählt: {{ certificateForm.studentSelectedName }}</div>
-                                        </div>
-                                        
-                                        <!-- Datei-Upload entfernt (Bewertung durch verifizierte Trainer) -->
-                                        
-                                        <button type="submit" class="btn btn-primary">
-                                            {{ t('uploadCertificate') }}
-                                        </button>
-                                    </form>
+                            <!-- Trainer/Admin: Manuelle Urkunde hinzufügen -->
+                            <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="form-container" style="margin-bottom: 1.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 style="margin: 0;"><i class="fas fa-plus-circle"></i> Manuelle Urkunde erstellen</h3>
+                                    <button class="btn btn-primary btn-sm" @click="showManualCertificateForm = !showManualCertificateForm">
+                                        {{ showManualCertificateForm ? 'Ausblenden' : 'Hinzufügen' }}
+                                    </button>
                                 </div>
-
-                                <div class="form-container">
-                                    <h2>{{ t('filter') }}</h2>
+                                <form v-if="showManualCertificateForm" @submit.prevent="createManualCertificate" style="margin-top: 1rem;">
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label>{{ t('search') }}</label>
-                                            <input type="text" v-model="certificateSearch" class="form-control" placeholder="Titel/Trainer/Level">
+                                            <label>Titel *</label>
+                                            <input type="text" v-model="manualCertificateForm.title" class="form-control" placeholder="z.B. Sonderauszeichnung" required>
                                         </div>
-                                        <div class="form-group" style="align-self: end;">
-                                            <button class="btn btn-secondary" @click="clearCertificateSearch">{{ t('clearFilter') }}</button>
+                                        <div class="form-group">
+                                            <label>Datum *</label>
+                                            <input type="date" v-model="manualCertificateForm.date" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Gürtelgrad</label>
+                                            <select v-model="manualCertificateForm.level" class="form-control">
+                                                <option value="">Bitte wählen</option>
+                                                <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Prüfer/Trainer *</label>
+                                            <input type="text" v-model="manualCertificateForm.instructor" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label>Schüler zuordnen</label>
+                                        <label>Schüler auswählen *</label>
                                         <div style="position:relative;">
-                                            <input type="text" v-model="certificateForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent>
-                                            <div v-if="certificateForm.studentQuery" class="form-container" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;">
-                                                <div v-for="g in groupMatches(certificateForm.studentQuery)" :key="'g_'+g.id" style="padding:.4rem 0; cursor:pointer; font-weight:600;" @click="applyGroupObjectTo('cert', g)">
-                                                    {{ g.name }} <span style="color:#64748b; font-weight:500;">(Gruppe)</span>
-                                                </div>
-                                                <div v-for="u in studentMatches(certificateForm.studentQuery)" :key="u.id" style="padding:.3rem 0; cursor:pointer;" @click="tapSelectStudent('cert', u)">
+                                            <input type="text" v-model="manualCertificateForm.studentQuery" class="form-control" placeholder="Schüler suchen...">
+                                            <div v-if="manualCertificateForm.studentQuery && studentMatches(manualCertificateForm.studentQuery).length" class="form-container" style="position:absolute; left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; z-index:1000; max-height:180px; overflow:auto;">
+                                                <div v-for="u in studentMatches(manualCertificateForm.studentQuery)" :key="u.id" style="padding:.4rem 1rem; cursor:pointer;" @click="selectStudentForManualCertificate(u)">
                                                     {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div v-if="certificateForm.userIds.length" style="margin-top:.35rem; display:flex; flex-wrap:wrap; gap:.35rem;">
-                                            <span v-for="sid in certificateForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;">
-                                                {{ displayUserName(sid) }}
-                                                <button type="button" class="btn btn-danger btn-sm" style="margin-left:.35rem;" @click="removeSelected('cert', sid)"><i class="fas fa-times"></i></button>
-                                            </span>
+                                        <div v-if="manualCertificateForm.studentName" style="margin-top:.25rem; color:#10b981; font-size:.9rem;">
+                                            <i class="fas fa-check"></i> Ausgewählt: {{ manualCertificateForm.studentName }}
                                         </div>
                                     </div>
-                                    <div class="certificates-grid">
-                                        <div 
-                                            v-for="cert in filteredCertificates" 
-                                            :key="cert.id" 
-                                            class="certificate-card"
-                                        >
-                                            <div class="certificate-preview">
-                                                {{ cert.preview }}
-                                            </div>
-                                            <h4>{{ cert.title }}</h4>
-                                            <p>{{ cert.level }}</p>
-                                            <p>{{ cert.date }}</p>
-                                            <p>{{ cert.instructor }}</p>
-                                            <div style="margin-top: 0.5rem; display:flex; gap:.5rem; align-items:center;">
-                                                <span :class="'status-' + cert.status">{{ cert.status }}</span>
-                                                <button class="btn btn-secondary" style="width:auto;" @click="editCertificate(cert)"><i class="fas fa-pen"></i></button>
-                                                <button class="btn btn-secondary" style="width:auto;" @click="deleteCertificate(cert)"><i class="fas fa-trash"></i></button>
-                                            </div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i> Urkunde erstellen
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Info-Text -->
+                            <div v-if="certificates.length === 0" class="form-container" style="text-align: center; padding: 3rem;">
+                                <i class="fas fa-certificate" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                                <h3 style="color: #64748b;">Noch keine Urkunden vorhanden</h3>
+                                <p style="color: #94a3b8;">Urkunden werden automatisch erstellt, wenn du Prüfungen bestehst.</p>
+                            </div>
+                            
+                            <!-- Urkunden-Kacheln -->
+                            <div v-else class="certificates-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                                <div 
+                                    v-for="cert in displayedCertificates" 
+                                    :key="cert.id" 
+                                    class="certificate-card form-container"
+                                    style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative;"
+                                    @click="openCertificateDetail(cert)"
+                                    @mouseenter="$event.target.style.transform = 'translateY(-4px)'; $event.target.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)'"
+                                    @mouseleave="$event.target.style.transform = ''; $event.target.style.boxShadow = ''"
+                                >
+                                    <!-- Gürtelgrad-Farbband -->
+                                    <div v-if="cert.gradeColor" style="position: absolute; top: 0; left: 0; right: 0; height: 6px; border-radius: 14px 14px 0 0;" :style="{ backgroundColor: cert.gradeColor }"></div>
+                                    
+                                    <!-- Manuell-Badge -->
+                                    <div v-if="cert.isManual" style="position: absolute; top: 12px; right: 12px;">
+                                        <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">MANUELL</span>
+                                    </div>
+                                    
+                                    <div style="text-align: center; padding: 1.5rem 1rem;">
+                                        <!-- Urkunden-Icon mit Grad-Farbe -->
+                                        <div style="width: 70px; height: 70px; margin: 0 auto 1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;" :style="{ backgroundColor: (cert.gradeColor || '#e2e8f0') + '20', color: cert.gradeColor || '#64748b' }">
+                                            <i class="fas fa-award"></i>
+                                        </div>
+                                        
+                                        <!-- Titel -->
+                                        <h4 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: #1e293b;">{{ cert.title }}</h4>
+                                        
+                                        <!-- Gürtelgrad -->
+                                        <div v-if="cert.gradeName" style="margin-bottom: 0.75rem;">
+                                            <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;" :style="{ backgroundColor: (cert.gradeColor || '#64748b') + '20', color: cert.gradeColor || '#64748b' }">
+                                                {{ cert.gradeName }}
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Details -->
+                                        <div style="color: #64748b; font-size: 0.9rem;">
+                                            <p style="margin: 0.25rem 0;"><i class="fas fa-calendar-alt" style="width: 20px;"></i> {{ formatDate(cert.date) }}</p>
+                                            <p style="margin: 0.25rem 0;"><i class="fas fa-user-tie" style="width: 20px;"></i> {{ cert.instructor }}</p>
+                                            <p v-if="cert.category" style="margin: 0.25rem 0;"><i class="fas fa-tag" style="width: 20px;"></i> {{ cert.category }}</p>
+                                        </div>
+                                        
+                                        <!-- Admin: Schülername -->
+                                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer') && cert.ownerName" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 0.85rem;">
+                                            <i class="fas fa-user-graduate"></i> {{ cert.ownerName }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Schüler: nur eigene Urkunden -->
-                            <div v-else class="certificates-grid">
-                                <div 
-                                    v-for="cert in ownCertificates" 
-                                    :key="cert.id" 
-                                    class="certificate-card"
-                                >
-                                    <div class="certificate-preview">
-                                        {{ cert.preview }}
-                                    </div>
-                                    <h4>{{ cert.title }}</h4>
-                                    <p>{{ cert.level }}</p>
-                                    <p>{{ cert.date }}</p>
-                                    <p>{{ cert.instructor }}</p>
-                                    <div style="margin-top: 0.5rem;">
-                                        <span :class="'status-' + cert.status">{{ cert.status }}</span>
-                                    </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Urkunden-Detail-Modal -->
+                <div v-if="showCertificateDetailModal" class="modal-overlay" @click.self="showCertificateDetailModal = false">
+                    <div class="modal-content form-container" style="max-width: 600px; text-align: center;">
+                        <button @click="showCertificateDetailModal = false" class="close-btn" style="position: absolute; top: 1rem; right: 1rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        
+                        <!-- Farbband oben -->
+                        <div v-if="selectedCertificate && selectedCertificate.gradeColor" style="position: absolute; top: 0; left: 0; right: 0; height: 8px; border-radius: 14px 14px 0 0;" :style="{ backgroundColor: selectedCertificate.gradeColor }"></div>
+                        
+                        <div v-if="selectedCertificate" style="padding: 2rem 1rem;">
+                            <!-- Großes Urkunden-Icon -->
+                            <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem;" :style="{ backgroundColor: (selectedCertificate.gradeColor || '#e2e8f0') + '20', color: selectedCertificate.gradeColor || '#64748b' }">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            
+                            <!-- Schultitel -->
+                            <h2 style="margin: 0 0 0.5rem; color: #64748b; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">{{ certificateSettings.certificate_school_name || 'Kampfsport Akademie' }}</h2>
+                            
+                            <!-- Urkunde Titel -->
+                            <h1 style="margin: 0 0 1rem; font-size: 2rem; color: #1e293b;">{{ certificateSettings.certificate_title || 'Urkunde' }}</h1>
+                            
+                            <!-- Empfänger -->
+                            <p style="font-size: 1.1rem; color: #64748b; margin-bottom: 0.5rem;">verliehen an</p>
+                            <h3 style="margin: 0 0 1.5rem; font-size: 1.5rem; color: #1e293b;">{{ selectedCertificate.ownerName || 'Unbekannt' }}</h3>
+                            
+                            <!-- Gürtelgrad -->
+                            <div v-if="selectedCertificate.gradeName" style="margin-bottom: 1.5rem;">
+                                <span style="padding: 8px 24px; border-radius: 25px; font-size: 1.1rem; font-weight: 600;" :style="{ backgroundColor: (selectedCertificate.gradeColor || '#64748b') + '20', color: selectedCertificate.gradeColor || '#64748b' }">
+                                    {{ selectedCertificate.gradeName }}
+                                </span>
+                            </div>
+                            
+                            <!-- Prüfungstitel -->
+                            <h4 style="margin: 0 0 1.5rem; color: #475569;">{{ selectedCertificate.title }}</h4>
+                            
+                            <!-- Gratulationstext -->
+                            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; white-space: pre-line; color: #475569; line-height: 1.6;">
+                                {{ certificateSettings.certificate_congratulation_text || 'Herzlichen Glückwunsch zur bestandenen Prüfung!' }}
+                            </div>
+                            
+                            <!-- Details -->
+                            <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; color: #64748b; margin-bottom: 1.5rem;">
+                                <div>
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <strong style="margin-left: 0.5rem;">{{ formatDate(selectedCertificate.date) }}</strong>
                                 </div>
+                                <div>
+                                    <i class="fas fa-user-tie"></i>
+                                    <strong style="margin-left: 0.5rem;">{{ selectedCertificate.instructor }}</strong>
+                                </div>
+                                <div v-if="selectedCertificate.category">
+                                    <i class="fas fa-tag"></i>
+                                    <strong style="margin-left: 0.5rem;">{{ selectedCertificate.category }}</strong>
+                                </div>
+                            </div>
+                            
+                            <!-- Footer -->
+                            <p style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">
+                                {{ certificateSettings.certificate_footer_text || 'Diese Urkunde wurde automatisch erstellt.' }}
+                            </p>
+                            
+                            <!-- Löschen-Button für manuelle Urkunden (nur Admin) -->
+                            <div v-if="selectedCertificate.isManual && currentUser && currentUser.role === 'admin'" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                                <button class="btn btn-danger" @click="deleteManualCertificate(selectedCertificate.id)">
+                                    <i class="fas fa-trash"></i> Urkunde löschen
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -422,13 +460,7 @@ const app = createApp({
                                             <label>{{ t('examLevel') }}</label>
                                             <select v-model="examForm.level" class="form-control" required>
                                                 <option value="">{{ t('examLevel') }}</option>
-                                                <option value="Weißgurt">Weißgurt</option>
-                                                <option value="Gelbgurt">Gelbgurt</option>
-                                                <option value="Orangegurt">Orangegurt</option>
-                                                <option value="Grüngurt">Grüngurt</option>
-                                                <option value="Blaugurt">Blaugurt</option>
-                                                <option value="Braungurt">Braungurt</option>
-                                                <option value="Schwarzgurt">Schwarzgurt</option>
+                                                <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -538,19 +570,13 @@ const app = createApp({
                                         <form @submit.prevent="saveExamEdit">
                                             <div class="form-row">
                                                 <div class="form-group">
-                                                    <label>Datum (TT.MM.JJJJ)</label>
-                                                    <input type="text" v-model="examEditForm.date" class="form-control" placeholder="z.B. 15.04.2026" required>
+                                                    <label>Datum</label>
+                                                    <input type="text" v-model="examEditForm.date" class="form-control datepicker" placeholder="TT.MM.JJJJ" required>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Stufe</label>
                                                     <select v-model="examEditForm.level" class="form-control" required>
-                                                        <option value="Weißgurt">Weißgurt</option>
-                                                        <option value="Gelbgurt">Gelbgurt</option>
-                                                        <option value="Orangegurt">Orangegurt</option>
-                                                        <option value="Grüngurt">Grüngurt</option>
-                                                        <option value="Blaugurt">Blaugurt</option>
-                                                        <option value="Braungurt">Braungurt</option>
-                                                        <option value="Schwarzgurt">Schwarzgurt</option>
+                                                        <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -874,9 +900,14 @@ const app = createApp({
                                     >
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                             <h3 style="margin: 0 0 0.5rem 0; text-decoration: line-through;">{{ goal.title }}</h3>
-                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <div style="display: flex; gap: 0.35rem;">
+                                                <button class="btn btn-success btn-sm" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                    <i class="fas fa-redo"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <p style="color: #94a3b8; font-size: 0.8rem;">
                                             <i class="fas fa-folder"></i> {{ goal.category }}
@@ -948,8 +979,8 @@ const app = createApp({
                     </div>
                 </div>
 
-                <!-- Presets (nur Admin) -->
-                <div v-else-if="currentPage === 'presets' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
+                <!-- Settings (nur Admin/Trainer) -->
+                <div v-else-if="currentPage === 'settings' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
                     <div style="padding: 2rem 0;">
                         <div class="container">
                             <div class="page-header">
@@ -957,85 +988,93 @@ const app = createApp({
                                     <i class="fas fa-arrow-left"></i>
                                     Zurück
                                 </button>
-                                <h1>Presets</h1>
+                                <h1>Settings</h1>
                             </div>
 
                             <!-- Tab-Switcher -->
-                            <div class="preset-tabs" role="tablist" aria-label="Presets Kategorien">
+                            <div class="preset-tabs" role="tablist" aria-label="Settings Kategorien">
                                 <button 
                                     class="tab-btn" 
-                                    :class="{ active: currentPresetsTab === 'certificates' }" 
+                                    :class="{ active: currentSettingsTab === 'certificates' }" 
                                     role="tab" 
-                                    :aria-selected="(currentPresetsTab === 'certificates').toString()" 
+                                    :aria-selected="(currentSettingsTab === 'certificates').toString()" 
                                     aria-controls="tab-certificates" 
-                                    @click="setPresetsTab('certificates')"
+                                    @click="setSettingsTab('certificates')"
                                 >Urkunden</button>
                                 
                                 <button 
                                     class="tab-btn" 
-                                    :class="{ active: currentPresetsTab === 'groups' }" 
+                                    :class="{ active: currentSettingsTab === 'groups' }" 
                                     role="tab" 
-                                    :aria-selected="(currentPresetsTab === 'groups').toString()" 
+                                    :aria-selected="(currentSettingsTab === 'groups').toString()" 
                                     aria-controls="tab-groups" 
-                                    @click="setPresetsTab('groups')"
+                                    @click="setSettingsTab('groups')"
                                 >Gruppen</button>
                                 
                                 <button 
                                     class="tab-btn" 
-                                    :class="{ active: currentPresetsTab === 'goals' }" 
+                                    :class="{ active: currentSettingsTab === 'goals' }" 
                                     role="tab" 
-                                    :aria-selected="(currentPresetsTab === 'goals').toString()" 
+                                    :aria-selected="(currentSettingsTab === 'goals').toString()" 
                                     aria-controls="tab-goals" 
-                                    @click="setPresetsTab('goals')"
+                                    @click="setSettingsTab('goals')"
                                 >Ziele</button>
+                                
+                                <button 
+                                    class="tab-btn" 
+                                    :class="{ active: currentSettingsTab === 'grades' }" 
+                                    role="tab" 
+                                    :aria-selected="(currentSettingsTab === 'grades').toString()" 
+                                    aria-controls="tab-grades" 
+                                    @click="setSettingsTab('grades')"
+                                >Grade</button>
                             </div>
 
-                            <div v-show="currentPresetsTab === 'certificates'" id="tab-certificates" class="form-container" role="tabpanel">
-                                <h2>Urkunden-Presets</h2>
-                                <form @submit.prevent="addCertificatePreset">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Titel</label>
-                                            <input type="text" v-model="certificatePresetForm.title" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Art</label>
-                                            <div class="choice-group" role="group" aria-label="Urkunden-Art wählen">
-                                                <button type="button" class="choice-btn" :class="{ active: certificatePresetForm.type === 'belt_exam' }" @click="certificatePresetForm.type = 'belt_exam'" :aria-pressed="(certificatePresetForm.type === 'belt_exam').toString()">Gürtelprüfung</button>
-                                                <button type="button" class="choice-btn" :class="{ active: certificatePresetForm.type === 'tournament' }" @click="certificatePresetForm.type = 'tournament'" :aria-pressed="(certificatePresetForm.type === 'tournament').toString()">Turnier</button>
-                                                <button type="button" class="choice-btn" :class="{ active: certificatePresetForm.type === 'workshop' }" @click="certificatePresetForm.type = 'workshop'" :aria-pressed="(certificatePresetForm.type === 'workshop').toString()">Workshop</button>
-                                            </div>
-                                        </div>
+                            <div v-show="currentSettingsTab === 'certificates'" id="tab-certificates" class="form-container" role="tabpanel">
+                                <h2>Urkunden-Einstellungen</h2>
+                                <p style="color: #64748b; margin-bottom: 1rem;">Passe die Texte an, die auf den Urkunden angezeigt werden.</p>
+                                
+                                <form @submit.prevent="saveCertificateSettings">
+                                    <div class="form-group">
+                                        <label>Titel der Urkunde</label>
+                                        <input type="text" v-model="certificateSettings.certificate_title" class="form-control" placeholder="z.B. Urkunde">
                                     </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Level</label>
-                                            <input type="text" v-model="certificatePresetForm.level" class="form-control">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Trainer/Prüfer</label>
-                                            <input type="text" v-model="certificatePresetForm.instructor" class="form-control">
-                                        </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Name der Schule/des Vereins</label>
+                                        <input type="text" v-model="certificateSettings.certificate_school_name" class="form-control" placeholder="z.B. Kampfsport Akademie München">
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Preset hinzufügen</button>
+                                    
+                                    <div class="form-group">
+                                        <label>Gratulationstext</label>
+                                        <textarea v-model="certificateSettings.certificate_congratulation_text" class="form-control" rows="4" placeholder="z.B. Herzlichen Glückwunsch zur bestandenen Prüfung! Mit dieser Urkunde bestätigen wir..."></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Fußzeilen-Text</label>
+                                        <input type="text" v-model="certificateSettings.certificate_footer_text" class="form-control" placeholder="z.B. Diese Urkunde wurde automatisch erstellt.">
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Einstellungen speichern
+                                    </button>
                                 </form>
-
-                                <h3 style="margin:1rem 0 .25rem; color:#1e293b;">Vorhandene Presets</h3>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="p in certificatePresetsFiltered" :key="p.id" class="nav-card preset-card" style="text-align:left;">
-                                        <h3>{{ p.title }}</h3>
-                                        <p><strong>Art:</strong> {{ p.type }}</p>
-                                        <p v-if="p.level"><strong>Level:</strong> {{ p.level }}</p>
-                                        <p v-if="p.instructor"><strong>Trainer/Prüfer:</strong> {{ p.instructor }}</p>
-                                        <div style="margin-top:.5rem; display:flex; gap:.5rem;">
-                                            <button class="icon-btn" @click="editCertificatePreset(p)" aria-label="Preset bearbeiten"><i class="fas fa-pen"></i></button>
-                                            <button class="icon-btn" @click="removeCertificatePreset(p)" aria-label="Preset löschen"><i class="fas fa-trash"></i></button>
-                                        </div>
+                                
+                                <!-- Vorschau -->
+                                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                                    <h3>Vorschau</h3>
+                                    <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; text-align: center; border: 2px dashed #cbd5e1;">
+                                        <h4 style="color: #64748b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem;">{{ certificateSettings.certificate_school_name || 'Kampfsport Akademie' }}</h4>
+                                        <h2 style="margin: 0 0 1rem; font-size: 1.8rem; color: #1e293b;">{{ certificateSettings.certificate_title || 'Urkunde' }}</h2>
+                                        <p style="color: #64748b; margin-bottom: 0.5rem;">verliehen an</p>
+                                        <h3 style="margin: 0 0 1rem; color: #1e293b;">[Schülername]</h3>
+                                        <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #475569; white-space: pre-line;">{{ certificateSettings.certificate_congratulation_text || 'Herzlichen Glückwunsch zur bestandenen Prüfung!' }}</div>
+                                        <p style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">{{ certificateSettings.certificate_footer_text || 'Diese Urkunde wurde automatisch erstellt.' }}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div v-show="currentPresetsTab === 'groups'" id="tab-groups" class="form-container" role="tabpanel">
+                            <div v-show="currentSettingsTab === 'groups'" id="tab-groups" class="form-container" role="tabpanel">
                                 <h2>Gruppen verwalten</h2>
                                 <form @submit.prevent="addStudentGroup()">
                                     <div class="form-row">
@@ -1096,7 +1135,7 @@ const app = createApp({
                             </div>
                             
                             <!-- Tab: Ziele (Goal Templates) -->
-                            <div v-show="currentPresetsTab === 'goals'" id="tab-goals" class="form-container" role="tabpanel">
+                            <div v-show="currentSettingsTab === 'goals'" id="tab-goals" class="form-container" role="tabpanel">
                                 <h2><i class="fas fa-bullseye" style="color:#10b981;"></i> Ziel-Vorlagen</h2>
                                 
                                 <!-- Formular für neues Ziel -->
@@ -1168,6 +1207,60 @@ const app = createApp({
                                         </div>
                                         <button class="icon-btn" @click="editGoalTemplate(t)" title="Bearbeiten" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-pen"></i></button>
                                         <button class="icon-btn" @click="deleteGoalTemplate(t)" title="Löschen" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab: Grade -->
+                            <div v-show="currentSettingsTab === 'grades'" id="tab-grades" class="form-container" role="tabpanel">
+                                <h2><i class="fas fa-medal" style="color:#f59e0b;"></i> Grade verwalten</h2>
+                                <p style="color:#64748b; margin-bottom:1rem;">Grade (Gürtelgrade) werden in Prüfungen, Urkunden und Benutzerprofilen verwendet.</p>
+                                
+                                <!-- Formular für neuen Grad -->
+                                <form @submit.prevent="saveGrade" v-if="currentUser && currentUser.role === 'admin'">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Name *</label>
+                                            <input type="text" v-model="gradeForm.name" class="form-control" placeholder="z.B. Gelbgurt" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sortierung</label>
+                                            <input type="number" v-model.number="gradeForm.sort_order" class="form-control" placeholder="1, 2, 3...">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Farbe (optional)</label>
+                                        <input type="color" v-model="gradeForm.color" class="form-control" style="width: 100px; height: 40px; padding: 2px;">
+                                    </div>
+                                    <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> {{ gradeForm.id ? 'Aktualisieren' : 'Erstellen' }}
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" @click="resetGradeForm" v-if="gradeForm.id">
+                                            Abbrechen
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Vorhandene Grade -->
+                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">
+                                    Vorhandene Grade 
+                                    <span style="color:#64748b; font-weight:normal; font-size:0.9rem;">({{ grades.length }})</span>
+                                </h3>
+                                <div v-if="grades.length === 0" style="color:#64748b;">Keine Grade vorhanden.</div>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                                    <div 
+                                        v-for="g in grades" 
+                                        :key="g.id" 
+                                        style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:0.9rem;"
+                                        :style="{ borderLeftColor: g.color || '#fcd34d', borderLeftWidth: '4px' }"
+                                    >
+                                        <div style="flex:1; min-width:0;">
+                                            <span style="font-weight:600; color:#92400e;">{{ g.name }}</span>
+                                            <span style="color:#94a3b8; margin-left:0.35rem; font-size:0.75rem;">#{{ g.sort_order }}</span>
+                                        </div>
+                                        <button v-if="currentUser && currentUser.role === 'admin'" class="icon-btn" @click="editGrade(g)" title="Bearbeiten" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-pen"></i></button>
+                                        <button v-if="currentUser && currentUser.role === 'admin'" class="icon-btn" @click="deleteGrade(g)" title="Löschen" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-trash"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -1333,8 +1426,8 @@ const app = createApp({
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Datum (TT.MM.JJJJ)</label>
-                                    <input type="text" v-model="courseEditForm.date" class="form-control" placeholder="z.B. 15.04.2026" required>
+                                    <label>Datum</label>
+                                    <input type="text" v-model="courseEditForm.date" class="form-control datepicker" placeholder="TT.MM.JJJJ" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Trainer</label>
@@ -1389,13 +1482,18 @@ const app = createApp({
                                 </button>
                             </div>
                             <div v-if="participantsAddMode" style="padding: 0.75rem; background: #f1f5f9; border-radius: 8px;">
-                                <input type="text" v-model="participantsSearchQuery" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
-                                <div v-if="participantsSearchQuery && filteredStudentsForCourse.length" style="margin-top: 0.5rem; max-height: 150px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                <input type="text" v-model="participantsSearchQuery" class="form-control" placeholder="Gruppe oder Schüler suchen..." @keydown.enter.prevent>
+                                <div v-if="participantsSearchQuery && (filteredGroupsForCourse.length || filteredStudentsForCourse.length)" style="margin-top: 0.5rem; max-height: 200px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                    <!-- Gruppen -->
+                                    <div v-for="g in filteredGroupsForCourse" :key="'g_'+g.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 600; background: #f8fafc;" @click="addGroupToCourse(g)">
+                                        <i class="fas fa-users"></i> {{ g.name }} <span style="color: #64748b; font-weight: 400;">(Gruppe - {{ g.memberIds ? g.memberIds.length : 0 }} Mitglieder)</span>
+                                    </div>
+                                    <!-- Einzelne Schüler -->
                                     <div v-for="u in filteredStudentsForCourse" :key="u.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9;" @click="addParticipantToCourse(u)">
                                         {{ u.name }} <span style="color: #64748b;">(@{{ u.username }})</span>
                                     </div>
                                 </div>
-                                <div v-if="participantsSearchQuery && !filteredStudentsForCourse.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Schüler gefunden</div>
+                                <div v-if="participantsSearchQuery && !filteredGroupsForCourse.length && !filteredStudentsForCourse.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Gruppen oder Schüler gefunden</div>
                             </div>
                         </div>
                         
@@ -1589,12 +1687,13 @@ const app = createApp({
                                                         
                                                         <div class="form-group">
                                                             <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
-                                                            <input 
-                                                                type="text" 
+                                                            <select 
                                                                 v-model="user._editForm.beltLevel" 
                                                                 class="form-control"
-                                                                placeholder="Gürtelgrad"
                                                             >
+                                                                <option value="">Bitte wählen</option>
+                                                                <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
+                                                            </select>
                                                         </div>
                                                         
                                                         <!-- Passwort-Änderung (über Rolle) -->
@@ -1719,7 +1818,10 @@ const app = createApp({
                                     
                                     <div class="form-group">
                                         <label>Gürtelgrad</label>
-                                        <input type="text" v-model="profileForm.beltLevel" class="form-control" placeholder="z.B. Weißgurt">
+                                        <select v-model="profileForm.beltLevel" class="form-control">
+                                            <option value="">Bitte wählen</option>
+                                            <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
+                                        </select>
                                     </div>
                                     
                                     <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
@@ -1872,12 +1974,13 @@ const app = createApp({
                             <!-- Gürtelgrad -->
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
-                                <input 
-                                    type="text" 
+                                <select 
                                     v-model="createUserForm.beltLevel" 
                                     class="form-control"
-                                    placeholder="Gürtelgrad"
                                 >
+                                    <option value="">Bitte wählen</option>
+                                    <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
+                                </select>
                             </div>
                             
                             <!-- Verifizierter Trainer -->
@@ -2067,6 +2170,26 @@ const app = createApp({
                 selectedStudents: []
             },
             
+            // Neue Urkunden-Anzeige
+            showManualCertificateForm: false,
+            manualCertificateForm: {
+                title: '',
+                date: '',
+                level: '',
+                instructor: '',
+                studentQuery: '',
+                studentId: null,
+                studentName: ''
+            },
+            showCertificateDetailModal: false,
+            selectedCertificate: null,
+            certificateSettings: {
+                certificate_title: 'Urkunde',
+                certificate_school_name: '',
+                certificate_congratulation_text: 'Herzlichen Glückwunsch zur bestandenen Prüfung!',
+                certificate_footer_text: ''
+            },
+            
             examForm: {
                 date: '',
                 level: '',
@@ -2164,8 +2287,8 @@ const app = createApp({
             emailError: false,
             phoneError: false,
 
-            // Presets
-            currentPresetsTab: 'certificates',
+            // Settings (ehemals Presets)
+            currentSettingsTab: 'certificates',
             certificatePresets: [],
             certificatePresetForm: { title: '', type: '', level: '', instructor: '' },
             // Gruppen (aus Datenbank)
@@ -2178,6 +2301,14 @@ const app = createApp({
                 definition: '',
                 category: '',
                 subtasks: []
+            },
+            // Grade (Gürtelgrade)
+            grades: [],
+            gradeForm: {
+                id: null,
+                name: '',
+                sort_order: 0,
+                color: '#FFEB3B'
             },
             // Gruppen-Bearbeitungs-Modal
             showGroupEditModal: false,
@@ -2292,18 +2423,33 @@ const app = createApp({
                 })
                 .slice(0, 20);
         },
+        // Gefilterte Gruppen für Kurs-Teilnehmer hinzufügen
+        filteredGroupsForCourse() {
+            const q = (this.participantsSearchQuery || '').toLowerCase().trim();
+            if (!q) return [];
+            return this.studentGroups
+                .filter(g => (g.name || '').toLowerCase().includes(q))
+                .slice(0, 10);
+        },
         filteredCertificates() {
             const q = (this.certificateSearch || '').toLowerCase().trim();
             if (!q) return this.certificates;
             return this.certificates.filter(c =>
                 (c.title || '').toLowerCase().includes(q) ||
                 (c.instructor || '').toLowerCase().includes(q) ||
-                (c.level || '').toLowerCase().includes(q)
+                (c.gradeName || '').toLowerCase().includes(q)
             );
         },
         ownCertificates() {
             if (!this.currentUser) return [];
             return this.certificates.filter(c => String(c.userId || c.user_id) === String(this.currentUser.id));
+        },
+        displayedCertificates() {
+            // Admins/Trainer sehen alle, Schüler nur eigene
+            if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
+                return this.filteredCertificates;
+            }
+            return this.ownCertificates;
         },
         filteredExams() {
             const q = (this.examSearch || '').toLowerCase().trim();
@@ -2686,43 +2832,112 @@ const app = createApp({
         
         // Urkunden
         async uploadCertificate() {
-            try {
-                const targetIds = (this.certificateForm.userIds && this.certificateForm.userIds.length)
-                    ? this.certificateForm.userIds
-                    : (this.certificateForm.userId ? [this.certificateForm.userId] : []);
-                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
-                // Demo: je Schüler eine Urkunde anlegen
-                for (const uid of targetIds) {
-                    await apiService.uploadCertificate({ ...this.certificateForm, userId: uid });
-                }
-                const response = { success: true };
-                if (response.success) {
-                    alert('Urkunde erfolgreich hochgeladen!');
-                    this.certificateForm = {
-                        title: '',
-                        type: '',
-                        date: '',
-                        level: '',
-                        instructor: '',
-                        file: null,
-                        userId: null,
-                        userIds: [],
-                        studentQuery: '',
-                        selectedStudents: []
-                    };
-                    this.loadCertificates();
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Upload fehlgeschlagen');
-            }
+            // Diese Methode wird nicht mehr genutzt - Urkunden werden automatisch erstellt
+            console.log('uploadCertificate() ist veraltet - Urkunden werden automatisch bei bestandenen Prüfungen erstellt');
         },
         
         async loadCertificates() {
             try {
                 this.certificates = await apiService.getCertificates();
+                // Lade auch die Urkunden-Einstellungen
+                await this.loadCertificateSettings();
             } catch (error) {
                 console.error('Load certificates error:', error);
+            }
+        },
+        
+        async loadCertificateSettings() {
+            try {
+                const settings = await apiService.getCertificateSettings();
+                if (settings && !settings.error) {
+                    this.certificateSettings = settings;
+                }
+            } catch (error) {
+                console.error('Load certificate settings error:', error);
+            }
+        },
+        
+        openCertificateDetail(cert) {
+            this.selectedCertificate = cert;
+            this.showCertificateDetailModal = true;
+        },
+        
+        selectStudentForManualCertificate(user) {
+            this.manualCertificateForm.studentId = user.id;
+            this.manualCertificateForm.studentName = user.name;
+            this.manualCertificateForm.studentQuery = '';
+        },
+        
+        async createManualCertificate() {
+            try {
+                if (!this.manualCertificateForm.studentId) {
+                    alert('Bitte einen Schüler auswählen.');
+                    return;
+                }
+                if (!this.manualCertificateForm.title || !this.manualCertificateForm.date || !this.manualCertificateForm.instructor) {
+                    alert('Bitte alle Pflichtfelder ausfüllen.');
+                    return;
+                }
+                
+                const result = await apiService.createManualCertificate({
+                    title: this.manualCertificateForm.title,
+                    date: this.manualCertificateForm.date,
+                    level: this.manualCertificateForm.level,
+                    instructor: this.manualCertificateForm.instructor,
+                    user_id: this.manualCertificateForm.studentId
+                });
+                
+                if (result.success) {
+                    alert('Urkunde erfolgreich erstellt!');
+                    this.manualCertificateForm = {
+                        title: '',
+                        date: '',
+                        level: '',
+                        instructor: '',
+                        studentQuery: '',
+                        studentId: null,
+                        studentName: ''
+                    };
+                    this.showManualCertificateForm = false;
+                    await this.loadCertificates();
+                } else {
+                    alert(result.message || 'Fehler beim Erstellen der Urkunde');
+                }
+            } catch (error) {
+                console.error('Create certificate error:', error);
+                alert('Fehler beim Erstellen der Urkunde');
+            }
+        },
+        
+        async deleteManualCertificate(id) {
+            if (!confirm('Möchten Sie diese Urkunde wirklich löschen?')) return;
+            
+            try {
+                const result = await apiService.deleteCertificate(id);
+                if (result.success) {
+                    alert('Urkunde gelöscht.');
+                    this.showCertificateDetailModal = false;
+                    await this.loadCertificates();
+                } else {
+                    alert(result.message || 'Fehler beim Löschen');
+                }
+            } catch (error) {
+                console.error('Delete certificate error:', error);
+                alert('Fehler beim Löschen der Urkunde');
+            }
+        },
+        
+        async saveCertificateSettings() {
+            try {
+                const result = await apiService.saveCertificateSettings(this.certificateSettings);
+                if (result.success) {
+                    alert('Urkunden-Einstellungen gespeichert!');
+                } else {
+                    alert(result.message || 'Fehler beim Speichern');
+                }
+            } catch (error) {
+                console.error('Save certificate settings error:', error);
+                alert('Fehler beim Speichern der Einstellungen');
             }
         },
         
@@ -3046,6 +3261,25 @@ const app = createApp({
             } catch (error) {
                 console.error('Cancel goal error:', error);
                 notify.alert('Fehler beim Abbrechen des Ziels');
+            }
+        },
+        
+        // Ziel wiederaufnehmen
+        async resumeGoal(goal) {
+            const ok = await notify.confirm('Dieses Ziel wirklich wiederaufnehmen?');
+            if (!ok) return;
+            
+            try {
+                const res = await apiService.resumeGoal(goal.id);
+                if (res.success) {
+                    await this.loadGoals();
+                    notify.alert('Ziel wiederaufgenommen');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Resume goal error:', error);
+                notify.alert('Fehler beim Wiederaufnehmen des Ziels');
             }
         },
         
@@ -3462,9 +3696,11 @@ const app = createApp({
                 case 'certificates':
                     await this.loadCertificates();
                     await this.loadUsers();
+                    await this.loadGrades();
                     break;
                 case 'exams':
                     await this.loadExams();
+                    await this.loadGrades();
                     // Nur für Admin/Trainer Users laden (für Schüler nicht nötig)
                     if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
                         await this.loadUsers();
@@ -3483,22 +3719,26 @@ const app = createApp({
                     break;
                 case 'courses':
                     await this.loadCourses();
-                    // Nur für Admin/Trainer Users laden
+                    // Für Admin/Trainer Users und Gruppen laden (für Schüler-Zuweisung)
                     if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
                         await this.loadUsers();
+                        await this.loadGroups();
                     }
                     break;
                 case 'admin':
                     await this.loadUsers();
+                    await this.loadGrades();
                     break;
-                case 'presets':
+                case 'settings':
                     this.loadPresets();
                     await this.loadUsers();
                     await this.loadGroups();
                     await this.loadGoalTemplates();
+                    await this.loadGrades();
                     break;
                 case 'profile':
                     // Profil-Daten frisch aus der Datenbank laden
+                    await this.loadGrades();
                     try {
                         const res = await apiService.getOwnProfile();
                         if (res.success && res.user) {
@@ -3728,10 +3968,83 @@ const app = createApp({
             this.certificatePresets = this.certificatePresets.filter(x => x.id !== preset.id);
             this.savePresets();
         },
-        setPresetsTab(tab) {
-            this.currentPresetsTab = tab;
+        setSettingsTab(tab) {
+            this.currentSettingsTab = tab;
             // Optional: Scroll to top on mobile for better UX
             try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+        },
+        
+        // ========== GRADE CRUD ==========
+        
+        async loadGrades() {
+            try {
+                const res = await apiService.getGrades();
+                if (res.success) {
+                    this.grades = res.grades || [];
+                }
+            } catch (error) {
+                console.error('Load grades error:', error);
+            }
+        },
+        
+        resetGradeForm() {
+            this.gradeForm = {
+                id: null,
+                name: '',
+                sort_order: this.grades.length + 1,
+                color: '#FFEB3B'
+            };
+        },
+        
+        editGrade(grade) {
+            this.gradeForm = {
+                id: grade.id,
+                name: grade.name,
+                sort_order: grade.sort_order,
+                color: grade.color || '#FFEB3B'
+            };
+        },
+        
+        async saveGrade() {
+            const { id, name, sort_order, color } = this.gradeForm;
+            
+            try {
+                let res;
+                if (id) {
+                    res = await apiService.updateGrade(id, name, sort_order, color);
+                } else {
+                    res = await apiService.createGrade(name, sort_order, color);
+                }
+                
+                if (res.success) {
+                    this.resetGradeForm();
+                    await this.loadGrades();
+                    notify.alert(id ? 'Grad aktualisiert' : 'Grad erstellt');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Save grade error:', error);
+                notify.alert('Fehler beim Speichern des Grads');
+            }
+        },
+        
+        async deleteGrade(grade) {
+            const ok = await notify.confirm('Diesen Grad wirklich löschen?');
+            if (!ok) return;
+            
+            try {
+                const res = await apiService.deleteGrade(grade.id);
+                if (res.success) {
+                    await this.loadGrades();
+                    notify.alert('Grad gelöscht');
+                } else {
+                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (error) {
+                console.error('Delete grade error:', error);
+                notify.alert('Fehler beim Löschen des Grads');
+            }
         },
         
         // ========== GOAL TEMPLATE CRUD ==========
@@ -3871,7 +4184,7 @@ const app = createApp({
             let courseDate = course.date || '';
             if (courseDate === '0000-00-00') {
                 courseDate = '';
-            } else {
+            } else if (courseDate) {
                 courseDate = this.toGermanDate(courseDate);
             }
             
@@ -3889,7 +4202,7 @@ const app = createApp({
         },
         async saveCourseEdit() {
             try {
-                // Datum zu ISO-Format konvertieren
+                // Konvertiere deutsches Datum zu ISO
                 const updateData = {
                     ...this.courseEditForm,
                     date: this.toISODate(this.courseEditForm.date)
@@ -3958,6 +4271,54 @@ const app = createApp({
             } catch (e) {
                 console.error('Add participant error:', e);
                 alert('Fehler beim Hinzufügen des Teilnehmers');
+            }
+        },
+        
+        async addGroupToCourse(group) {
+            if (!this.participantsModalCourse) return;
+            if (!group.memberIds || group.memberIds.length === 0) {
+                alert('Diese Gruppe hat keine Mitglieder');
+                return;
+            }
+            
+            // Bereits vorhandene Teilnehmer IDs sammeln
+            const currentIds = this.participantsList.map(p => p.user_id);
+            // Nur neue Mitglieder hinzufügen
+            const newMemberIds = group.memberIds.filter(id => !currentIds.includes(id));
+            
+            if (newMemberIds.length === 0) {
+                alert('Alle Mitglieder dieser Gruppe sind bereits im Kurs');
+                return;
+            }
+            
+            let added = 0;
+            let failed = 0;
+            
+            for (const userId of newMemberIds) {
+                try {
+                    const res = await apiService.addCourseParticipant(this.participantsModalCourse.id, userId);
+                    if (res.success) {
+                        added++;
+                    } else {
+                        failed++;
+                    }
+                } catch (e) {
+                    failed++;
+                }
+            }
+            
+            // Teilnehmerliste neu laden
+            const participants = await apiService.getCourseParticipants(this.participantsModalCourse.id);
+            this.participantsList = Array.isArray(participants) ? participants : [];
+            this.participantsAddMode = false;
+            this.participantsSearchQuery = '';
+            // Kursliste aktualisieren für korrekte Teilnehmerzahl
+            await this.loadCourses();
+            
+            if (failed > 0) {
+                alert(`${added} Mitglieder hinzugefügt, ${failed} fehlgeschlagen (evtl. bereits angemeldet oder Kurs voll)`);
+            } else {
+                await notify.alert(`${added} Mitglieder aus "${group.name}" hinzugefügt`);
             }
         },
         
@@ -4072,6 +4433,7 @@ const app = createApp({
                 // Lade Daten nach dem Login
                 await this.loadExams();
                 await this.loadCourses();
+                await this.loadGrades();
             } else {
                 // Fallback zu altem System
                 const savedUsername = getCachedUsername();
@@ -4080,6 +4442,7 @@ const app = createApp({
                     this.currentUser = demoData.user;
                     await this.loadExams();
                     await this.loadCourses();
+                    await this.loadGrades();
                 }
             }
         }

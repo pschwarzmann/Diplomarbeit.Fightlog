@@ -36,7 +36,7 @@ $role = isset($body['role']) && in_array($body['role'], ['schueler', 'trainer', 
 
 $name = trim($body['firstName'].' '.$body['lastName']);
 $school = isset($body['school']) && $body['school'] !== '' ? $body['school'] : null;
-$belt = isset($body['beltLevel']) && $body['beltLevel'] !== '' ? $body['beltLevel'] : null;
+$beltLevelName = isset($body['beltLevel']) && $body['beltLevel'] !== '' ? $body['beltLevel'] : null;
 $phone = isset($body['phone']) && $body['phone'] !== '' ? $body['phone'] : null;
 $verifiedTrainer = isset($body['verifiedTrainer']) ? (int)!!$body['verifiedTrainer'] : 0;
 
@@ -65,8 +65,20 @@ if (!$hash || strlen($hash) === 0) {
     json_out(['success'=>false, 'error'=>'Passwort-Hash konnte nicht generiert werden'], 500);
 }
 
-$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, belt_level, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param('ssssssssssi', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $belt, $verifiedTrainer);
+// Grade-ID aus dem Namen ermitteln
+$gradeId = null;
+if ($beltLevelName) {
+    $gradeStmt = $mysqli->prepare("SELECT id FROM grade WHERE name = ? LIMIT 1");
+    $gradeStmt->bind_param('s', $beltLevelName);
+    $gradeStmt->execute();
+    $gradeRes = $gradeStmt->get_result()->fetch_assoc();
+    if ($gradeRes) {
+        $gradeId = (int)$gradeRes['id'];
+    }
+}
+
+$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, grade_id, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param('sssssssssis', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $gradeId, $verifiedTrainer);
 
 if (!$stmt->execute()) {
     json_out(['success'=>false, 'error'=>'Insert fehlgeschlagen: '.$stmt->error], 500);

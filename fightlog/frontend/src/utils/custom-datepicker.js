@@ -1,7 +1,7 @@
 // Lightweight Custom Datepicker Overlay for input[type="date"].form-control
 // Renders a rounded, animated dropdown calendar matching the custom select style.
 (function(){
-    const INPUT_SELECTOR = 'input[type="date"].form-control';
+    const INPUT_SELECTOR = 'input[type="date"].form-control, input.form-control.datepicker';
 
     function pad(n){ return String(n).padStart(2,'0'); }
     function formatDMY(d){ return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`; }

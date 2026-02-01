@@ -454,6 +454,35 @@ if ($method === 'POST') {
         json_out(['success' => true]);
     }
     
+    // Ziel wiederaufnehmen (von cancelled zu in_progress)
+    if ($action === 'resumeGoal') {
+        $userGoalId = isset($body['userGoalId']) ? (int)$body['userGoalId'] : 0;
+        if (!$userGoalId) json_out(['success' => false, 'error' => 'userGoalId erforderlich'], 400);
+        
+        // Berechtigungsprüfung
+        $checkStmt = $mysqli->prepare("SELECT user_id, status FROM user_goals WHERE id = ?");
+        $checkStmt->bind_param('i', $userGoalId);
+        $checkStmt->execute();
+        $goalInfo = $checkStmt->get_result()->fetch_assoc();
+        
+        if (!$goalInfo) json_out(['success' => false, 'error' => 'Ziel nicht gefunden'], 404);
+        if ((int)$goalInfo['user_id'] !== $userId && $userRole === 'schueler') {
+            json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
+        }
+        
+        if ($goalInfo['status'] !== 'cancelled') {
+            json_out(['success' => false, 'error' => 'Nur abgebrochene Ziele können wiederaufgenommen werden'], 400);
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE user_goals SET status = 'in_progress', completed_at = NULL WHERE id = ?");
+        $stmt->bind_param('i', $userGoalId);
+        if (!$stmt->execute()) {
+            json_out(['success' => false, 'error' => 'Fehler: ' . $stmt->error], 500);
+        }
+        
+        json_out(['success' => true]);
+    }
+    
     // Ziel löschen
     if ($action === 'deleteGoal') {
         $userGoalId = isset($body['userGoalId']) ? (int)$body['userGoalId'] : 0;

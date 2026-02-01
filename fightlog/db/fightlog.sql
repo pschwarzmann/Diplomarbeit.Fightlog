@@ -6,6 +6,29 @@ CREATE DATABASE IF NOT EXISTS fightlog CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 
 USE fightlog;
 
+-- Grade-Tabelle (Gürtelgrade / Stufen)
+CREATE TABLE grade (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    sort_order INT DEFAULT 0,
+    color VARCHAR(50) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Standard-Grade einfügen
+INSERT INTO grade (name, sort_order, color) VALUES 
+    ('Weißgurt', 1, '#FFFFFF'),
+    ('Gelbgurt', 2, '#FFEB3B'),
+    ('Orangegurt', 3, '#FF9800'),
+    ('Grüngurt', 4, '#4CAF50'),
+    ('Blaugurt', 5, '#2196F3'),
+    ('Braungurt', 6, '#795548'),
+    ('Schwarzgurt 1. Dan', 7, '#000000'),
+    ('Schwarzgurt 2. Dan', 8, '#000000'),
+    ('Schwarzgurt 3. Dan', 9, '#000000'),
+    ('Schwarzgurt 4. Dan', 10, '#000000'),
+    ('Schwarzgurt 5. Dan - Meister', 11, '#000000');
+
 -- Benutzer-Tabelle
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,11 +45,12 @@ CREATE TABLE users (
     last_name VARCHAR(100) NULL,
     phone VARCHAR(30) NULL,
     school VARCHAR(100),
-    belt_level VARCHAR(50),
+    grade_id INT NULL,
     verified_trainer TINYINT(1) DEFAULT 0,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (grade_id) REFERENCES grade (id)
 );
 
 -- Benutzerrechte-Tabelle
@@ -41,50 +65,58 @@ CREATE TABLE user_permissions (
     user_id INT NOT NULL,
     permission_id INT NOT NULL,
     PRIMARY KEY (user_id, permission_id),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (permission_id) REFERENCES permissions (id)
 );
 
--- Urkunden-Tabelle
-CREATE TABLE certificates (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    type ENUM(
-        'belt_exam',
-        'tournament',
-        'workshop',
-        'special_course'
-    ) NOT NULL,
-    date DATE NOT NULL,
-    level VARCHAR(50),
-    instructor VARCHAR(100),
-    file_url VARCHAR(255),
-    preview VARCHAR(10),
-    status ENUM(
-        'pending',
-        'approved',
-        'rejected'
-    ) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- Prüfungen-Tabelle
+-- Prüfungen-Tabelle (muss VOR certificates kommen wegen FK)
 CREATE TABLE exams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     date DATE NOT NULL,
-    level VARCHAR(50) NOT NULL,
+    grade_id INT NULL,
     category VARCHAR(50) NOT NULL,
     instructor VARCHAR(100) NOT NULL,
     comments TEXT,
     status ENUM('passed', 'failed', 'pending') DEFAULT 'passed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (grade_id) REFERENCES grade (id)
 );
+
+-- Urkunden-Tabelle (werden automatisch bei bestandenen Prüfungen erstellt)
+CREATE TABLE certificates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    exam_id INT NULL,
+    title VARCHAR(200) NOT NULL,
+    date DATE NOT NULL,
+    grade_id INT NULL,
+    instructor VARCHAR(100),
+    category VARCHAR(50),
+    is_manual TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (exam_id) REFERENCES exams (id),
+    FOREIGN KEY (grade_id) REFERENCES grade (id)
+);
+
+-- System-Einstellungen-Tabelle
+CREATE TABLE app_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Standard-Einstellungen für Urkunden
+INSERT INTO app_settings (setting_key, setting_value) VALUES
+    ('certificate_title', 'Urkunde'),
+    ('certificate_congratulation_text', 'Herzlichen Glückwunsch!\n\nMit dieser Urkunde bestätigen wir, dass du die Prüfung erfolgreich bestanden hast.\n\nWir sind stolz auf deine Leistung und deinen Einsatz. Weiter so!'),
+    ('certificate_school_name', 'Kampfsport Akademie'),
+    ('certificate_footer_text', 'Diese Urkunde wurde automatisch erstellt.');
 
 -- Trainingsverlauf-Tabelle
 CREATE TABLE training_history (
@@ -97,7 +129,7 @@ CREATE TABLE training_history (
     focus TEXT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- Kurse-Tabelle
@@ -126,8 +158,8 @@ CREATE TABLE course_bookings (
         'pending',
         'cancelled'
     ) DEFAULT 'pending',
-    FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (course_id) REFERENCES courses (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- Sessions-Tabelle für Login-Management
@@ -137,7 +169,7 @@ CREATE TABLE sessions (
     token VARCHAR(255) UNIQUE NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- Gruppen-Tabelle (für Schülergruppen)
@@ -148,7 +180,7 @@ CREATE TABLE student_groups (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (created_by) REFERENCES users (id)
 );
 
 -- Zuordnung Gruppe <-> Benutzer
@@ -157,8 +189,8 @@ CREATE TABLE group_members (
     user_id INT NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (group_id, user_id),
-    FOREIGN KEY (group_id) REFERENCES student_groups (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES student_groups (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- Ziele-Tabelle
@@ -176,7 +208,7 @@ CREATE TABLE goal_template_subtasks (
     template_id INT NOT NULL,
     definition VARCHAR(255) NOT NULL,
     sort_order INT DEFAULT 0,
-    FOREIGN KEY (template_id) REFERENCES goal_templates (id) ON DELETE CASCADE
+    FOREIGN KEY (template_id) REFERENCES goal_templates (id)
 );
 
 -- Zugewiesene Ziele pro User
@@ -192,8 +224,8 @@ CREATE TABLE user_goals (
     ) DEFAULT 'in_progress',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (template_id) REFERENCES goal_templates (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (template_id) REFERENCES goal_templates (id)
 );
 
 -- Fortschritt bei Unterzielen
@@ -203,8 +235,8 @@ CREATE TABLE user_goal_progress (
     subtask_id INT NOT NULL,
     completed TINYINT(1) DEFAULT 0,
     completed_at TIMESTAMP NULL,
-    FOREIGN KEY (user_goal_id) REFERENCES user_goals (id) ON DELETE CASCADE,
-    FOREIGN KEY (subtask_id) REFERENCES goal_template_subtasks (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_goal_id) REFERENCES user_goals (id),
+    FOREIGN KEY (subtask_id) REFERENCES goal_template_subtasks (id),
     UNIQUE KEY unique_progress (user_goal_id, subtask_id)
 );
 
@@ -218,9 +250,15 @@ CREATE INDEX idx_certificates_user_id ON certificates (user_id);
 
 CREATE INDEX idx_certificates_date ON certificates (date);
 
+CREATE INDEX idx_certificates_grade ON certificates (grade_id);
+
 CREATE INDEX idx_exams_user_id ON exams (user_id);
 
 CREATE INDEX idx_exams_date ON exams (date);
+
+CREATE INDEX idx_exams_grade ON exams (grade_id);
+
+CREATE INDEX idx_users_grade ON users (grade_id);
 
 CREATE INDEX idx_training_user_id ON training_history (user_id);
 
@@ -265,7 +303,7 @@ INSERT INTO
         last_name,
         phone,
         school,
-        belt_level,
+        grade_id,
         verified_trainer
     )
 VALUES (
@@ -278,7 +316,7 @@ VALUES (
         'Trainer',
         '+49 30 12345678',
         'Kampfsport Akademie Berlin',
-        'Schwarzgurt 5. Dan - Meister',
+        11,
         1
     ),
     (
@@ -291,7 +329,7 @@ VALUES (
         'Trainer',
         '+49 30 87654321',
         'Kampfsport Akademie Berlin',
-        'Schwarzgurt 2. Dan',
+        8,
         1
     ),
     (
@@ -304,7 +342,7 @@ VALUES (
         'Schüler',
         '+49 151 11111111',
         'Kampfsport Akademie Berlin',
-        'Gelbgurt',
+        2,
         0
     ),
     (
@@ -317,7 +355,7 @@ VALUES (
         'Schwarzmann',
         '+49 151 22222222',
         'Kampfsport Akademie Berlin',
-        'Weißgurt',
+        1,
         0
     ),
     (
@@ -330,7 +368,7 @@ VALUES (
         'Meier',
         '+49 151 33333333',
         'Kampfsport Akademie Berlin',
-        'Gelbgurt',
+        2,
         0
     ),
     (
@@ -343,7 +381,7 @@ VALUES (
         'Müller',
         '+49 151 44444444',
         'Kampfsport Akademie Berlin',
-        'Orangegurt',
+        3,
         0
     ),
     (
@@ -356,7 +394,7 @@ VALUES (
         'Schmidt',
         '+49 151 55555555',
         'Kampfsport Akademie Berlin',
-        'Grüngurt',
+        4,
         0
     ),
     (
@@ -369,7 +407,7 @@ VALUES (
         'Schneider',
         '+49 151 66666666',
         'Kampfsport Akademie Berlin',
-        'Blaugurt',
+        5,
         0
     );
 
@@ -544,7 +582,7 @@ CREATE TABLE role_permissions (
     ) NOT NULL,
     permission_id INT NOT NULL,
     PRIMARY KEY (role, permission_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
+    FOREIGN KEY (permission_id) REFERENCES permissions (id)
 );
 
 -- Schüler-Berechtigungen
@@ -682,7 +720,7 @@ INSERT INTO
     exams (
         user_id,
         date,
-        level,
+        grade_id,
         category,
         instructor,
         comments,
@@ -691,7 +729,7 @@ INSERT INTO
 VALUES (
         3,
         '2026-03-15',
-        'Gelbgurt',
+        2,
         'Technik',
         'Tom Trainer',
         'Gute Leistung gezeigt',
@@ -700,7 +738,7 @@ VALUES (
     (
         3,
         '2026-04-19',
-        'Grüngurt',
+        4,
         'Kampf',
         'Tom Trainer',
         'is aight',
@@ -709,7 +747,7 @@ VALUES (
     (
         3,
         '2026-05-01',
-        'Schwarzgurt',
+        7,
         'Theorie',
         'Tom Trainer',
         'joa',
@@ -718,7 +756,7 @@ VALUES (
     (
         4,
         '2026-03-20',
-        'Weißgurt',
+        1,
         'Kata',
         'Tom Trainer',
         'Noch etwas unsicher',
@@ -974,3 +1012,49 @@ SET
     password_hash = '$2y$10$0g3b0D4rdU/grYlz7TEAxe6KlivZ7G7xyVuHQFlHoZSwJ9kOtK04O'
 WHERE
     username = 'sophia';
+
+
+
+-- Urkunden (certificates) - automatisch erstellte + manuelle
+-- Automatische Urkunden für bestandene Prüfungen
+INSERT INTO certificates (user_id, exam_id, title, date, grade_id, instructor, category, is_manual) VALUES
+    (3, 1, 'Gürtelprüfung Gelbgurt', '2026-03-15', 2, 'Tom Trainer', 'Technik', 0),
+    (3, 2, 'Gürtelprüfung Grüngurt', '2026-04-19', 4, 'Tom Trainer', 'Kampf', 0),
+    (3, 3, 'Gürtelprüfung Schwarzgurt 1. Dan', '2026-05-01', 7, 'Tom Trainer', 'Theorie', 0),
+    (4, 4, 'Gürtelprüfung Weißgurt', '2026-03-20', 1, 'Tom Trainer', 'Kata', 0);
+
+-- Manuelle Urkunden
+INSERT INTO certificates (user_id, exam_id, title, date, grade_id, instructor, category, is_manual) VALUES
+    (3, NULL, 'Beste Leistung des Monats', '2026-02-01', NULL, 'Admin Trainer', NULL, 1),
+    (5, NULL, 'Turnierteilnahme Stadtmeisterschaft', '2026-01-28', NULL, 'Tom Trainer', NULL, 1),
+    (7, NULL, 'Trainer-Assistenz Zertifikat', '2026-01-20', NULL, 'Admin Trainer', NULL, 1);
+
+-- Zugewiesene Ziele (user_goals)
+INSERT INTO user_goals (user_id, template_id, target_date, status, created_at, completed_at) VALUES
+    (3, 1, '2026-03-01', 'completed', '2026-01-01 10:00:00', '2026-02-15 14:30:00'),
+    (3, 2, '2026-04-01', 'in_progress', '2026-01-15 09:00:00', NULL),
+    (3, 5, '2026-05-01', 'in_progress', '2026-01-20 11:00:00', NULL),
+    (4, 1, '2026-04-01', 'in_progress', '2026-01-10 10:00:00', NULL),
+    (4, 3, '2026-05-01', 'in_progress', '2026-01-15 10:00:00', NULL),
+    (5, 4, '2026-03-15', 'completed', '2026-01-05 09:00:00', '2026-03-10 16:00:00'),
+    (5, 6, '2026-04-15', 'in_progress', '2026-01-20 10:00:00', NULL),
+    (6, 1, '2026-04-01', 'in_progress', '2026-01-12 10:00:00', NULL),
+    (6, 2, '2026-05-01', 'cancelled', '2026-01-12 10:00:00', NULL),
+    (7, 7, '2026-03-01', 'completed', '2026-01-01 09:00:00', '2026-02-28 15:00:00'),
+    (7, 8, '2026-04-01', 'in_progress', '2026-02-01 10:00:00', NULL),
+    (8, 1, '2026-05-01', 'in_progress', '2026-01-25 10:00:00', NULL);
+
+
+INSERT INTO user_goal_progress (user_goal_id, subtask_id, completed, completed_at) VALUES
+    (1, 1, 1, '2026-02-15 14:30:00'),
+    (2, 2, 1, '2026-01-25 15:00:00'),
+    (2, 3, 0, NULL),
+    (3, 8, 0, NULL),
+    (4, 1, 0, NULL),
+    (5, 4, 1, '2026-01-28 14:00:00'),
+    (5, 5, 0, NULL),
+    (6, 9, 1, '2026-03-10 16:00:00'),
+    (7, 11, 0, NULL),
+    (8, 1, 0, NULL),
+    (10, 10, 1, '2026-02-28 15:00:00'),
+    (12, 1, 0, NULL);

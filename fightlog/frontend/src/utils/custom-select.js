@@ -66,8 +66,13 @@
     
     function setupGlobalScrollHandler(){
         if (globalScrollHandler) return;
-        globalScrollHandler = () => {
-            // Schließe alle offenen Dropdowns beim Scrollen
+        globalScrollHandler = (e) => {
+            // NICHT schließen, wenn im Dropdown-Menü selbst gescrollt wird
+            if (e.target.closest && e.target.closest('.cs-menu')) {
+                return; // Scrolling im Dropdown-Menü erlauben
+            }
+            
+            // Schließe alle offenen Dropdowns beim Scrollen außerhalb
             openDropdowns.forEach(closeFn => {
                 if (typeof closeFn === 'function') closeFn();
             });
@@ -95,30 +100,40 @@
         const menu = document.createElement('div');
         menu.className = 'cs-menu';
         menu.setAttribute('role', 'listbox');
-
-        // Build options
-        const options = Array.from(native.querySelectorAll('option'));
-        const optionEls = options.map(opt => {
-            const item = document.createElement('div');
-            item.className = 'cs-option';
-            item.setAttribute('role', 'option');
-            item.dataset.value = opt.value;
-            item.textContent = opt.textContent;
-            if (opt.disabled) item.setAttribute('aria-disabled', 'true');
-            if (opt.value === native.value) item.classList.add('selected');
-            item.addEventListener('click', (e)=>{
-                e.stopPropagation(); // Verhindere, dass der globale Handler das Dropdown schließt bevor der Wert gesetzt wird
-                e.preventDefault(); // Verhindere Standard-Verhalten
-                if (opt.disabled) return;
-                setValue(opt.value, true);
-                close();
+        
+        let optionEls = [];
+        
+        // Funktion zum Neuaufbau der Optionen
+        function rebuildOptions() {
+            // Alte Optionen entfernen
+            menu.innerHTML = '';
+            optionEls = [];
+            
+            const options = Array.from(native.querySelectorAll('option'));
+            optionEls = options.map(opt => {
+                const item = document.createElement('div');
+                item.className = 'cs-option';
+                item.setAttribute('role', 'option');
+                item.dataset.value = opt.value;
+                item.textContent = opt.textContent;
+                if (opt.disabled) item.setAttribute('aria-disabled', 'true');
+                if (opt.value === native.value) item.classList.add('selected');
+                item.addEventListener('click', (e)=>{
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (opt.disabled) return;
+                    setValue(opt.value, true);
+                    close();
+                });
+                return item;
             });
-            return item;
-        });
-        optionEls.forEach(el=> menu.appendChild(el));
+            optionEls.forEach(el=> menu.appendChild(el));
+            refreshLabel();
+        }
 
         // Sync trigger label
         function refreshLabel(){
+            const options = Array.from(native.querySelectorAll('option'));
             const current = options.find(o=> o.value === native.value) || options[0];
             trigger.textContent = current ? current.textContent : '';
         }
@@ -141,6 +156,9 @@
                 if (typeof closeFn === 'function' && closeFn !== close) closeFn();
             });
             openDropdowns.clear();
+            
+            // Optionen neu aufbauen (Vue könnte sie geändert haben)
+            rebuildOptions();
             
             wrapper.classList.add('open');
             trigger.setAttribute('aria-expanded', 'true');
@@ -189,7 +207,8 @@
         wrapper.appendChild(menu);
         wrapper.appendChild(native); // keep in DOM for forms
 
-        refreshLabel();
+        // Initial build
+        rebuildOptions();
     }
 
     function enhanceAll(root){

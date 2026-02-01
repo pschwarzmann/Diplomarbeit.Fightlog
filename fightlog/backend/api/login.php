@@ -37,14 +37,14 @@ $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL) !== false;
 // Datenbankabfrage: Benutzer anhand Username ODER Email finden (case-insensitive)
 if ($isEmail) {
     // Suche nach Email (case-insensitive)
-    $stmt = $mysqli->prepare("SELECT id, username, email, role, password_hash, first_name, last_name, phone, school, belt_level FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1");
+    $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.password_hash, u.first_name, u.last_name, u.phone, u.school, u.grade_id, g.name as belt_level FROM users u LEFT JOIN grade g ON u.grade_id = g.id WHERE LOWER(u.email) = LOWER(?) LIMIT 1");
     if (!$stmt) {
         json_out(['success'=>false, 'error'=>'Datenbankfehler beim Login'], 500);
     }
     $stmt->bind_param('s', $identifier);
 } else {
     // Suche nach Username (case-insensitive)
-    $stmt = $mysqli->prepare("SELECT id, username, email, role, password_hash, first_name, last_name, phone, school, belt_level FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
+    $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.password_hash, u.first_name, u.last_name, u.phone, u.school, u.grade_id, g.name as belt_level FROM users u LEFT JOIN grade g ON u.grade_id = g.id WHERE LOWER(u.username) = LOWER(?) LIMIT 1");
     if (!$stmt) {
         json_out(['success'=>false, 'error'=>'Datenbankfehler beim Login'], 500);
     }
