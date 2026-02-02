@@ -1,31 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FightLog - Kampfsporterfolge digital erfassen</title>
-    
+
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- CSS -->
-    <link rel="stylesheet" href="./styles/main.css">
-    
+    <link rel="stylesheet" href="./styles/main.css" />
+
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <!-- Bridge for early alerts (queues calls until notify.service.js is ready) -->
     <script>
-        (function(){
-            if (!window._notifyQueue) window._notifyQueue = [];
-            // queue native alert calls
-            const _nativeAlert = window.alert;
-            window.alert = function(msg){
-                try { window._notifyQueue.push(msg); } catch(e){ /* fallback */ _nativeAlert(msg); }
-            };
-        })();
+      (function () {
+        if (!window._notifyQueue) window._notifyQueue = [];
+        // queue native alert calls
+        const _nativeAlert = window.alert;
+        window.alert = function (msg) {
+          try {
+            window._notifyQueue.push(msg);
+          } catch (e) {
+            /* fallback */ _nativeAlert(msg);
+          }
+        };
+      })();
     </script>
     <!-- Passkey Manager -->
     <script src="./src/services/passkey.service.js"></script>
@@ -33,1292 +43,1496 @@
     <script src="./src/utils/custom-select.js"></script>
     <script src="./src/utils/custom-datepicker.js"></script>
     <script src="./src/utils/form-validation.js"></script>
-    
+
     <style>
-        /* Apple-ähnliches Design */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.47;
-            font-size: 17px;
-            font-weight: 400;
-            letter-spacing: -0.022em;
-        }
-        
+      /* Apple-ähnliches Design */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.47;
+        font-size: 17px;
+        font-weight: 400;
+        letter-spacing: -0.022em;
+      }
+
+      .simple-login {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 24px;
+        background: #ffffff;
+        position: relative;
+      }
+
+      .login-card {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(14px) saturate(130%);
+        border-radius: 22px;
+        padding: 42px 34px;
+        box-shadow:
+          0 24px 48px rgba(2, 6, 23, 0.1),
+          0 0 0 1px rgba(0, 0, 0, 0.04),
+          0 0 0 6px rgba(255, 255, 255, 0.45) inset;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        overflow: hidden;
+      }
+      .login-card::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          120deg,
+          rgba(99, 102, 241, 0.55),
+          rgba(14, 165, 233, 0.45),
+          rgba(255, 255, 255, 0.3)
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0.6;
+      }
+      .login-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          600px 240px at 50% -10%,
+          rgba(255, 255, 255, 0.65),
+          rgba(255, 255, 255, 0)
+        );
+        opacity: 0.7;
+      }
+
+      .login-card h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        color: #1d1d1f;
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .login-subtitle {
+        text-align: center;
+        margin-bottom: 32px;
+        color: #6b7280;
+        font-size: 15px;
+        font-weight: 400;
+      }
+
+      /* Akzent-Linie unter Titel */
+      .login-card h1 + .login-subtitle::after {
+        content: "";
+        display: block;
+        width: 72px;
+        height: 4px;
+        margin: 14px auto 0;
+        border-radius: 9999px;
+        background: linear-gradient(
+          90deg,
+          rgba(99, 102, 241, 0.9),
+          rgba(14, 165, 233, 0.9)
+        );
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 400;
+        color: #1d1d1f;
+        font-size: 17px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 16px 20px;
+        border: 1px solid rgba(0, 0, 0, 0.14);
+        border-radius: 14px;
+        font-size: 17px;
+        font-weight: 400;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) inset;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: rgba(0, 0, 0, 0.28);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .password-container {
+        position: relative;
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #86868b;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .password-toggle:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #1d1d1f;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 16px 24px;
+        background: #007aff;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        font-weight: 400;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        margin-bottom: 12px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 122, 255, 0.25);
+      }
+
+      /* Glanz-Effekt für alle Buttons */
+      .btn::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 130%;
+        height: 100%;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.5) 30%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        transform: skewX(-20deg) translateX(0);
+        transition:
+          transform 0.9s ease,
+          left 0s 0.9s;
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .btn:hover::after {
+        transform: translateX(250%) skewX(-20deg);
+        opacity: 1;
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn:not(:hover)::after {
+        transform: skewX(-20deg) translateX(0);
+        opacity: 0;
+        transition:
+          transform 0s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
+      }
+
+      .btn:active {
+        transform: translateY(0) scale(0.99);
+        box-shadow: 0 4px 8px rgba(0, 122, 255, 0.25);
+      }
+
+      .btn-secondary {
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-secondary:active {
+        transform: translateY(0) scale(0.99);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Passwort vergessen Button - komplett neu */
+      .btn.btn-danger {
+        background: #ff3b30 !important;
+        box-shadow: 0 4px 6px rgba(255, 59, 48, 0.25) !important;
+        position: relative !important;
+        overflow: hidden !important;
+      }
+
+      .btn.btn-danger::after {
+        content: "" !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -150% !important;
+        width: 130% !important;
+        height: 100% !important;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.6) 30%,
+          rgba(255, 255, 255, 0) 60%
+        ) !important;
+        transform: skewX(-20deg) translateX(0) !important;
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+        opacity: 0 !important;
+      }
+
+      .btn.btn-danger:hover {
+        background: #ff3b30 !important;
+        color: white !important;
+        transform: translateY(-1px) scale(1.01) !important;
+        box-shadow: 0 8px 16px rgba(255, 59, 48, 0.3) !important;
+      }
+
+      .btn.btn-danger:hover::after {
+        transform: translateX(250%) skewX(-20deg) !important;
+        opacity: 1 !important;
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease !important;
+      }
+
+      .btn.btn-danger:not(:hover)::after {
+        transform: skewX(-20deg) translateX(0) !important;
+        opacity: 0 !important;
+        transition:
+          transform 0s ease,
+          opacity 0.1s ease !important;
+      }
+
+      .btn.btn-danger:active {
+        transform: translateY(0) scale(0.99) !important;
+        box-shadow: 0 4px 8px rgba(255, 59, 48, 0.25) !important;
+      }
+
+      .btn.btn-danger > * {
+        position: relative !important;
+        z-index: 2 !important;
+      }
+
+      .btn-success {
+        background: #34c759;
+        box-shadow: 0 4px 6px rgba(52, 199, 89, 0.25);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-success::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 130%;
+        height: 100%;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.5) 30%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        transform: skewX(-20deg) translateX(0);
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0;
+      }
+
+      .btn-success:hover::after {
+        transform: translateX(250%) skewX(-20deg);
+        opacity: 1;
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn-success:not(:hover)::after {
+        transform: skewX(-20deg) translateX(0);
+        opacity: 0;
+        transition:
+          transform 0s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn-success:hover {
+        background: #248a3d;
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 8px 16px rgba(52, 199, 89, 0.3);
+      }
+
+      .btn-success:active {
+        transform: translateY(0) scale(0.99);
+        box-shadow: 0 4px 8px rgba(52, 199, 89, 0.25);
+      }
+
+      .btn-success > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .btn-purple {
+        background: #af52de;
+        box-shadow: 0 4px 6px rgba(175, 82, 222, 0.25);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-purple::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 130%;
+        height: 100%;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.5) 30%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        transform: skewX(-20deg) translateX(0);
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0;
+      }
+
+      .btn-purple:hover::after {
+        transform: translateX(250%) skewX(-20deg);
+        opacity: 1;
+        transition:
+          transform 0.9s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn-purple:not(:hover)::after {
+        transform: skewX(-20deg) translateX(0);
+        opacity: 0;
+        transition:
+          transform 0s ease,
+          opacity 0.1s ease;
+      }
+
+      .btn-purple:hover {
+        background: #8e44ad;
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 8px 16px rgba(175, 82, 222, 0.3);
+      }
+
+      .btn-purple:active {
+        transform: translateY(0) scale(0.99);
+        box-shadow: 0 4px 8px rgba(175, 82, 222, 0.25);
+      }
+
+      .btn-purple > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .button-group .btn {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      .demo-info {
+        text-align: center;
+        margin-top: 32px;
+        font-size: 15px;
+        color: #86868b;
+        line-height: 1.4;
+      }
+
+      .demo-info code {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family:
+          "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+          "Courier New", monospace;
+        font-size: 13px;
+      }
+
+      /* Modal Styles - am Ende für höchste Priorität */
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
         .simple-login {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 24px;
-            background: #ffffff;
-            position: relative;
-        }
-        
-        .login-card {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(14px) saturate(130%);
-            border-radius: 22px;
-            padding: 42px 34px;
-            box-shadow:
-                0 24px 48px rgba(2,6,23,0.10),
-                0 0 0 1px rgba(0,0,0,0.04),
-                0 0 0 6px rgba(255,255,255,0.45) inset;
-            width: 100%;
-            max-width: 440px;
-            position: relative;
-            overflow: hidden;
-        }
-        .login-card::before{
-            content: '';
-            position: absolute; inset: -1px;
-            border-radius: inherit;
-            padding: 1px;
-            background: linear-gradient(120deg, rgba(99,102,241,0.55), rgba(14,165,233,0.45), rgba(255,255,255,0.3));
-            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            pointer-events: none;
-            opacity: .6;
-        }
-        .login-card::after{
-            content: '';
-            position: absolute; inset: 0;
-            pointer-events: none;
-            background: radial-gradient(600px 240px at 50% -10%, rgba(255,255,255,0.65), rgba(255,255,255,0));
-            opacity: .7;
-        }
-        
-        .login-card h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #1d1d1f;
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        
-        .login-subtitle {
-            text-align: center;
-            margin-bottom: 32px;
-            color: #6b7280;
-            font-size: 15px;
-            font-weight: 400;
+          padding: 16px;
         }
 
-        /* Akzent-Linie unter Titel */
-        .login-card h1 + .login-subtitle::after{
-            content: '';
-            display: block;
-            width: 72px; height: 4px;
-            margin: 14px auto 0;
-            border-radius: 9999px;
-            background: linear-gradient(90deg, rgba(99,102,241,0.9), rgba(14,165,233,0.9));
-            box-shadow: 0 2px 8px rgba(14,165,233,0.25);
+        .login-card {
+          padding: 32px 24px;
+          margin: 0;
+          max-width: 100%;
+          border-radius: 16px;
         }
-        
+
+        .login-card h1 {
+          font-size: 28px;
+        }
+
+        .login-subtitle {
+          font-size: 16px;
+          margin-bottom: 32px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+          margin-bottom: 18px;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 400;
-            color: #1d1d1f;
-            font-size: 17px;
-        }
-        
+
         .form-group input {
-            width: 100%;
-            padding: 16px 20px;
-            border: 1px solid rgba(0, 0, 0, 0.14);
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 400;
-            background: #ffffff;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) inset;
+          padding: 14px 18px;
+          font-size: 16px; /* Verhindert Zoom auf iOS */
         }
-        
-        .form-group input:focus {
-            outline: none;
-            background: #ffffff;
-            border-color: rgba(0, 0, 0, 0.28);
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
-        }
-        
-        .password-container {
-            position: relative;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #86868b;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        
-        .password-toggle:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: #1d1d1f;
-        }
-        
+
         .btn {
-            width: 100%;
-            padding: 16px 24px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 400;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: inherit;
-            margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 122, 255, 0.25);
+          padding: 14px 20px;
+          font-size: 16px; /* Verhindert Zoom auf iOS */
         }
-        
-        /* Glanz-Effekt für alle Buttons */
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, left 0s 0.9s;
-            pointer-events: none;
-            opacity: 0;
-        }
-        
-        .btn:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
-        }
-        
-        .btn:hover {
-            background: #0056b3;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
-        }
-        
-        .btn:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(0, 122, 255, 0.25);
-        }
-        
-        .btn-secondary {
-            background: rgba(0, 0, 0, 0.04);
-            color: #1d1d1f;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(0, 0, 0, 0.08);
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-secondary:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        /* Passwort vergessen Button - komplett neu */
-        .btn.btn-danger {
-            background: #ff3b30 !important;
-            box-shadow: 0 4px 6px rgba(255, 59, 48, 0.25) !important;
-            position: relative !important;
-            overflow: hidden !important;
-        }
-        
-        .btn.btn-danger::after {
-            content: '' !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: -150% !important;
-            width: 130% !important;
-            height: 100% !important;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.6) 30%,
-                rgba(255,255,255,0) 60%) !important;
-            transform: skewX(-20deg) translateX(0) !important;
-            transition: transform 0.9s ease, opacity 0.1s ease !important;
-            pointer-events: none !important;
-            z-index: 1 !important;
-            opacity: 0 !important;
-        }
-        
-        .btn.btn-danger:hover {
-            background: #ff3b30 !important;
-            color: white !important;
-            transform: translateY(-1px) scale(1.01) !important;
-            box-shadow: 0 8px 16px rgba(255, 59, 48, 0.3) !important;
-        }
-        
-        .btn.btn-danger:hover::after {
-            transform: translateX(250%) skewX(-20deg) !important;
-            opacity: 1 !important;
-            transition: transform 0.9s ease, opacity 0.1s ease !important;
-        }
-        
-        .btn.btn-danger:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0) !important;
-            opacity: 0 !important;
-            transition: transform 0s ease, opacity 0.1s ease !important;
-        }
-        
-        .btn.btn-danger:active {
-            transform: translateY(0) scale(0.99) !important;
-            box-shadow: 0 4px 8px rgba(255, 59, 48, 0.25) !important;
-        }
-        
-        .btn.btn-danger > * {
-            position: relative !important;
-            z-index: 2 !important;
-        }
-        
-        .btn-success {
-            background: #34c759;
-            box-shadow: 0 4px 6px rgba(52, 199, 89, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-success::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, opacity 0.1s ease;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-        }
-        
-        .btn-success:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn-success:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
-        }
-        
-        .btn-success:hover {
-            background: #248a3d;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(52, 199, 89, 0.3);
-        }
-        
-        .btn-success:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(52, 199, 89, 0.25);
-        }
-        
-        .btn-success > * {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .btn-purple {
-            background: #af52de;
-            box-shadow: 0 4px 6px rgba(175, 82, 222, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-purple::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 130%;
-            height: 100%;
-            background: linear-gradient(120deg,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.5) 30%,
-                rgba(255,255,255,0) 60%);
-            transform: skewX(-20deg) translateX(0);
-            transition: transform 0.9s ease, opacity 0.1s ease;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-        }
-        
-        .btn-purple:hover::after {
-            transform: translateX(250%) skewX(-20deg);
-            opacity: 1;
-            transition: transform 0.9s ease, opacity 0.1s ease;
-        }
-        
-        .btn-purple:not(:hover)::after {
-            transform: skewX(-20deg) translateX(0);
-            opacity: 0;
-            transition: transform 0s ease, opacity 0.1s ease;
-        }
-        
-        .btn-purple:hover {
-            background: #8e44ad;
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 8px 16px rgba(175, 82, 222, 0.3);
-        }
-        
-        .btn-purple:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 8px rgba(175, 82, 222, 0.25);
-        }
-        
-        .btn-purple > * {
-            position: relative;
-            z-index: 2;
-        }
-        
+
         .button-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
+          flex-direction: column;
+          gap: 10px;
         }
-        
+
         .button-group .btn {
-            flex: 1;
-            margin-bottom: 0;
+          margin-bottom: 0;
         }
-        
+
         .demo-info {
-            text-align: center;
-            margin-top: 32px;
-            font-size: 15px;
-            color: #86868b;
-            line-height: 1.4;
+          margin-top: 24px;
+          font-size: 14px;
         }
-        
+
         .demo-info code {
-            background: rgba(0, 0, 0, 0.05);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-            font-size: 13px;
+          font-size: 12px;
+          padding: 2px 5px;
         }
-        
-        /* Modal Styles - am Ende für höchste Priorität */
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .simple-login {
-                padding: 16px;
-            }
-            
-            .login-card {
-                padding: 32px 24px;
-                margin: 0;
-                max-width: 100%;
-                border-radius: 16px;
-            }
-            
-            .login-card h1 {
-                font-size: 28px;
-            }
-            
-            .login-subtitle {
-                font-size: 16px;
-                margin-bottom: 32px;
-            }
-            
-            .form-group {
-                margin-bottom: 18px;
-            }
-            
-            .form-group input {
-                padding: 14px 18px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-            
-            .btn {
-                padding: 14px 20px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-            
-            .button-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .button-group .btn {
-                margin-bottom: 0;
-            }
-            
-            .demo-info {
-                margin-top: 24px;
-                font-size: 14px;
-            }
-            
-            .demo-info code {
-                font-size: 12px;
-                padding: 2px 5px;
-            }
-            
-            .modal-overlay {
-                padding: 1rem;
-            }
-            
-            .modal-content {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 16px;
-                max-height: 90vh;
-            }
-            
-            .modal-header {
-                padding: 28px 24px 20px;
-            }
-            
-            .modal-header h2 {
-                font-size: 22px;
-            }
-            
-            .modal-body {
-                padding: 0 24px 24px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .simple-login {
-                padding: 12px;
-            }
-            
-            .login-card {
-                padding: 24px 20px;
-                border-radius: 14px;
-            }
-            
-            .login-card h1 {
-                font-size: 24px;
-                margin-bottom: 6px;
-            }
-            
-            .login-subtitle {
-                font-size: 15px;
-                margin-bottom: 28px;
-            }
-            
-            .form-group {
-                margin-bottom: 16px;
-            }
-            
-            .form-group label {
-                font-size: 15px;
-                margin-bottom: 6px;
-            }
-            
-            .form-group input {
-                padding: 12px 16px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-                border-radius: 10px;
-            }
-            
-            .password-toggle {
-                right: 12px;
-                padding: 6px;
-            }
-            
-            .btn {
-                padding: 12px 18px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-                border-radius: 10px;
-                margin-bottom: 10px;
-            }
-            
-            .button-group {
-                gap: 8px;
-            }
-            
-            .demo-info {
-                margin-top: 20px;
-                font-size: 13px;
-            }
-            
-            .demo-info p {
-                margin: 4px 0;
-            }
-            
-            .demo-info code {
-                font-size: 11px;
-                padding: 1px 4px;
-            }
-            
-            .modal-overlay {
-                padding: 0.5rem;
-            }
-            
-            .modal-content {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 14px;
-                max-height: 95vh;
-            }
-            
-            .modal-header {
-                padding: 24px 20px 16px;
-            }
-            
-            .modal-header h2 {
-                font-size: 20px;
-            }
-            
-            .modal-body {
-                padding: 0 20px 20px;
-            }
-            
-            .modal-body .form-group {
-                margin-bottom: 16px;
-            }
-            
-            .modal-body .form-group label {
-                font-size: 14px;
-            }
-            
-            .modal-body .form-group input,
-            .modal-body .form-group select {
-                padding: 12px 16px;
-                font-size: 16px; /* Verhindert Zoom auf iOS */
-            }
-        }
-        
-        @media (max-width: 360px) {
-            .login-card {
-                padding: 20px 16px;
-            }
-            
-            .login-card h1 {
-                font-size: 22px;
-            }
-            
-            .login-subtitle {
-                font-size: 14px;
-            }
-            
-            .form-group input {
-                padding: 10px 14px;
-            }
-            
-            .btn {
-                padding: 10px 16px;
-                font-size: 15px;
-            }
-            
-            .demo-info {
-                font-size: 12px;
-            }
-        }
-        
-        /* Modal Styles - Apple Design - am Ende für höchste Priorität */
+
         .modal-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: rgba(0, 0, 0, 0.4) !important;
-            backdrop-filter: blur(8px) !important;
-            display: none;
-            justify-content: center !important;
-            align-items: center !important;
-            z-index: 1000 !important;
-            padding: 1rem !important;
-            box-sizing: border-box !important;
+          padding: 1rem;
         }
-        
-        .modal-overlay .modal-content {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: saturate(180%) blur(20px) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 0.5px rgba(0, 0, 0, 0.05) !important;
-            max-width: 420px !important;
-            width: 100% !important;
-            max-height: 90vh !important;
-            overflow-y: auto !important;
-            border: none !important;
-            position: relative !important;
-            margin: auto !important;
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
+
+        .modal-content {
+          width: 100%;
+          max-width: 100%;
+          margin: 0;
+          border-radius: 16px;
+          max-height: 90vh;
         }
-        
-        .modal-overlay .modal-content::-webkit-scrollbar {
-            display: none !important;
-            width: 0 !important;
+
+        .modal-header {
+          padding: 28px 24px 20px;
         }
-        
-        .modal-overlay .modal-header {
-            padding: 32px 32px 24px !important;
-            border-bottom: none !important;
-            position: relative !important;
-            text-align: center !important;
+
+        .modal-header h2 {
+          font-size: 22px;
         }
-        
-        .modal-overlay .modal-header h2 {
-            margin: 0 !important;
-            color: #1d1d1f !important;
-            font-size: 24px !important;
-            font-weight: 600 !important;
-            letter-spacing: -0.003em !important;
+
+        .modal-body {
+          padding: 0 24px 24px;
         }
-        
-        .modal-overlay .modal-body {
-            padding: 0 32px 32px !important;
+      }
+
+      @media (max-width: 480px) {
+        .simple-login {
+          padding: 12px;
         }
-        
-        .modal-overlay .close-btn {
-            display: none !important;
-            visibility: hidden !important;
+
+        .login-card {
+          padding: 24px 20px;
+          border-radius: 14px;
         }
+
+        .login-card h1 {
+          font-size: 24px;
+          margin-bottom: 6px;
+        }
+
+        .login-subtitle {
+          font-size: 15px;
+          margin-bottom: 28px;
+        }
+
+        .form-group {
+          margin-bottom: 16px;
+        }
+
+        .form-group label {
+          font-size: 15px;
+          margin-bottom: 6px;
+        }
+
+        .form-group input {
+          padding: 12px 16px;
+          font-size: 16px; /* Verhindert Zoom auf iOS */
+          border-radius: 10px;
+        }
+
+        .password-toggle {
+          right: 12px;
+          padding: 6px;
+        }
+
+        .btn {
+          padding: 12px 18px;
+          font-size: 16px; /* Verhindert Zoom auf iOS */
+          border-radius: 10px;
+          margin-bottom: 10px;
+        }
+
+        .button-group {
+          gap: 8px;
+        }
+
+        .demo-info {
+          margin-top: 20px;
+          font-size: 13px;
+        }
+
+        .demo-info p {
+          margin: 4px 0;
+        }
+
+        .demo-info code {
+          font-size: 11px;
+          padding: 1px 4px;
+        }
+
+        .modal-overlay {
+          padding: 0.5rem;
+        }
+
+        .modal-content {
+          width: 100%;
+          max-width: 100%;
+          margin: 0;
+          border-radius: 14px;
+          max-height: 95vh;
+        }
+
+        .modal-header {
+          padding: 24px 20px 16px;
+        }
+
+        .modal-header h2 {
+          font-size: 20px;
+        }
+
+        .modal-body {
+          padding: 0 20px 20px;
+        }
+
+        .modal-body .form-group {
+          margin-bottom: 16px;
+        }
+
+        .modal-body .form-group label {
+          font-size: 14px;
+        }
+
+        .modal-body .form-group input,
+        .modal-body .form-group select {
+          padding: 12px 16px;
+          font-size: 16px; /* Verhindert Zoom auf iOS */
+        }
+      }
+
+      @media (max-width: 360px) {
+        .login-card {
+          padding: 20px 16px;
+        }
+
+        .login-card h1 {
+          font-size: 22px;
+        }
+
+        .login-subtitle {
+          font-size: 14px;
+        }
+
+        .form-group input {
+          padding: 10px 14px;
+        }
+
+        .btn {
+          padding: 10px 16px;
+          font-size: 15px;
+        }
+
+        .demo-info {
+          font-size: 12px;
+        }
+      }
+
+      /* Modal Styles - Apple Design - am Ende für höchste Priorität */
+      .modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        backdrop-filter: blur(8px) !important;
+        display: none;
+        justify-content: center !important;
+        align-items: center !important;
+        z-index: 1000 !important;
+        padding: 1rem !important;
+        box-sizing: border-box !important;
+      }
+
+      .modal-overlay .modal-content {
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: saturate(180%) blur(20px) !important;
+        border-radius: 20px !important;
+        box-shadow:
+          0 20px 60px rgba(0, 0, 0, 0.15),
+          0 0 0 0.5px rgba(0, 0, 0, 0.05) !important;
+        max-width: 420px !important;
+        width: 100% !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        border: none !important;
+        position: relative !important;
+        margin: auto !important;
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+      }
+
+      .modal-overlay .modal-content::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+      }
+
+      .modal-overlay .modal-header {
+        padding: 32px 32px 24px !important;
+        border-bottom: none !important;
+        position: relative !important;
+        text-align: center !important;
+      }
+
+      .modal-overlay .modal-header h2 {
+        margin: 0 !important;
+        color: #1d1d1f !important;
+        font-size: 24px !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.003em !important;
+      }
+
+      .modal-overlay .modal-body {
+        padding: 0 32px 32px !important;
+      }
+
+      .modal-overlay .close-btn {
+        display: none !important;
+        visibility: hidden !important;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="simple-login">
-        <div class="login-card">
-            <h1><span class="brand-logo">FightLog</span></h1>
-            <p class="login-subtitle">Kampfsporterfolge digital erfassen</p>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="identifier">Benutzername oder E-Mail</label>
-                    <input type="text" id="identifier" name="identifier" placeholder="Benutzername oder E-Mail" required autocomplete="username">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Passwort</label>
-                    <div class="password-container">
-                        <input type="password" id="password" name="password" placeholder="Passwort" required autocomplete="current-password">
-                        <button type="button" onclick="togglePasswordVisibility()" class="password-toggle">
-                            <i id="passwordToggleIcon" class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn">
-                    Anmelden
-                </button>
-                
-                <button type="button" class="btn btn-danger" onclick="showForgotPassword()" style="margin-top: 8px;">
-                    Passwort vergessen
-                </button>
-                
-                <button type="button" class="btn btn-purple" id="passkeyRegisterBtn" onclick="registerPasskey()" style="display: none;">
-                    Passkey registrieren
-                </button>
-            </form>
-        </div>
+      <div class="login-card">
+        <h1><span class="brand-logo">FightLog</span></h1>
+        <p class="login-subtitle">Kampfsporterfolge digital erfassen</p>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="identifier">Benutzername oder E-Mail</label>
+            <input
+              type="text"
+              id="identifier"
+              name="identifier"
+              placeholder="Benutzername oder E-Mail"
+              required
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Passwort</label>
+            <div class="password-container">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Passwort"
+                required
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                onclick="togglePasswordVisibility()"
+                class="password-toggle"
+              >
+                <i id="passwordToggleIcon" class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn">Anmelden</button>
+
+          <button
+            type="button"
+            class="btn btn-danger"
+            onclick="showForgotPassword()"
+            style="margin-top: 8px"
+          >
+            Passwort vergessen
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-purple"
+            id="passkeyRegisterBtn"
+            onclick="registerPasskey()"
+            style="display: none"
+          >
+            Passkey registrieren
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- Passwort vergessen Modal -->
-    <div id="forgotPasswordModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Passwort zurücksetzen</h2>
-            </div>
-            
-            <div class="modal-body">
-                <p>Geben Sie Ihre E-Mail-Adresse ein, um ein neues Passwort anzufordern:</p>
-                
-                <div class="form-group">
-                    <label for="resetEmail">E-Mail-Adresse</label>
-                    <input type="email" id="resetEmail" placeholder="ihre@email.com">
-                </div>
-                
-                <div class="button-group">
-                    <button onclick="sendPasswordReset()" class="btn">
-                        Zurücksetzen
-                    </button>
-                    <button onclick="closeForgotPassword()" class="btn btn-secondary">
-                        Abbrechen
-                    </button>
-                </div>
-            </div>
+    <div id="forgotPasswordModal" class="modal-overlay" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Passwort zurücksetzen</h2>
         </div>
+
+        <div class="modal-body">
+          <p>
+            Geben Sie Ihre E-Mail-Adresse ein, um ein neues Passwort
+            anzufordern:
+          </p>
+
+          <div class="form-group">
+            <label for="resetEmail">E-Mail-Adresse</label>
+            <input type="email" id="resetEmail" placeholder="ihre@email.com" />
+          </div>
+
+          <div class="button-group">
+            <button onclick="sendPasswordReset()" class="btn">
+              Zurücksetzen
+            </button>
+            <button onclick="closeForgotPassword()" class="btn btn-secondary">
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Registrierung Modal -->
-    <div id="registerModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Neuen Account erstellen</h2>
-            </div>
-            
-            <div class="modal-body">
-                <form id="registerForm">
-                    <div class="form-group">
-                        <label for="regUsername">Benutzername</label>
-                        <input type="text" id="regUsername" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="regEmail">E-Mail-Adresse</label>
-                        <input type="email" id="regEmail" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="regPassword">Passwort</label>
-                        <div class="password-container">
-                            <input type="password" id="regPassword" required>
-                            <button type="button" onclick="toggleRegisterPasswordVisibility()" class="password-toggle">
-                                <i id="registerPasswordToggleIcon" class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="regPasswordConfirm">Passwort bestätigen</label>
-                        <input type="password" id="regPasswordConfirm" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="regRole">Rolle</label>
-                        <select id="regRole" required style="width: 100%; padding: 16px 20px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 17px; background: rgba(255, 255, 255, 0.8); font-family: inherit;">
-                            <option value="schueler" selected>Schüler (Standard)</option>
-                        </select>
-                        <p style="margin-top: 8px; font-size: 14px; color: #86868b;">
-                            Neue Accounts werden standardmäßig als Schüler erstellt. Administratoren können später die Rechte anpassen.
-                        </p>
-                    </div>
-                    
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-success">
-                            Account erstellen
-                        </button>
-                        <button type="button" onclick="closeRegisterForm()" class="btn btn-secondary">
-                            Abbrechen
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <div id="registerModal" class="modal-overlay" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Neuen Account erstellen</h2>
         </div>
+
+        <div class="modal-body">
+          <form id="registerForm">
+            <div class="form-group">
+              <label for="regUsername">Benutzername</label>
+              <input type="text" id="regUsername" required />
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail">E-Mail-Adresse</label>
+              <input type="email" id="regEmail" required />
+            </div>
+
+            <div class="form-group">
+              <label for="regPassword">Passwort</label>
+              <div class="password-container">
+                <input type="password" id="regPassword" required />
+                <button
+                  type="button"
+                  onclick="toggleRegisterPasswordVisibility()"
+                  class="password-toggle"
+                >
+                  <i id="registerPasswordToggleIcon" class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPasswordConfirm">Passwort bestätigen</label>
+              <input type="password" id="regPasswordConfirm" required />
+            </div>
+
+            <div class="form-group">
+              <label for="regRole">Rolle</label>
+              <select
+                id="regRole"
+                required
+                style="
+                  width: 100%;
+                  padding: 16px 20px;
+                  border: 1px solid #d2d2d7;
+                  border-radius: 12px;
+                  font-size: 17px;
+                  background: rgba(255, 255, 255, 0.8);
+                  font-family: inherit;
+                "
+              >
+                <option value="schueler" selected>Schüler (Standard)</option>
+              </select>
+              <p style="margin-top: 8px; font-size: 14px; color: #86868b">
+                Neue Accounts werden standardmäßig als Schüler erstellt.
+                Administratoren können später die Rechte anpassen.
+              </p>
+            </div>
+
+            <div class="button-group">
+              <button type="submit" class="btn btn-success">
+                Account erstellen
+              </button>
+              <button
+                type="button"
+                onclick="closeRegisterForm()"
+                class="btn btn-secondary"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <script>
-        // API Base URL - absolut ab Root, funktioniert von überall
-        const API_BASE = '/fightlog/backend/api';
-        
-        // Prüfe ob bereits authentifiziert
-        function checkExistingAuth() {
-            const isAuthenticated = localStorage.getItem('fightlog_authenticated');
-            if (isAuthenticated) {
-                navigateWithFade('index.html');
-            }
+      // API Base URL - relativ zum frontend Ordner
+      const API_BASE = "../backend/api";
+
+      // Prüfe ob bereits authentifiziert
+      function checkExistingAuth() {
+        const isAuthenticated = localStorage.getItem("fightlog_authenticated");
+        if (isAuthenticated) {
+          navigateWithFade("index.html");
         }
-        
-        // Prüfe auf Passkey-Verfügbarkeit
-        function checkPasskeyAvailability() {
-            const hasPasskey = localStorage.getItem('fightlog_passkey_available');
-            if (hasPasskey) {
-                showPasskeyOption();
-            }
+      }
+
+      // Prüfe auf Passkey-Verfügbarkeit
+      function checkPasskeyAvailability() {
+        const hasPasskey = localStorage.getItem("fightlog_passkey_available");
+        if (hasPasskey) {
+          showPasskeyOption();
         }
-        
-        // Zeige Passkey-Option an
-        function showPasskeyOption() {
-            const passkeyButton = document.createElement('button');
-            passkeyButton.type = 'button';
-            passkeyButton.className = 'btn';
-            passkeyButton.style.marginTop = '1rem';
-            passkeyButton.style.backgroundColor = '#10b981';
-            passkeyButton.innerHTML = '<i class="fas fa-key"></i> Mit Passkey anmelden';
-            passkeyButton.onclick = attemptPasskeyLogin;
-            
-            const form = document.getElementById('loginForm');
-            form.parentNode.insertBefore(passkeyButton, form.nextSibling);
-        }
-        
-        // Versuche Passkey-Anmeldung
-        async function attemptPasskeyLogin() {
-            const button = event.target;
-            const originalText = button.innerHTML;
-            
-            try {
-                // Zeige Ladeindikator
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Passkey wird überprüft...';
-                button.disabled = true;
-                
-                // Starte Passkey-Authentifizierung über API
-                const authResponse = await fetch(`${API_BASE}/passkeys.php?action=authenticate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Server-Fehler bei Passkey-Authentifizierung');
-                }
-                
-                const contentType = authResponse.headers.get('content-type') || '';
-                if (!contentType.includes('application/json')) {
-                    const text = await authResponse.text();
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned non-JSON response');
-                }
-                
-                const authData = await authResponse.json();
-                
-                if (!authData.success || !authData.options) {
-                    throw new Error(authData.error || 'Keine Passkeys registriert');
-                }
-                
-                // Erstelle Passkey-Assertion mit WebAuthn
-                const assertion = await navigator.credentials.get({
-                    publicKey: authData.options
-                });
-                
-                // Verifiziere Passkey-Authentifizierung beim Server
-                const verifyResponse = await fetch(`${API_BASE}/passkeys.php?action=verifyAuth`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        credential: {
-                            id: assertion.id,
-                            rawId: Array.from(new Uint8Array(assertion.rawId)),
-                            response: {
-                                authenticatorData: Array.from(new Uint8Array(assertion.response.authenticatorData)),
-                                clientDataJSON: Array.from(new Uint8Array(assertion.response.clientDataJSON)),
-                                signature: Array.from(new Uint8Array(assertion.response.signature)),
-                                userHandle: assertion.response.userHandle ? Array.from(new Uint8Array(assertion.response.userHandle)) : null
-                            },
-                            type: assertion.type
-                        }
-                    })
-                });
-                
-                if (!verifyResponse.ok) {
-                    throw new Error('Server-Fehler bei Passkey-Verifizierung');
-                }
-                
-                const verifyContentType = verifyResponse.headers.get('content-type') || '';
-                if (!verifyContentType.includes('application/json')) {
-                    const text = await verifyResponse.text();
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned non-JSON response');
-                }
-                
-                const verifyData = await verifyResponse.json();
-                
-                if (verifyData.success && verifyData.user) {
-                    // Session-Token speichern (falls vorhanden)
-                    if (verifyData.token) {
-                        localStorage.setItem('fightlog_token', verifyData.token);
-                    }
-                    
-                    // User-Daten speichern
-                    localStorage.setItem('fightlog_authenticated', 'true');
-                    localStorage.setItem('fightlog_user', JSON.stringify({
-                        id: verifyData.user.id,
-                        username: verifyData.user.username,
-                        email: verifyData.user.email,
-                        role: verifyData.user.role,
-                        authMethod: 'passkey'
-                    }));
-                    
-                    const roleLabel = verifyData.user.role === 'admin' ? 'Admin' : verifyData.user.role === 'trainer' ? 'Trainer' : 'Schüler';
-                    await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                    navigateWithFade('index.html');
-                } else {
-                    throw new Error(verifyData.error || 'Passkey-Verifizierung fehlgeschlagen');
-                }
-                
-            } catch (error) {
-                console.error('Passkey-Anmeldung fehlgeschlagen:', error);
-                await notify.alert('Passkey-Anmeldung fehlgeschlagen: ' + error.message + '\n\nBitte verwenden Sie die normale Anmeldung.');
-            } finally {
-                // Stelle Button wieder her
-                button.innerHTML = originalText;
-                button.disabled = false;
-            }
-        }
-        
-        // Registriere neuen Passkey
-        async function registerPasskey() {
-            // Prüfe ob User bereits eingeloggt ist (Token vorhanden)
-            const token = localStorage.getItem('fightlog_token');
-            const userData = localStorage.getItem('fightlog_user');
-            
-            if (!token || !userData) {
-                await notify.alert('Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.');
-                return;
-            }
-            
-            let user;
-            try {
-                user = JSON.parse(userData);
-            } catch (e) {
-                await notify.alert('Fehler beim Lesen der Benutzerdaten. Bitte melden Sie sich erneut an.');
-                return;
-            }
-            
-            const username = user.username || user.email;
-            
-            if (!username) {
-                await notify.alert('Benutzername nicht gefunden. Bitte melden Sie sich erneut an.');
-                return;
-            }
-            
-            try {
-                // Starte Passkey-Registrierung über API
-                const registerResponse = await fetch(`${API_BASE}/passkeys.php?action=register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    credentials: 'include'
-                });
-                
-                if (!registerResponse.ok) {
-                    throw new Error('Server-Fehler bei Passkey-Registrierung');
-                }
-                
-                const contentType = registerResponse.headers.get('content-type') || '';
-                if (!contentType.includes('application/json')) {
-                    const text = await registerResponse.text();
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned non-JSON response');
-                }
-                
-                const registerData = await registerResponse.json();
-                
-                if (!registerData.success || !registerData.options) {
-                    throw new Error(registerData.error || 'Passkey-Registrierung fehlgeschlagen');
-                }
-                
-                // Erstelle Passkey mit WebAuthn
-                const credential = await navigator.credentials.create({
-                    publicKey: registerData.options
-                });
-                
-                // Verifiziere Passkey-Registrierung beim Server
-                const verifyResponse = await fetch(`${API_BASE}/passkeys.php?action=verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        credential: {
-                            id: credential.id,
-                            rawId: Array.from(new Uint8Array(credential.rawId)),
-                            response: {
-                                attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
-                                clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
-                            },
-                            type: credential.type
-                        }
-                    })
-                });
-                
-                if (!verifyResponse.ok) {
-                    throw new Error('Server-Fehler bei Passkey-Verifizierung');
-                }
-                
-                const verifyContentType = verifyResponse.headers.get('content-type') || '';
-                if (!verifyContentType.includes('application/json')) {
-                    const text = await verifyResponse.text();
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned non-JSON response');
-                }
-                
-                const verifyData = await verifyResponse.json();
-                
-                if (verifyData.success) {
-                    await notify.alert('Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.');
-                    // Aktualisiere UI
-                    checkPasskeyAvailability();
-                } else {
-                    throw new Error(verifyData.error || 'Passkey-Verifizierung fehlgeschlagen');
-                }
-                
-            } catch (error) {
-                console.error('Passkey-Registrierung fehlgeschlagen:', error);
-                await notify.alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
-            }
-        }
-        
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const identifier = document.getElementById('identifier').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!identifier || !password) {
-                await notify.alert('Bitte geben Sie Benutzername oder E-Mail und Passwort ein.');
-                return;
-            }
-            
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...';
-            
-            try {
-                // API-Login mit Username ODER Email - KEINE Hardcodings!
-                // Absoluter Pfad ab Root, funktioniert von überall
-                const response = await fetch(`${API_BASE}/login.php`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        identifier: identifier,
-                        password: password
-                    })
-                });
-                
-                // Prüfe Content-Type
-                const contentType = response.headers.get('content-type') || '';
-                let data;
-                
-                if (contentType.includes('application/json')) {
-                    data = await response.json();
-                } else {
-                    const text = await response.text();
-                    console.error('Non-JSON response:', {
-                        status: response.status,
-                        contentType: contentType,
-                        body: text.substring(0, 500)
-                    });
-                    throw new Error('Server returned non-JSON response');
-                }
-                
-                if (data.success && data.user) {
-                    // Session-Token speichern (falls vorhanden)
-                    if (data.token) {
-                        localStorage.setItem('fightlog_token', data.token);
-                    }
-                    
-                    // User-Daten speichern
-                    localStorage.setItem('fightlog_authenticated', 'true');
-                    localStorage.setItem('fightlog_user', JSON.stringify({
-                        id: data.user.id,
-                        username: data.user.username,
-                        email: data.user.email,
-                        role: data.user.role,
-                        authMethod: 'password'
-                    }));
-                    
-                    const roleLabel = data.user.role === 'admin' ? 'Admin' : data.user.role === 'trainer' ? 'Trainer' : 'Schüler';
-                    await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
-                    navigateWithFade('index.html');
-                } else {
-                    // Allgemeine Fehlermeldung (keine Account-Enumeration)
-                    await notify.alert('Login-Daten ungültig. Bitte überprüfen Sie Ihre Eingaben.');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                await notify.alert('Fehler beim Anmelden. Bitte versuchen Sie es erneut.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        });
-        
-        // Passwort-Sichtbarkeit umschalten
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('passwordToggleIcon');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.className = 'fas fa-eye-slash';
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.className = 'fas fa-eye';
-            }
-        }
-        
-        // Registrierung Passwort-Sichtbarkeit umschalten
-        function toggleRegisterPasswordVisibility() {
-            const passwordInput = document.getElementById('regPassword');
-            const toggleIcon = document.getElementById('registerPasswordToggleIcon');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.className = 'fas fa-eye-slash';
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.className = 'fas fa-eye';
-            }
-        }
-        
-        // Passwort vergessen - Direkte Meldung anzeigen
-        async function showForgotPassword() {
-            await notify.alert('Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.');
-        }
-        
-        // Passwort vergessen Modal schließen (wird nicht mehr verwendet, aber für Kompatibilität behalten)
-        function closeForgotPassword() {
-            document.getElementById('forgotPasswordModal').style.display = 'none';
-            if (document.getElementById('resetEmail')) {
-                document.getElementById('resetEmail').value = '';
-            }
-        }
-        
-        // Passwort zurücksetzen senden (wird nicht mehr verwendet, aber für Kompatibilität behalten)
-        async function sendPasswordReset() {
-            await notify.alert('Bitte wenden Sie sich an einen Administrator, um Ihr Passwort zurücksetzen zu lassen.');
-            closeForgotPassword();
-        }
-        
-        // Registrierung Modal anzeigen
-        function showRegisterForm() {
-            document.getElementById('registerModal').style.display = 'flex';
-        }
-        
-        // Registrierung Modal schließen
-        function closeRegisterForm() {
-            document.getElementById('registerModal').style.display = 'none';
-            document.getElementById('registerForm').reset();
-        }
-        
-        // Registrierung verarbeiten
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('regUsername').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
-            const role = document.getElementById('regRole').value;
-            
-            // Validierung
-            if (!username || !email || !password || !passwordConfirm) {
-                await notify.alert('Bitte füllen Sie alle Felder aus.');
-                return;
+      }
+
+      // Zeige Passkey-Option an
+      function showPasskeyOption() {
+        const passkeyButton = document.createElement("button");
+        passkeyButton.type = "button";
+        passkeyButton.className = "btn";
+        passkeyButton.style.marginTop = "1rem";
+        passkeyButton.style.backgroundColor = "#10b981";
+        passkeyButton.innerHTML =
+          '<i class="fas fa-key"></i> Mit Passkey anmelden';
+        passkeyButton.onclick = attemptPasskeyLogin;
+
+        const form = document.getElementById("loginForm");
+        form.parentNode.insertBefore(passkeyButton, form.nextSibling);
+      }
+
+      // Versuche Passkey-Anmeldung
+      async function attemptPasskeyLogin() {
+        const button = event.target;
+        const originalText = button.innerHTML;
+
+        try {
+          // Zeige Ladeindikator
+          button.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Passkey wird überprüft...';
+          button.disabled = true;
+
+          // Starte Passkey-Authentifizierung über API
+          const authResponse = await fetch(
+            `${API_BASE}/passkeys.php?action=authenticate`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            },
+          );
+
+          if (!authResponse.ok) {
+            throw new Error("Server-Fehler bei Passkey-Authentifizierung");
+          }
+
+          const contentType = authResponse.headers.get("content-type") || "";
+          if (!contentType.includes("application/json")) {
+            const text = await authResponse.text();
+            console.error("Non-JSON response:", text.substring(0, 500));
+            throw new Error("Server returned non-JSON response");
+          }
+
+          const authData = await authResponse.json();
+
+          if (!authData.success || !authData.options) {
+            throw new Error(authData.error || "Keine Passkeys registriert");
+          }
+
+          // Erstelle Passkey-Assertion mit WebAuthn
+          const assertion = await navigator.credentials.get({
+            publicKey: authData.options,
+          });
+
+          // Verifiziere Passkey-Authentifizierung beim Server
+          const verifyResponse = await fetch(
+            `${API_BASE}/passkeys.php?action=verifyAuth`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                credential: {
+                  id: assertion.id,
+                  rawId: Array.from(new Uint8Array(assertion.rawId)),
+                  response: {
+                    authenticatorData: Array.from(
+                      new Uint8Array(assertion.response.authenticatorData),
+                    ),
+                    clientDataJSON: Array.from(
+                      new Uint8Array(assertion.response.clientDataJSON),
+                    ),
+                    signature: Array.from(
+                      new Uint8Array(assertion.response.signature),
+                    ),
+                    userHandle: assertion.response.userHandle
+                      ? Array.from(
+                          new Uint8Array(assertion.response.userHandle),
+                        )
+                      : null,
+                  },
+                  type: assertion.type,
+                },
+              }),
+            },
+          );
+
+          if (!verifyResponse.ok) {
+            throw new Error("Server-Fehler bei Passkey-Verifizierung");
+          }
+
+          const verifyContentType =
+            verifyResponse.headers.get("content-type") || "";
+          if (!verifyContentType.includes("application/json")) {
+            const text = await verifyResponse.text();
+            console.error("Non-JSON response:", text.substring(0, 500));
+            throw new Error("Server returned non-JSON response");
+          }
+
+          const verifyData = await verifyResponse.json();
+
+          if (verifyData.success && verifyData.user) {
+            // Session-Token speichern (falls vorhanden)
+            if (verifyData.token) {
+              localStorage.setItem("fightlog_token", verifyData.token);
             }
 
-            if (password !== passwordConfirm) {
-                await notify.alert('Die Passwörter stimmen nicht überein.');
-                return;
-            }
+            // User-Daten speichern
+            localStorage.setItem("fightlog_authenticated", "true");
+            localStorage.setItem(
+              "fightlog_user",
+              JSON.stringify({
+                id: verifyData.user.id,
+                username: verifyData.user.username,
+                email: verifyData.user.email,
+                role: verifyData.user.role,
+                authMethod: "passkey",
+              }),
+            );
 
-            if (password.length < 6) {
-                await notify.alert('Das Passwort muss mindestens 6 Zeichen lang sein.');
-                return;
-            }
-            
-            // Prüfe ob Benutzername bereits existiert
-            const existingUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
-            if (existingUsers[username]) {
-                await notify.alert('Dieser Benutzername ist bereits vergeben.');
-                return;
-            }
-            
-            // Speichere neuen Benutzer
-            existingUsers[username] = {
-                username: username,
-                email: email,
-                password: password, // In echter App würde hier ein Hash gespeichert
-                role: role,
-                createdAt: new Date().toISOString()
-            };
-            
-            localStorage.setItem('fightlog_registered_users', JSON.stringify(existingUsers));
-            
-            await notify.alert(`Account erfolgreich erstellt!\n\nBenutzername: ${username}\nRolle: ${role}\n\nSie können sich jetzt anmelden.`);
-            closeRegisterForm();
-            
-            // Zeige Passkey-Registrierung Button an, da jetzt ein Account existiert
+            const roleLabel =
+              verifyData.user.role === "admin"
+                ? "Admin"
+                : verifyData.user.role === "trainer"
+                  ? "Trainer"
+                  : "Schüler";
+            await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
+            navigateWithFade("index.html");
+          } else {
+            throw new Error(
+              verifyData.error || "Passkey-Verifizierung fehlgeschlagen",
+            );
+          }
+        } catch (error) {
+          console.error("Passkey-Anmeldung fehlgeschlagen:", error);
+          await notify.alert(
+            "Passkey-Anmeldung fehlgeschlagen: " +
+              error.message +
+              "\n\nBitte verwenden Sie die normale Anmeldung.",
+          );
+        } finally {
+          // Stelle Button wieder her
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
+      }
+
+      // Registriere neuen Passkey
+      async function registerPasskey() {
+        // Prüfe ob User bereits eingeloggt ist (Token vorhanden)
+        const token = localStorage.getItem("fightlog_token");
+        const userData = localStorage.getItem("fightlog_user");
+
+        if (!token || !userData) {
+          await notify.alert(
+            "Bitte melden Sie sich zuerst mit gültigen Anmeldedaten an, bevor Sie einen Passkey registrieren.",
+          );
+          return;
+        }
+
+        let user;
+        try {
+          user = JSON.parse(userData);
+        } catch (e) {
+          await notify.alert(
+            "Fehler beim Lesen der Benutzerdaten. Bitte melden Sie sich erneut an.",
+          );
+          return;
+        }
+
+        const username = user.username || user.email;
+
+        if (!username) {
+          await notify.alert(
+            "Benutzername nicht gefunden. Bitte melden Sie sich erneut an.",
+          );
+          return;
+        }
+
+        try {
+          // Starte Passkey-Registrierung über API
+          const registerResponse = await fetch(
+            `${API_BASE}/passkeys.php?action=register`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              credentials: "include",
+            },
+          );
+
+          if (!registerResponse.ok) {
+            throw new Error("Server-Fehler bei Passkey-Registrierung");
+          }
+
+          const contentType =
+            registerResponse.headers.get("content-type") || "";
+          if (!contentType.includes("application/json")) {
+            const text = await registerResponse.text();
+            console.error("Non-JSON response:", text.substring(0, 500));
+            throw new Error("Server returned non-JSON response");
+          }
+
+          const registerData = await registerResponse.json();
+
+          if (!registerData.success || !registerData.options) {
+            throw new Error(
+              registerData.error || "Passkey-Registrierung fehlgeschlagen",
+            );
+          }
+
+          // Erstelle Passkey mit WebAuthn
+          const credential = await navigator.credentials.create({
+            publicKey: registerData.options,
+          });
+
+          // Verifiziere Passkey-Registrierung beim Server
+          const verifyResponse = await fetch(
+            `${API_BASE}/passkeys.php?action=verify`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                credential: {
+                  id: credential.id,
+                  rawId: Array.from(new Uint8Array(credential.rawId)),
+                  response: {
+                    attestationObject: Array.from(
+                      new Uint8Array(credential.response.attestationObject),
+                    ),
+                    clientDataJSON: Array.from(
+                      new Uint8Array(credential.response.clientDataJSON),
+                    ),
+                  },
+                  type: credential.type,
+                },
+              }),
+            },
+          );
+
+          if (!verifyResponse.ok) {
+            throw new Error("Server-Fehler bei Passkey-Verifizierung");
+          }
+
+          const verifyContentType =
+            verifyResponse.headers.get("content-type") || "";
+          if (!verifyContentType.includes("application/json")) {
+            const text = await verifyResponse.text();
+            console.error("Non-JSON response:", text.substring(0, 500));
+            throw new Error("Server returned non-JSON response");
+          }
+
+          const verifyData = await verifyResponse.json();
+
+          if (verifyData.success) {
+            await notify.alert(
+              "Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.",
+            );
+            // Aktualisiere UI
             checkPasskeyAvailability();
-        });
-        
-        // Prüfe ob registrierte Benutzer existieren (für Passkey-Button)
-        function checkRegisteredUsers() {
-            const existingUsers = JSON.parse(localStorage.getItem('fightlog_registered_users') || '{}');
-            const hasRegisteredUsers = Object.keys(existingUsers).length > 0;
-            
-            // Zeige Passkey-Button nur wenn registrierte Benutzer existieren
-            const passkeyBtn = document.getElementById('passkeyRegisterBtn');
-            if (hasRegisteredUsers) {
-                passkeyBtn.style.display = 'block';
-            } else {
-                passkeyBtn.style.display = 'none';
-            }
+          } else {
+            throw new Error(
+              verifyData.error || "Passkey-Verifizierung fehlgeschlagen",
+            );
+          }
+        } catch (error) {
+          console.error("Passkey-Registrierung fehlgeschlagen:", error);
+          await notify.alert(
+            "Passkey-Registrierung fehlgeschlagen: " + error.message,
+          );
         }
-        
-        // Initialisierung
-        checkExistingAuth();
-        checkPasskeyAvailability();
-        checkRegisteredUsers();
+      }
 
-        // Hilfsfunktion: Navigation mit Page-Transition-Overlay (Crossfade)
-        function navigateWithFade(url){
-            try {
-                // falls globaler Helfer vorhanden (index.html)
-                if (typeof window.navigateWithTransition === 'function') {
-                    window.navigateWithTransition(url);
-                    return;
-                }
-                // Fallback: eigenes Overlay erzeugen
-                let overlay = document.getElementById('page-transition');
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'page-transition';
-                    overlay.className = 'page-transition';
-                    document.body.appendChild(overlay);
-                }
-                overlay.classList.add('show');
-                setTimeout(()=> { window.location.href = url; }, 280);
-            } catch (e) {
-                window.location.href = url;
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const identifier = document.getElementById("identifier").value.trim();
+          const password = document.getElementById("password").value;
+
+          if (!identifier || !password) {
+            await notify.alert(
+              "Bitte geben Sie Benutzername oder E-Mail und Passwort ein.",
+            );
+            return;
+          }
+
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...';
+
+          try {
+            // API-Login mit Username ODER Email - KEINE Hardcodings!
+            // Absoluter Pfad ab Root, funktioniert von überall
+            const response = await fetch(`${API_BASE}/login.php`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                identifier: identifier,
+                password: password,
+              }),
+            });
+
+            // Prüfe Content-Type
+            const contentType = response.headers.get("content-type") || "";
+            let data;
+
+            if (contentType.includes("application/json")) {
+              data = await response.json();
+            } else {
+              const text = await response.text();
+              console.error("Non-JSON response:", {
+                status: response.status,
+                contentType: contentType,
+                body: text.substring(0, 500),
+              });
+              throw new Error("Server returned non-JSON response");
             }
+
+            if (data.success && data.user) {
+              // Session-Token speichern (falls vorhanden)
+              if (data.token) {
+                localStorage.setItem("fightlog_token", data.token);
+              }
+
+              // User-Daten speichern
+              localStorage.setItem("fightlog_authenticated", "true");
+              localStorage.setItem(
+                "fightlog_user",
+                JSON.stringify({
+                  id: data.user.id,
+                  username: data.user.username,
+                  email: data.user.email,
+                  role: data.user.role,
+                  authMethod: "password",
+                }),
+              );
+
+              const roleLabel =
+                data.user.role === "admin"
+                  ? "Admin"
+                  : data.user.role === "trainer"
+                    ? "Trainer"
+                    : "Schüler";
+              await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
+              navigateWithFade("index.html");
+            } else {
+              // Allgemeine Fehlermeldung (keine Account-Enumeration)
+              await notify.alert(
+                "Login-Daten ungültig. Bitte überprüfen Sie Ihre Eingaben.",
+              );
+            }
+          } catch (error) {
+            console.error("Login error:", error);
+            await notify.alert(
+              "Fehler beim Anmelden. Bitte versuchen Sie es erneut.",
+            );
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        });
+
+      // Passwort-Sichtbarkeit umschalten
+      function togglePasswordVisibility() {
+        const passwordInput = document.getElementById("password");
+        const toggleIcon = document.getElementById("passwordToggleIcon");
+
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          toggleIcon.className = "fas fa-eye-slash";
+        } else {
+          passwordInput.type = "password";
+          toggleIcon.className = "fas fa-eye";
         }
+      }
+
+      // Registrierung Passwort-Sichtbarkeit umschalten
+      function toggleRegisterPasswordVisibility() {
+        const passwordInput = document.getElementById("regPassword");
+        const toggleIcon = document.getElementById(
+          "registerPasswordToggleIcon",
+        );
+
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          toggleIcon.className = "fas fa-eye-slash";
+        } else {
+          passwordInput.type = "password";
+          toggleIcon.className = "fas fa-eye";
+        }
+      }
+
+      // Passwort vergessen - Direkte Meldung anzeigen
+      async function showForgotPassword() {
+        await notify.alert(
+          "Passwort vergessen?\n\nBitte wenden Sie sich an einen Administrator.\n\nAdministratoren können Passwörter für alle Benutzer zurücksetzen und verwalten.\n\nKontaktieren Sie Ihren Trainer oder einen Admin der Kampfsportschule.",
+        );
+      }
+
+      // Passwort vergessen Modal schließen (wird nicht mehr verwendet, aber für Kompatibilität behalten)
+      function closeForgotPassword() {
+        document.getElementById("forgotPasswordModal").style.display = "none";
+        if (document.getElementById("resetEmail")) {
+          document.getElementById("resetEmail").value = "";
+        }
+      }
+
+      // Passwort zurücksetzen senden (wird nicht mehr verwendet, aber für Kompatibilität behalten)
+      async function sendPasswordReset() {
+        await notify.alert(
+          "Bitte wenden Sie sich an einen Administrator, um Ihr Passwort zurücksetzen zu lassen.",
+        );
+        closeForgotPassword();
+      }
+
+      // Registrierung Modal anzeigen
+      function showRegisterForm() {
+        document.getElementById("registerModal").style.display = "flex";
+      }
+
+      // Registrierung Modal schließen
+      function closeRegisterForm() {
+        document.getElementById("registerModal").style.display = "none";
+        document.getElementById("registerForm").reset();
+      }
+
+      // Registrierung verarbeiten
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const username = document.getElementById("regUsername").value;
+          const email = document.getElementById("regEmail").value;
+          const password = document.getElementById("regPassword").value;
+          const passwordConfirm =
+            document.getElementById("regPasswordConfirm").value;
+          const role = document.getElementById("regRole").value;
+
+          // Validierung
+          if (!username || !email || !password || !passwordConfirm) {
+            await notify.alert("Bitte füllen Sie alle Felder aus.");
+            return;
+          }
+
+          if (password !== passwordConfirm) {
+            await notify.alert("Die Passwörter stimmen nicht überein.");
+            return;
+          }
+
+          if (password.length < 6) {
+            await notify.alert(
+              "Das Passwort muss mindestens 6 Zeichen lang sein.",
+            );
+            return;
+          }
+
+          // Prüfe ob Benutzername bereits existiert
+          const existingUsers = JSON.parse(
+            localStorage.getItem("fightlog_registered_users") || "{}",
+          );
+          if (existingUsers[username]) {
+            await notify.alert("Dieser Benutzername ist bereits vergeben.");
+            return;
+          }
+
+          // Speichere neuen Benutzer
+          existingUsers[username] = {
+            username: username,
+            email: email,
+            password: password, // In echter App würde hier ein Hash gespeichert
+            role: role,
+            createdAt: new Date().toISOString(),
+          };
+
+          localStorage.setItem(
+            "fightlog_registered_users",
+            JSON.stringify(existingUsers),
+          );
+
+          await notify.alert(
+            `Account erfolgreich erstellt!\n\nBenutzername: ${username}\nRolle: ${role}\n\nSie können sich jetzt anmelden.`,
+          );
+          closeRegisterForm();
+
+          // Zeige Passkey-Registrierung Button an, da jetzt ein Account existiert
+          checkPasskeyAvailability();
+        });
+
+      // Prüfe ob registrierte Benutzer existieren (für Passkey-Button)
+      function checkRegisteredUsers() {
+        const existingUsers = JSON.parse(
+          localStorage.getItem("fightlog_registered_users") || "{}",
+        );
+        const hasRegisteredUsers = Object.keys(existingUsers).length > 0;
+
+        // Zeige Passkey-Button nur wenn registrierte Benutzer existieren
+        const passkeyBtn = document.getElementById("passkeyRegisterBtn");
+        if (hasRegisteredUsers) {
+          passkeyBtn.style.display = "block";
+        } else {
+          passkeyBtn.style.display = "none";
+        }
+      }
+
+      // Initialisierung
+      checkExistingAuth();
+      checkPasskeyAvailability();
+      checkRegisteredUsers();
+
+      // Hilfsfunktion: Navigation mit Page-Transition-Overlay (Crossfade)
+      function navigateWithFade(url) {
+        try {
+          // falls globaler Helfer vorhanden (index.html)
+          if (typeof window.navigateWithTransition === "function") {
+            window.navigateWithTransition(url);
+            return;
+          }
+          // Fallback: eigenes Overlay erzeugen
+          let overlay = document.getElementById("page-transition");
+          if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "page-transition";
+            overlay.className = "page-transition";
+            document.body.appendChild(overlay);
+          }
+          overlay.classList.add("show");
+          setTimeout(() => {
+            window.location.href = url;
+          }, 280);
+        } catch (e) {
+          window.location.href = url;
+        }
+      }
     </script>
-</body>
-</html> 
+  </body>
+</html>

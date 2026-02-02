@@ -1,9 +1,10 @@
 // src/services/api.service.js
 // Zentraler Client für alle Backend-API-Aufrufe
 
-// Automatische Erkennung: Dev-Server (localhost:3000) oder XAMPP
+// Automatische Erkennung: Dev-Server (localhost:3000) oder Produktion
 const isDev = window.location.port === '3000';
-const BASE_URL = isDev ? 'http://localhost:8080/api' : '/fightlog/backend/api';
+// Relativer Pfad: von frontend/ zu backend/api
+const BASE_URL = isDev ? 'http://localhost:8080/api' : '../backend/api';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
