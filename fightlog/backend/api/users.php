@@ -117,17 +117,91 @@ if ($method === 'POST') {
         require_permission($mysqli, 'manage_users');
         require_fields($body, ['id']);
         
+        $deleteUserId = (int)$body['id'];
+        
         // Verhindern dass man sich selbst löscht
-        if ((int)$body['id'] === $currentUserId) {
+        if ($deleteUserId === $currentUserId) {
             json_out(['success'=>false, 'error'=>'Du kannst dich nicht selbst löschen'], 400);
         }
         
-        $stmt = $mysqli->prepare("DELETE FROM users WHERE id=?");
-        $stmt->bind_param('i', $body['id']);
-        if (!$stmt->execute()) {
-            json_out(['success'=>false, 'error'=>'Delete fehlgeschlagen: '.$stmt->error], 500);
+        // Transaktion starten
+        $mysqli->begin_transaction();
+        
+        try {
+            // Alle abhängigen Daten löschen (FK-Constraints)
+            
+            // 1. Ziel-Fortschritt löschen
+            $mysqli->query("DELETE ugp FROM user_goal_progress ugp 
+                           INNER JOIN user_goals ug ON ugp.user_goal_id = ug.id 
+                           WHERE ug.user_id = $deleteUserId");
+            
+            // 2. Zugewiesene Ziele löschen
+            $stmt = $mysqli->prepare("DELETE FROM user_goals WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 3. Kursbuchungen löschen
+            $stmt = $mysqli->prepare("DELETE FROM course_bookings WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 4. Gruppenmitgliedschaften löschen
+            $stmt = $mysqli->prepare("DELETE FROM group_members WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 5. Urkunden löschen
+            $stmt = $mysqli->prepare("DELETE FROM certificates WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 6. Prüfungen löschen
+            $stmt = $mysqli->prepare("DELETE FROM exams WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 7. Trainingsverlauf löschen
+            $stmt = $mysqli->prepare("DELETE FROM training_history WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 8. Sessions löschen
+            $stmt = $mysqli->prepare("DELETE FROM sessions WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 9. Berechtigungen löschen
+            $stmt = $mysqli->prepare("DELETE FROM user_permissions WHERE user_id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // 10. Passkeys löschen (falls Tabelle existiert)
+            @$mysqli->query("DELETE FROM passkeys WHERE user_id = $deleteUserId");
+            @$mysqli->query("DELETE FROM passkey_challenges WHERE user_id = $deleteUserId");
+            
+            // 11. Gruppen des Users löschen (created_by)
+            // Erst Mitglieder aus diesen Gruppen entfernen
+            $mysqli->query("DELETE gm FROM group_members gm 
+                           INNER JOIN student_groups sg ON gm.group_id = sg.id 
+                           WHERE sg.created_by = $deleteUserId");
+            $stmt = $mysqli->prepare("DELETE FROM student_groups WHERE created_by = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            $stmt->execute();
+            
+            // Jetzt den Benutzer löschen
+            $stmt = $mysqli->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->bind_param('i', $deleteUserId);
+            if (!$stmt->execute()) {
+                throw new Exception('Delete fehlgeschlagen: ' . $stmt->error);
+            }
+            
+            $mysqli->commit();
+            json_out(['success'=>true]);
+            
+        } catch (Exception $e) {
+            $mysqli->rollback();
+            json_out(['success'=>false, 'error'=>$e->getMessage()], 500);
         }
-        json_out(['success'=>true]);
     }
 
     if ($action === 'changePassword') {

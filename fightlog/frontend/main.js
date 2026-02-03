@@ -2,6 +2,123 @@
 // Diese Datei enthält die komplette Vue.js Anwendung
 // Backend-Entwickler: Hier können echte API-Calls eingefügt werden
 
+// ===== INLINE NOTIFY SYSTEM (garantiert frisch geladen) =====
+(function() {
+    // Stelle sicher dass notify-root existiert
+    let root = document.getElementById('notify-root');
+    if (!root) {
+        root = document.createElement('div');
+        root.id = 'notify-root';
+        root.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+        document.body.appendChild(root);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function createModal(html) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(10px);pointer-events:auto;';
+        
+        const box = document.createElement('div');
+        box.style.cssText = 'width:90%;max-width:420px;background:rgba(255,255,255,0.95);border-radius:20px;box-shadow:0 20px 25px rgba(0,0,0,0.1);overflow:hidden;font-family:inherit;animation:notifySlideIn .24s ease;';
+        box.innerHTML = html;
+        
+        overlay.appendChild(box);
+        root.appendChild(overlay);
+        return { overlay, box };
+    }
+
+    function removeModal(overlay) {
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    // Füge Animation hinzu falls nicht vorhanden
+    if (!document.getElementById('notify-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'notify-keyframes';
+        style.textContent = '@keyframes notifySlideIn{from{opacity:0;transform:translateY(6px) scale(0.995);}to{opacity:1;transform:translateY(0) scale(1);}}';
+        document.head.appendChild(style);
+    }
+
+    window.notify = {
+        alert(message) {
+            return new Promise(resolve => {
+                const str = String(message);
+                const { overlay, box } = createModal(`
+                    <div style="padding:24px 24px 0;">
+                        <div style="color:#1e293b;font-size:17px;line-height:1.47;text-align:center;margin-bottom:16px;">${escapeHtml(str).replace(/\n/g,'<br>')}</div>
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:center;padding:0 24px 24px;">
+                        <button style="background:#0a84ff;color:white;border:none;padding:12px 18px;border-radius:9999px;cursor:pointer;font-size:17px;flex:1;box-shadow:0 10px 20px rgba(10,132,255,0.25);">OK</button>
+                    </div>
+                `);
+                box.querySelector('button').focus();
+                box.querySelector('button').onclick = () => { removeModal(overlay); resolve(); };
+            });
+        },
+
+        confirm(message) {
+            return new Promise(resolve => {
+                const str = String(message);
+                const { overlay, box } = createModal(`
+                    <div style="padding:24px 24px 0;">
+                        <div style="color:#1e293b;font-size:17px;line-height:1.47;text-align:center;margin-bottom:16px;">${escapeHtml(str).replace(/\n/g,'<br>')}</div>
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:center;padding:0 24px 24px;">
+                        <button data-val="false" style="background:rgba(142,142,147,0.12);color:#1e293b;border:1px solid rgba(142,142,147,0.2);padding:12px 18px;border-radius:9999px;cursor:pointer;font-size:17px;flex:1;">Abbrechen</button>
+                        <button data-val="true" style="background:#0a84ff;color:white;border:none;padding:12px 18px;border-radius:9999px;cursor:pointer;font-size:17px;flex:1;box-shadow:0 10px 20px rgba(10,132,255,0.25);">OK</button>
+                    </div>
+                `);
+                box.querySelectorAll('button').forEach(btn => {
+                    btn.onclick = () => {
+                        const val = btn.getAttribute('data-val') === 'true';
+                        removeModal(overlay);
+                        resolve(val);
+                    };
+                });
+                box.querySelector('button[data-val="true"]').focus();
+            });
+        },
+
+        prompt(message, defaultValue = '') {
+            return new Promise(resolve => {
+                const str = String(message);
+                const { overlay, box } = createModal(`
+                    <div style="padding:24px 24px 0;">
+                        <div style="color:#1e293b;font-size:17px;line-height:1.47;text-align:center;margin-bottom:16px;">${escapeHtml(str).replace(/\n/g,'<br>')}</div>
+                        <input type="text" value="${escapeHtml(defaultValue)}" style="width:100%;padding:16px 20px;border-radius:14px;border:1.5px solid rgba(0,0,0,0.08);background:rgba(255,255,255,0.9);font-size:17px;box-sizing:border-box;margin-bottom:16px;">
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:center;padding:0 24px 24px;">
+                        <button data-val="cancel" style="background:rgba(142,142,147,0.12);color:#1e293b;border:1px solid rgba(142,142,147,0.2);padding:12px 18px;border-radius:9999px;cursor:pointer;font-size:17px;flex:1;">Abbrechen</button>
+                        <button data-val="ok" style="background:#0a84ff;color:white;border:none;padding:12px 18px;border-radius:9999px;cursor:pointer;font-size:17px;flex:1;box-shadow:0 10px 20px rgba(10,132,255,0.25);">OK</button>
+                    </div>
+                `);
+                const input = box.querySelector('input');
+                input.focus();
+                input.select();
+                box.querySelectorAll('button').forEach(btn => {
+                    btn.onclick = () => {
+                        const val = btn.getAttribute('data-val') === 'ok' ? input.value : null;
+                        removeModal(overlay);
+                        resolve(val);
+                    };
+                });
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') { removeModal(overlay); resolve(input.value); }
+                    if (e.key === 'Escape') { removeModal(overlay); resolve(null); }
+                };
+            });
+        }
+    };
+
+    console.log('[FightLog] Inline notify system loaded');
+})();
+// ===== END INLINE NOTIFY SYSTEM =====
+
 import { translations } from './src/constants/translations.js';
 import { demoData } from './src/data/demo-data.js';
 import { apiService } from './src/services/api.service.js';
@@ -1400,9 +1517,12 @@ const app = createApp({
                                             <button v-if="!c.booking_status" class="btn btn-primary" @click="bookCourse(c)" :disabled="c.free_spots <= 0">
                                                 <i class="fas fa-plus"></i> Anmelden
                                             </button>
-                                            <button v-else-if="c.booking_status === 'confirmed' && canCancelBooking(c)" class="btn btn-danger" @click="cancelBooking(c)">
+                                            <button v-else-if="(c.booking_status === 'confirmed' || c.booking_status === 'pending') && canCancelBooking(c)" class="btn btn-danger" @click="cancelBooking(c)">
                                                 <i class="fas fa-times"></i> Abmelden
                                             </button>
+                                            <span v-else-if="c.booking_status === 'pending'" style="color:#f59e0b; font-size:0.85rem;">
+                                                <i class="fas fa-clock"></i> Anmeldung ausstehend
+                                            </span>
                                             <span v-else-if="c.booking_status === 'confirmed'" style="color:#64748b; font-size:0.85rem;">
                                                 <i class="fas fa-info-circle"></i> Abmeldung nicht mehr möglich
                                             </span>
@@ -1816,12 +1936,17 @@ const app = createApp({
                                         <input type="text" v-model="profileForm.school" class="form-control" placeholder="z.B. Kampfsport Akademie Berlin">
                                     </div>
                                     
-                                    <div class="form-group">
+                                    <div class="form-group" v-if="currentUser && currentUser.role !== 'schueler'">
                                         <label>Gürtelgrad</label>
                                         <select v-model="profileForm.beltLevel" class="form-control">
                                             <option value="">Bitte wählen</option>
                                             <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
                                         </select>
+                                    </div>
+                                    <div class="form-group" v-else>
+                                        <label>Gürtelgrad</label>
+                                        <input type="text" :value="profileForm.beltLevel || 'Nicht zugewiesen'" class="form-control" disabled style="background:#1e293b; cursor:not-allowed;">
+                                        <small style="color:#64748b;">Der Gürtelgrad kann nur von einem Trainer geändert werden.</small>
                                     </div>
                                     
                                     <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
@@ -2705,24 +2830,24 @@ const app = createApp({
                         phone: '' // Zurücksetzen des Telefonfelds
                     };
                 } else {
-                    await notify.alert(response.error || 'Login fehlgeschlagen');
+                    await window.notify.alert(response.error || 'Login fehlgeschlagen');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                await notify.alert('Login fehlgeschlagen');
+                await window.notify.alert('Login fehlgeschlagen');
             }
         },
         
         async handleRegister() {
             try {
                 if (!this.validateEmail() || !this.validatePhone()) {
-                    await notify.alert(this.validateEmail() ? this.t('phoneInvalid') : this.t('emailInvalid'));
+                    await window.notify.alert(this.validateEmail() ? this.t('phoneInvalid') : this.t('emailInvalid'));
                     return;
                 }
                 const payload = { ...this.authForm, role: 'schueler' };
                 const response = await apiService.register(payload);
                 if (response.success) {
-                    await notify.alert('Registrierung erfolgreich! Sie können sich jetzt anmelden.');
+                    await window.notify.alert('Registrierung erfolgreich! Sie können sich jetzt anmelden.');
                     this.showRegister = false;
                     this.authForm = {
                         username: '',
@@ -2737,7 +2862,7 @@ const app = createApp({
                 }
             } catch (error) {
                 console.error('Register error:', error);
-                await notify.alert('Registrierung fehlgeschlagen');
+                await window.notify.alert('Registrierung fehlgeschlagen');
             }
         },
         
@@ -2776,7 +2901,7 @@ const app = createApp({
         // Passkey registrieren
         async registerPasskey() {
             if (!window.passkeyManager) {
-                alert('PasskeyManager nicht verfügbar. Bitte laden Sie die Seite neu.');
+                window.notify.alert('PasskeyManager nicht verfügbar. Bitte laden Sie die Seite neu.');
                 return;
             }
             
@@ -2785,7 +2910,7 @@ const app = createApp({
                 const result = await window.passkeyManager.registerPasskey(username);
                 
                 if (result.success) {
-                    alert('Passkey erfolgreich registriert!');
+                    window.notify.alert('Passkey erfolgreich registriert!');
                     this.closePasskeyModal();
                 } else {
                     throw new Error('Passkey-Registrierung fehlgeschlagen');
@@ -2793,22 +2918,22 @@ const app = createApp({
                 
             } catch (error) {
                 console.error('Passkey-Registrierung fehlgeschlagen:', error);
-                alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
+                window.notify.alert('Passkey-Registrierung fehlgeschlagen: ' + error.message);
             }
         },
         
         // Passkey entfernen
         async removePasskey(passkeyId) {
-            const ok = await notify.confirm('Passkey wirklich entfernen?');
+            const ok = await window.notify.confirm('Passkey wirklich entfernen?');
             if (!ok) return;
 
             try {
                 const username = this.currentUser.username;
                 window.passkeyManager.removePasskey(username);
-                alert('Passkey erfolgreich entfernt!');
+                window.notify.alert('Passkey erfolgreich entfernt!');
             } catch (error) {
                 console.error('Passkey-Entfernung fehlgeschlagen:', error);
-                alert('Passkey-Entfernung fehlgeschlagen: ' + error.message);
+                window.notify.alert('Passkey-Entfernung fehlgeschlagen: ' + error.message);
             }
         },
         
@@ -2848,9 +2973,9 @@ const app = createApp({
         
         async loadCertificateSettings() {
             try {
-                const settings = await apiService.getCertificateSettings();
-                if (settings && !settings.error) {
-                    this.certificateSettings = settings;
+                const response = await apiService.getCertificateSettings();
+                if (response && response.success && response.settings) {
+                    this.certificateSettings = response.settings;
                 }
             } catch (error) {
                 console.error('Load certificate settings error:', error);
@@ -2871,11 +2996,11 @@ const app = createApp({
         async createManualCertificate() {
             try {
                 if (!this.manualCertificateForm.studentId) {
-                    alert('Bitte einen Schüler auswählen.');
+                    window.notify.alert('Bitte einen Schüler auswählen.');
                     return;
                 }
                 if (!this.manualCertificateForm.title || !this.manualCertificateForm.date || !this.manualCertificateForm.instructor) {
-                    alert('Bitte alle Pflichtfelder ausfüllen.');
+                    window.notify.alert('Bitte alle Pflichtfelder ausfüllen.');
                     return;
                 }
                 
@@ -2884,11 +3009,11 @@ const app = createApp({
                     date: this.manualCertificateForm.date,
                     level: this.manualCertificateForm.level,
                     instructor: this.manualCertificateForm.instructor,
-                    user_id: this.manualCertificateForm.studentId
+                    userId: this.manualCertificateForm.studentId
                 });
                 
                 if (result.success) {
-                    alert('Urkunde erfolgreich erstellt!');
+                    window.notify.alert('Urkunde erfolgreich erstellt!');
                     this.manualCertificateForm = {
                         title: '',
                         date: '',
@@ -2901,29 +3026,30 @@ const app = createApp({
                     this.showManualCertificateForm = false;
                     await this.loadCertificates();
                 } else {
-                    alert(result.message || 'Fehler beim Erstellen der Urkunde');
+                    window.notify.alert(result.error || 'Fehler beim Erstellen der Urkunde');
                 }
             } catch (error) {
                 console.error('Create certificate error:', error);
-                alert('Fehler beim Erstellen der Urkunde');
+                window.notify.alert('Fehler beim Erstellen der Urkunde');
             }
         },
         
         async deleteManualCertificate(id) {
-            if (!confirm('Möchten Sie diese Urkunde wirklich löschen?')) return;
+            const ok = await window.notify.confirm('Möchten Sie diese Urkunde wirklich löschen?');
+            if (!ok) return;
             
             try {
                 const result = await apiService.deleteCertificate(id);
                 if (result.success) {
-                    alert('Urkunde gelöscht.');
+                    window.notify.alert('Urkunde gelöscht.');
                     this.showCertificateDetailModal = false;
                     await this.loadCertificates();
                 } else {
-                    alert(result.message || 'Fehler beim Löschen');
+                    window.notify.alert(result.error || 'Fehler beim Löschen');
                 }
             } catch (error) {
                 console.error('Delete certificate error:', error);
-                alert('Fehler beim Löschen der Urkunde');
+                window.notify.alert('Fehler beim Löschen der Urkunde');
             }
         },
         
@@ -2931,13 +3057,13 @@ const app = createApp({
             try {
                 const result = await apiService.saveCertificateSettings(this.certificateSettings);
                 if (result.success) {
-                    alert('Urkunden-Einstellungen gespeichert!');
+                    window.notify.alert('Urkunden-Einstellungen gespeichert!');
                 } else {
-                    alert(result.message || 'Fehler beim Speichern');
+                    window.notify.alert(result.error || 'Fehler beim Speichern');
                 }
             } catch (error) {
                 console.error('Save certificate settings error:', error);
-                alert('Fehler beim Speichern der Einstellungen');
+                window.notify.alert('Fehler beim Speichern der Einstellungen');
             }
         },
         
@@ -2953,20 +3079,20 @@ const app = createApp({
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     if (examDate > today) {
-                        alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                        window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
                         return;
                     }
                 }
                 const targetIds = (this.examForm.userIds && this.examForm.userIds.length)
                     ? this.examForm.userIds
                     : (this.examForm.userId ? [this.examForm.userId] : []);
-                if (!targetIds.length) return alert('Bitte mindestens einen Schüler auswählen.');
+                if (!targetIds.length) return window.notify.alert('Bitte mindestens einen Schüler auswählen.');
                 for (const uid of targetIds) {
                     await apiService.addExam({ ...this.examForm, userId: uid });
                 }
                 const response = { success: true };
                 if (response.success) {
-                    alert('Prüfung erfolgreich eingetragen!');
+                    window.notify.alert('Prüfung erfolgreich eingetragen!');
                     this.examForm = {
                         date: '',
                         level: '',
@@ -2983,7 +3109,7 @@ const app = createApp({
                 }
             } catch (error) {
                 console.error('Add exam error:', error);
-                alert('Prüfungseintrag fehlgeschlagen');
+                window.notify.alert('Prüfungseintrag fehlgeschlagen');
             }
         },
         
@@ -3002,12 +3128,22 @@ const app = createApp({
             this.examSearch = '';
         },
         editCertificate(cert) {
-            alert('Bearbeiten (Platzhalter): ' + cert.title);
+            window.notify.alert('Bearbeiten (Platzhalter): ' + cert.title);
         },
         async deleteCertificate(cert) {
-            const ok = await notify.confirm('Diese Urkunde löschen?');
-            if (ok) {
-                this.certificates = this.certificates.filter(c => c.id !== cert.id);
+            const ok = await window.notify.confirm('Diese Urkunde löschen?');
+            if (!ok) return;
+            try {
+                const res = await apiService.deleteCertificate(cert.id);
+                if (res.success) {
+                    this.certificates = this.certificates.filter(c => c.id !== cert.id);
+                    window.notify.alert('Urkunde gelöscht!');
+                } else {
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                }
+            } catch (e) {
+                console.error('Delete certificate error:', e);
+                window.notify.alert('Fehler beim Löschen der Urkunde');
             }
         },
         editExam(exam) {
@@ -3046,7 +3182,7 @@ const app = createApp({
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     if (examDate > today) {
-                        alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                        window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
                         return;
                     }
                 }
@@ -3061,30 +3197,30 @@ const app = createApp({
                     status: this.examEditForm.status
                 });
                 if (res.success) {
-                    alert('Prüfung erfolgreich aktualisiert!');
+                    window.notify.alert('Prüfung erfolgreich aktualisiert!');
                     this.showExamEditModal = false;
                     await this.loadExams();
                 } else {
-                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannter Fehler'));
+                    window.notify.alert('Fehler beim Speichern: ' + (res.error || 'Unbekannter Fehler'));
                 }
             } catch (e) {
                 console.error('Update exam error:', e);
-                alert('Fehler beim Speichern der Prüfung');
+                window.notify.alert('Fehler beim Speichern der Prüfung');
             }
         },
         async deleteExam(exam) {
-            const ok = await notify.confirm('Diesen Prüfungseintrag wirklich löschen?');
+            const ok = await window.notify.confirm('Diesen Prüfungseintrag wirklich löschen?');
             if (!ok) return;
             try {
                 const res = await apiService.deleteExam(exam.id);
                 if (res.success) {
                     this.exams = this.exams.filter(e => e.id !== exam.id);
                 } else {
-                    alert('Fehler beim Löschen');
+                    window.notify.alert('Fehler beim Löschen');
                 }
             } catch (e) {
                 console.error('Delete exam error:', e);
-                alert('Fehler beim Löschen');
+                window.notify.alert('Fehler beim Löschen');
             }
         },
         // Deutsches Datum (31.12.2025) zu ISO (2025-12-31) konvertieren
@@ -3193,13 +3329,13 @@ const app = createApp({
                     this.selectedTemplateId = null;
                     this.goalTargetDate = '';
                     await this.loadGoals();
-                    notify.alert('Ziel erfolgreich gestartet!');
+                    window.notify.alert('Ziel erfolgreich gestartet!');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Assign goal error:', error);
-                notify.alert('Fehler beim Starten des Ziels');
+                window.notify.alert('Fehler beim Starten des Ziels');
             }
         },
         
@@ -3212,7 +3348,7 @@ const app = createApp({
                 this.showGoalDetailsModal = true;
             } catch (error) {
                 console.error('Load goal progress error:', error);
-                notify.alert('Fehler beim Laden der Unterziele');
+                window.notify.alert('Fehler beim Laden der Unterziele');
             }
         },
         
@@ -3230,75 +3366,75 @@ const app = createApp({
                     
                     // Prüfen ob Ziel jetzt abgeschlossen ist
                     if (res.goalCompleted) {
-                        notify.alert('Glückwunsch! Ziel erreicht! 🎉');
+                        window.notify.alert('Glückwunsch! Ziel erreicht! 🎉');
                         this.showGoalDetailsModal = false;
                     }
                     
                     // Ziele-Liste neu laden
                     await this.loadGoals();
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Toggle subtask error:', error);
-                notify.alert('Fehler beim Aktualisieren');
+                window.notify.alert('Fehler beim Aktualisieren');
             }
         },
         
         // Ziel abbrechen
         async cancelGoal(goal) {
-            const ok = await notify.confirm('Dieses Ziel wirklich abbrechen?');
+            const ok = await window.notify.confirm('Dieses Ziel wirklich abbrechen?');
             if (!ok) return;
             
             try {
                 const res = await apiService.cancelGoal(goal.id);
                 if (res.success) {
                     await this.loadGoals();
-                    notify.alert('Ziel abgebrochen');
+                    window.notify.alert('Ziel abgebrochen');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Cancel goal error:', error);
-                notify.alert('Fehler beim Abbrechen des Ziels');
+                window.notify.alert('Fehler beim Abbrechen des Ziels');
             }
         },
         
         // Ziel wiederaufnehmen
         async resumeGoal(goal) {
-            const ok = await notify.confirm('Dieses Ziel wirklich wiederaufnehmen?');
+            const ok = await window.notify.confirm('Dieses Ziel wirklich wiederaufnehmen?');
             if (!ok) return;
             
             try {
                 const res = await apiService.resumeGoal(goal.id);
                 if (res.success) {
                     await this.loadGoals();
-                    notify.alert('Ziel wiederaufgenommen');
+                    window.notify.alert('Ziel wiederaufgenommen');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Resume goal error:', error);
-                notify.alert('Fehler beim Wiederaufnehmen des Ziels');
+                window.notify.alert('Fehler beim Wiederaufnehmen des Ziels');
             }
         },
         
         // Ziel löschen
         async deleteGoal(goal) {
-            const ok = await notify.confirm('Dieses Ziel wirklich löschen? Dies kann nicht rückgängig gemacht werden.');
+            const ok = await window.notify.confirm('Dieses Ziel wirklich löschen? Dies kann nicht rückgängig gemacht werden.');
             if (!ok) return;
             
             try {
                 const res = await apiService.deleteGoal(goal.id);
                 if (res.success) {
                     this.goals = this.goals.filter(g => g.id !== goal.id);
-                    notify.alert('Ziel gelöscht');
+                    window.notify.alert('Ziel gelöscht');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Delete goal error:', error);
-                notify.alert('Fehler beim Löschen des Ziels');
+                window.notify.alert('Fehler beim Löschen des Ziels');
             }
         },
         
@@ -3585,7 +3721,7 @@ const app = createApp({
             const key = (user._newPasskey || '').trim();
             if (!key) return;
             const current = Array.isArray(user.passkeys) ? user.passkeys : [];
-            if (current.includes(key)) return alert('Passkey existiert bereits.');
+            if (current.includes(key)) return window.notify.alert('Passkey existiert bereits.');
             user.passkeys = [...current, key];
             user._newPasskey = '';
         },
@@ -3611,7 +3747,7 @@ const app = createApp({
         },
         async changeUserPassword(user) {
             if (!user._newPassword || user._newPassword.length < 3) {
-                alert('Passwort muss mindestens 3 Zeichen lang sein');
+                window.notify.alert('Passwort muss mindestens 3 Zeichen lang sein');
                 return;
             }
             
@@ -3627,11 +3763,11 @@ const app = createApp({
                         user._passwordChanged = false;
                     }, 3000);
                 } else {
-                    alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
                 }
             } catch (e) {
                 console.error('Change password error:', e);
-                alert('Fehler beim Ändern des Passworts');
+                window.notify.alert('Fehler beim Ändern des Passworts');
             }
         },
         
@@ -3647,24 +3783,24 @@ const app = createApp({
                     };
                     // LocalStorage aktualisieren
                     persistAuthState(this.currentUser);
-                    await notify.alert('Profil erfolgreich gespeichert!');
+                    await window.notify.alert('Profil erfolgreich gespeichert!');
                 } else {
-                    await notify.alert('Fehler: ' + (res.error || 'Profil konnte nicht gespeichert werden'));
+                    await window.notify.alert('Fehler: ' + (res.error || 'Profil konnte nicht gespeichert werden'));
                 }
             } catch (e) {
                 console.error('Save profile error:', e);
-                await notify.alert('Fehler beim Speichern des Profils');
+                await window.notify.alert('Fehler beim Speichern des Profils');
             }
         },
         
         // Eigenes Passwort ändern
         async changePassword() {
             if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-                await notify.alert('Die Passwörter stimmen nicht überein');
+                await window.notify.alert('Die Passwörter stimmen nicht überein');
                 return;
             }
             if (this.passwordForm.newPassword.length < 4) {
-                await notify.alert('Das neue Passwort muss mindestens 4 Zeichen lang sein');
+                await window.notify.alert('Das neue Passwort muss mindestens 4 Zeichen lang sein');
                 return;
             }
             
@@ -3680,13 +3816,13 @@ const app = createApp({
                         newPassword: '',
                         confirmPassword: ''
                     };
-                    await notify.alert('Passwort erfolgreich geändert!');
+                    await window.notify.alert('Passwort erfolgreich geändert!');
                 } else {
-                    await notify.alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
+                    await window.notify.alert('Fehler: ' + (res.error || 'Passwort konnte nicht geändert werden'));
                 }
             } catch (e) {
                 console.error('Change password error:', e);
-                await notify.alert('Fehler beim Ändern des Passworts');
+                await window.notify.alert('Fehler beim Ändern des Passworts');
             }
         },
         
@@ -3701,9 +3837,10 @@ const app = createApp({
                 case 'exams':
                     await this.loadExams();
                     await this.loadGrades();
-                    // Nur für Admin/Trainer Users laden (für Schüler nicht nötig)
+                    // Nur für Admin/Trainer Users und Gruppen laden (für Schüler-Zuweisung)
                     if (this.currentUser && (this.currentUser.role === 'admin' || this.currentUser.role === 'trainer')) {
                         await this.loadUsers();
+                        await this.loadGroups();
                     }
                     break;
                 case 'goals':
@@ -3735,6 +3872,7 @@ const app = createApp({
                     await this.loadGroups();
                     await this.loadGoalTemplates();
                     await this.loadGrades();
+                    await this.loadCertificateSettings();
                     break;
                 case 'profile':
                     // Profil-Daten frisch aus der Datenbank laden
@@ -3816,8 +3954,8 @@ const app = createApp({
             const name = (this.groupForm.name || '').trim();
             const description = (this.groupForm.description || '').trim();
             const ids = Array.from(new Set(this.groupForm.userIds));
-            if (!name) return alert('Bitte einen Gruppennamen angeben.');
-            if (!ids.length) return alert('Mindestens einen Schüler auswählen.');
+            if (!name) return window.notify.alert('Bitte einen Gruppennamen angeben.');
+            if (!ids.length) return window.notify.alert('Mindestens einen Schüler auswählen.');
             
             try {
                 const response = await apiService.addGroup({
@@ -3829,11 +3967,11 @@ const app = createApp({
                     await this.loadGroups();
                     this.resetGroupForm();
                 } else {
-                    alert(response.error || 'Fehler beim Erstellen');
+                    window.notify.alert(response.error || 'Fehler beim Erstellen');
                 }
             } catch (e) {
                 console.error('Save group error:', e);
-                alert('Fehler beim Speichern der Gruppe');
+                window.notify.alert('Fehler beim Speichern der Gruppe');
             }
         },
         resetGroupForm() {
@@ -3903,7 +4041,7 @@ const app = createApp({
         async saveGroupEdit() {
             const name = (this.groupEditForm.name || '').trim();
             if (!name) {
-                alert('Bitte einen Gruppennamen angeben.');
+                window.notify.alert('Bitte einen Gruppennamen angeben.');
                 return;
             }
             
@@ -3920,15 +4058,15 @@ const app = createApp({
                     await this.loadGroups();
                     this.closeGroupEditModal();
                 } else {
-                    alert(response.error || 'Fehler beim Speichern');
+                    window.notify.alert(response.error || 'Fehler beim Speichern');
                 }
             } catch (e) {
                 console.error('Save group error:', e);
-                alert('Fehler beim Speichern der Gruppe');
+                window.notify.alert('Fehler beim Speichern der Gruppe');
             }
         },
         async removeGroup(grp) {
-            const ok = await notify.confirm('Gruppe löschen?');
+            const ok = await window.notify.confirm('Gruppe löschen?');
             if (!ok) return;
             
             try {
@@ -3936,11 +4074,11 @@ const app = createApp({
                 if (response.success) {
                     await this.loadGroups();
                 } else {
-                    alert(response.error || 'Fehler beim Löschen');
+                    window.notify.alert(response.error || 'Fehler beim Löschen');
                 }
             } catch (e) {
                 console.error('Delete group error:', e);
-                alert('Fehler beim Löschen der Gruppe');
+                window.notify.alert('Fehler beim Löschen der Gruppe');
             }
         },
         // Certificate Presets
@@ -3963,7 +4101,7 @@ const app = createApp({
             this.savePresets();
         },
         async removeCertificatePreset(preset) {
-            const ok = await notify.confirm('Preset löschen?');
+            const ok = await window.notify.confirm('Preset löschen?');
             if (!ok) return;
             this.certificatePresets = this.certificatePresets.filter(x => x.id !== preset.id);
             this.savePresets();
@@ -4019,31 +4157,31 @@ const app = createApp({
                 if (res.success) {
                     this.resetGradeForm();
                     await this.loadGrades();
-                    notify.alert(id ? 'Grad aktualisiert' : 'Grad erstellt');
+                    window.notify.alert(id ? 'Grad aktualisiert' : 'Grad erstellt');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Save grade error:', error);
-                notify.alert('Fehler beim Speichern des Grads');
+                window.notify.alert('Fehler beim Speichern des Grads');
             }
         },
         
         async deleteGrade(grade) {
-            const ok = await notify.confirm('Diesen Grad wirklich löschen?');
+            const ok = await window.notify.confirm('Diesen Grad wirklich löschen?');
             if (!ok) return;
             
             try {
                 const res = await apiService.deleteGrade(grade.id);
                 if (res.success) {
                     await this.loadGrades();
-                    notify.alert('Grad gelöscht');
+                    window.notify.alert('Grad gelöscht');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Delete grade error:', error);
-                notify.alert('Fehler beim Löschen des Grads');
+                window.notify.alert('Fehler beim Löschen des Grads');
             }
         },
         
@@ -4086,13 +4224,13 @@ const app = createApp({
                 if (res.success) {
                     this.resetGoalTemplateForm();
                     await this.loadGoalTemplates();
-                    notify.alert(id ? 'Ziel-Vorlage aktualisiert!' : 'Ziel-Vorlage erstellt!');
+                    window.notify.alert(id ? 'Ziel-Vorlage aktualisiert!' : 'Ziel-Vorlage erstellt!');
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (error) {
                 console.error('Save goal template error:', error);
-                notify.alert('Fehler beim Speichern');
+                window.notify.alert('Fehler beim Speichern');
             }
         },
         
@@ -4111,29 +4249,34 @@ const app = createApp({
                     // Scroll zum Formular
                     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
                 } else {
-                    notify.alert('Fehler beim Laden der Vorlage');
+                    window.notify.alert('Fehler beim Laden der Vorlage');
                 }
             } catch (error) {
                 console.error('Edit goal template error:', error);
-                notify.alert('Fehler beim Laden');
+                window.notify.alert('Fehler beim Laden');
             }
         },
         
         async deleteGoalTemplate(template) {
-            const ok = await notify.confirm(`Ziel-Vorlage "${template.title}" wirklich löschen?`);
+            const ok = await window.notify.confirm(`Ziel-Vorlage "${template.title}" wirklich löschen?\n\nHinweis: Vorlagen können nur gelöscht werden, wenn sie nicht mehr von Schülern verwendet werden.`);
             if (!ok) return;
             
             try {
                 const res = await apiService.deleteGoalTemplate(template.id);
                 if (res.success) {
-                    notify.alert('Ziel-Vorlage gelöscht!');
+                    window.notify.alert('Ziel-Vorlage gelöscht!');
                     await this.loadGoalTemplates();
                 } else {
-                    notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    // Bessere Fehlermeldung für "wird noch verwendet"
+                    if (res.error && res.error.includes('verwendet')) {
+                        window.notify.alert('Diese Vorlage kann nicht gelöscht werden, da sie noch von Schülern verwendet wird. Bitte beenden Sie zuerst alle zugewiesenen Ziele.');
+                    } else {
+                        window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    }
                 }
             } catch (error) {
                 console.error('Delete goal template error:', error);
-                notify.alert('Fehler beim Löschen');
+                window.notify.alert('Fehler beim Löschen');
             }
         },
         
@@ -4162,7 +4305,7 @@ const app = createApp({
                 
                 const res = await apiService.addCourse(courseData);
                 if (res.success) {
-                    alert('Kurs erstellt.');
+                    window.notify.alert('Kurs erstellt.');
                     this.courseForm = { 
                         title: '', date: '', instructor: '', duration: '', 
                         max_participants: 20, price: '', description: '', 
@@ -4171,11 +4314,11 @@ const app = createApp({
                     };
                     await this.loadCourses();
                 } else {
-                    alert('Fehler: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
                 }
             } catch (e) {
                 console.error('Add course error:', e);
-                alert('Kurs konnte nicht erstellt werden.');
+                window.notify.alert('Kurs konnte nicht erstellt werden.');
             }
         },
         editCourse(course) {
@@ -4214,15 +4357,15 @@ const app = createApp({
                     this.showCourseEditModal = false;
                     await this.loadCourses();
                 } else {
-                    alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
                 }
             } catch (e) {
                 console.error('Update course error:', e);
-                alert('Kurs konnte nicht aktualisiert werden.');
+                window.notify.alert('Kurs konnte nicht aktualisiert werden.');
             }
         },
         async removeCourse(course) {
-            const ok = await notify.confirm('Diesen Kurs wirklich löschen?');
+            const ok = await window.notify.confirm('Diesen Kurs wirklich löschen?');
             if (!ok) return;
             const res = await apiService.deleteCourse(course.id);
             if (res.success) {
@@ -4266,18 +4409,18 @@ const app = createApp({
                     // Kursliste aktualisieren für korrekte Teilnehmerzahl
                     await this.loadCourses();
                 } else {
-                    alert(res.error || 'Fehler beim Hinzufügen');
+                    window.notify.alert(res.error || 'Fehler beim Hinzufügen');
                 }
             } catch (e) {
                 console.error('Add participant error:', e);
-                alert('Fehler beim Hinzufügen des Teilnehmers');
+                window.notify.alert('Fehler beim Hinzufügen des Teilnehmers');
             }
         },
         
         async addGroupToCourse(group) {
             if (!this.participantsModalCourse) return;
             if (!group.memberIds || group.memberIds.length === 0) {
-                alert('Diese Gruppe hat keine Mitglieder');
+                window.notify.alert('Diese Gruppe hat keine Mitglieder');
                 return;
             }
             
@@ -4287,7 +4430,7 @@ const app = createApp({
             const newMemberIds = group.memberIds.filter(id => !currentIds.includes(id));
             
             if (newMemberIds.length === 0) {
-                alert('Alle Mitglieder dieser Gruppe sind bereits im Kurs');
+                window.notify.alert('Alle Mitglieder dieser Gruppe sind bereits im Kurs');
                 return;
             }
             
@@ -4316,15 +4459,15 @@ const app = createApp({
             await this.loadCourses();
             
             if (failed > 0) {
-                alert(`${added} Mitglieder hinzugefügt, ${failed} fehlgeschlagen (evtl. bereits angemeldet oder Kurs voll)`);
+                window.notify.alert(`${added} Mitglieder hinzugefügt, ${failed} fehlgeschlagen (evtl. bereits angemeldet oder Kurs voll)`);
             } else {
-                await notify.alert(`${added} Mitglieder aus "${group.name}" hinzugefügt`);
+                await window.notify.alert(`${added} Mitglieder aus "${group.name}" hinzugefügt`);
             }
         },
         
         async removeParticipantFromCourse(userId) {
             if (!this.participantsModalCourse) return;
-            const ok = await notify.confirm('Teilnehmer wirklich entfernen?');
+            const ok = await window.notify.confirm('Teilnehmer wirklich entfernen?');
             if (!ok) return;
             try {
                 const res = await apiService.removeCourseParticipant(this.participantsModalCourse.id, userId);
@@ -4334,11 +4477,11 @@ const app = createApp({
                     // Kursliste aktualisieren für korrekte Teilnehmerzahl
                     await this.loadCourses();
                 } else {
-                    alert(res.error || 'Fehler beim Entfernen');
+                    window.notify.alert(res.error || 'Fehler beim Entfernen');
                 }
             } catch (e) {
                 console.error('Remove participant error:', e);
-                alert('Fehler beim Entfernen des Teilnehmers');
+                window.notify.alert('Fehler beim Entfernen des Teilnehmers');
             }
         },
         
@@ -4360,32 +4503,32 @@ const app = createApp({
             try {
                 const res = await apiService.bookCourse(course.id);
                 if (res.success) {
-                    alert('Erfolgreich angemeldet!');
+                    window.notify.alert('Erfolgreich angemeldet!');
                     await this.loadCourses();
                 } else {
-                    alert('Anmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Anmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
                 }
             } catch (e) {
                 console.error('Book course error:', e);
-                alert('Anmeldung fehlgeschlagen.');
+                window.notify.alert('Anmeldung fehlgeschlagen.');
             }
         },
         
         // Schüler: Von Kurs abmelden
         async cancelBooking(course) {
-            const ok = await notify.confirm('Wirklich vom Kurs abmelden?');
+            const ok = await window.notify.confirm('Wirklich vom Kurs abmelden?');
             if (!ok) return;
             try {
                 const res = await apiService.cancelCourseBooking(course.id);
                 if (res.success) {
-                    alert('Erfolgreich abgemeldet.');
+                    window.notify.alert('Erfolgreich abgemeldet.');
                     await this.loadCourses();
                 } else {
-                    alert('Abmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
+                    window.notify.alert('Abmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
                 }
             } catch (e) {
                 console.error('Cancel booking error:', e);
-                alert('Abmeldung fehlgeschlagen.');
+                window.notify.alert('Abmeldung fehlgeschlagen.');
             }
         },
         

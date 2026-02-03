@@ -1,106 +1,118 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FightLog - Kampfsporterfolge digital erfassen</title>
-    
+
     <!-- Vue.js CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
-        (function(){
-            if (!window._notifyQueue) window._notifyQueue = [];
-            const _nativeAlert = window.alert;
-            window.alert = function(msg){
-                try { window._notifyQueue.push(msg); } catch(e){ _nativeAlert(msg); }
-            };
-        })();
+      (function () {
+        if (!window._notifyQueue) window._notifyQueue = [];
+        const _nativeAlert = window.alert;
+        window.alert = function (msg) {
+          try {
+            window._notifyQueue.push(msg);
+          } catch (e) {
+            _nativeAlert(msg);
+          }
+        };
+      })();
     </script>
     <script>
-        // Fallback für Vue.js
-        if (typeof Vue === 'undefined') {
-            console.error('Vue.js konnte nicht geladen werden');
-            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>FightLog</h1><p>Vue.js konnte nicht geladen werden. Bitte überprüfe deine Internetverbindung.</p></div>';
-        }
+      // Fallback für Vue.js
+      if (typeof Vue === "undefined") {
+        console.error("Vue.js konnte nicht geladen werden");
+        document.body.innerHTML =
+          '<div style="padding: 20px; text-align: center;"><h1>FightLog</h1><p>Vue.js konnte nicht geladen werden. Bitte überprüfe deine Internetverbindung.</p></div>';
+      }
     </script>
-    
+
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- CSS -->
-    <link rel="stylesheet" href="./styles/main.css?v=20250129">
-    
+    <link rel="stylesheet" href="./styles/main.css?v=20250129" />
+
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <!-- Passkey Manager -->
     <script src="./src/services/passkey.service.js"></script>
-    <script src="./src/services/notify.service.js"></script>
+    <script src="./src/services/notify.service.js?v=20260203090913"></script>
     <script src="./src/utils/custom-select.js"></script>
     <script src="./src/utils/custom-datepicker.js"></script>
     <script src="./src/utils/form-validation.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div id="app">
-        <!-- Hauptanwendung wird hier gerendert -->
+      <!-- Hauptanwendung wird hier gerendert -->
     </div>
-    
+
     <!-- JavaScript -->
     <script>
-        // Prüfe ob Benutzer bereits authentifiziert ist; ansonsten immer zur Login-Startseite
-        function checkAuthentication() {
-            const isAuthenticated = localStorage.getItem('fightlog_authenticated');
+      // Prüfe ob Benutzer bereits authentifiziert ist; ansonsten immer zur Login-Startseite
+      function checkAuthentication() {
+        const isAuthenticated = localStorage.getItem("fightlog_authenticated");
 
-            if (!isAuthenticated) {
-                window.location.href = 'simple.html?v=' + Date.now();
-                return;
-            }
+        if (!isAuthenticated) {
+          window.location.href = "simple.html?v=" + Date.now();
+          return;
+        }
 
-            // Authentifiziert → Hauptanwendung laden
-            loadMainApp();
-        }
-        
-        // Passkey-Auto-Login wird nicht mehr von index.html erzwungen
-        
-        // Lade die Hauptanwendung
-        function loadMainApp() {
-            // Cache-busting to ensure the browser loads the latest main.js after route changes
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = './main.js?v=' + Date.now();
-            document.body.appendChild(script);
-        }
-        
-        // Starte Authentifizierungsprüfung
-        checkAuthentication();
+        // Authentifiziert → Hauptanwendung laden
+        loadMainApp();
+      }
+
+      // Passkey-Auto-Login wird nicht mehr von index.html erzwungen
+
+      // Lade die Hauptanwendung
+      function loadMainApp() {
+        // Cache-busting to ensure the browser loads the latest main.js after route changes
+        const script = document.createElement("script");
+        script.type = "module";
+        script.src = "./main.js?v=" + Date.now();
+        document.body.appendChild(script);
+      }
+
+      // Starte Authentifizierungsprüfung
+      checkAuthentication();
     </script>
-    
+
     <script>
-        // Page-Transition Overlay beim Laden einrichten und ausblenden
-        (function(){
-            const overlay = document.createElement('div');
-            overlay.id = 'page-transition';
-            overlay.className = 'page-transition show';
-            document.addEventListener('DOMContentLoaded', function(){
-                document.body.appendChild(overlay);
-                // kleinem Timeout, damit CSS greift, dann ausblenden
-                setTimeout(()=> overlay.classList.remove('show'), 40);
-            });
-            // Globale Helferfunktion für Navigations-Übergänge
-            window.navigateWithTransition = function(url){
-                try {
-                    const el = document.getElementById('page-transition') || overlay;
-                    if (!el.isConnected) document.body.appendChild(el);
-                    el.classList.add('show');
-                    setTimeout(()=> { window.location.href = url; }, 280);
-                } catch (e) {
-                    window.location.href = url;
-                }
-            };
-        })();
+      // Page-Transition Overlay beim Laden einrichten und ausblenden
+      (function () {
+        const overlay = document.createElement("div");
+        overlay.id = "page-transition";
+        overlay.className = "page-transition show";
+        document.addEventListener("DOMContentLoaded", function () {
+          document.body.appendChild(overlay);
+          // kleinem Timeout, damit CSS greift, dann ausblenden
+          setTimeout(() => overlay.classList.remove("show"), 40);
+        });
+        // Globale Helferfunktion für Navigations-Übergänge
+        window.navigateWithTransition = function (url) {
+          try {
+            const el = document.getElementById("page-transition") || overlay;
+            if (!el.isConnected) document.body.appendChild(el);
+            el.classList.add("show");
+            setTimeout(() => {
+              window.location.href = url;
+            }, 280);
+          } catch (e) {
+            window.location.href = url;
+          }
+        };
+      })();
     </script>
-</body>
-</html> 
+  </body>
+</html>

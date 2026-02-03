@@ -70,9 +70,13 @@ if ($method === 'POST') {
     $body = read_json_body();
     $action = isset($body['action']) ? $body['action'] : 'create';
     
-    // Einstellungen speichern (nur Admin)
+    // Einstellungen speichern (nur Admin/Trainer)
     if ($action === 'saveSettings') {
-        require_permission($mysqli, 'manage_settings');
+        // Prüfe ob Admin oder Trainer
+        $userRole = auth_user_role($mysqli);
+        if ($userRole !== 'admin' && $userRole !== 'trainer') {
+            json_error('Keine Berechtigung', 403);
+        }
         
         $settings = isset($body['settings']) ? $body['settings'] : [];
         foreach ($settings as $key => $value) {

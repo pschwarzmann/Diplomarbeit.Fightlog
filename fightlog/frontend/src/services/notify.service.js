@@ -65,7 +65,15 @@
 
         confirm(message){
             return new Promise(resolve=>{
-                const { overlay, box } = createModal(`\n+                    <div class=\"notify-content\">\n+                        <div class=\"notify-message\">${escapeHtml(String(message)).replace(/\n/g,'<br>')}</div>\n+                        <div class=\"notify-actions\">\n+                            <button class=\"notify-btn\" data-val=\"false\">Abbrechen</button>\n+                            <button class=\"notify-btn notify-btn-primary\" data-val=\"true\">OK</button>\n+                        </div>\n+                    </div>\n+                `);
+                const { overlay, box } = createModal(`
+                    <div class="notify-content">
+                        <div class="notify-message">${escapeHtml(String(message)).replace(/\n/g,'<br>')}</div>
+                        <div class="notify-actions">
+                            <button class="notify-btn" data-val="false">Abbrechen</button>
+                            <button class="notify-btn notify-btn-primary" data-val="true">OK</button>
+                        </div>
+                    </div>
+                `);
 
                 const buttons = box.querySelectorAll('.notify-btn');
                 buttons.forEach(btn=> btn.addEventListener('click', (e)=>{
@@ -78,7 +86,16 @@
 
         prompt(message, defaultValue=''){
             return new Promise(resolve=>{
-                const { overlay, box } = createModal(`\n+                    <div class=\"notify-content\">\n+                        <div class=\"notify-message\">${escapeHtml(String(message)).replace(/\n/g,'<br>')}</div>\n+                        <div style=\"margin:12px 20px;\"><input class=\"notify-input\" value=\"${escapeHtml(String(defaultValue))}\"></div>\n+                        <div class=\"notify-actions\">\n+                            <button class=\"notify-btn\" data-val=\"null\">Abbrechen</button>\n+                            <button class=\"notify-btn notify-btn-primary\" data-val=\"ok\">OK</button>\n+                        </div>\n+                    </div>\n+                `);
+                const { overlay, box } = createModal(`
+                    <div class="notify-content">
+                        <div class="notify-message">${escapeHtml(String(message)).replace(/\n/g,'<br>')}</div>
+                        <div style="margin:12px 20px;"><input class="notify-input" value="${escapeHtml(String(defaultValue))}"></div>
+                        <div class="notify-actions">
+                            <button class="notify-btn" data-val="null">Abbrechen</button>
+                            <button class="notify-btn notify-btn-primary" data-val="ok">OK</button>
+                        </div>
+                    </div>
+                `);
 
                 const input = box.querySelector('.notify-input');
                 input.select();

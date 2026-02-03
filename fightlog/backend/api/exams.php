@@ -167,6 +167,13 @@ if ($method === 'DELETE') {
     
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
+    
+    // Zuerst zugehörige Urkunden löschen (FK-Constraint)
+    $delCertStmt = $mysqli->prepare("DELETE FROM certificates WHERE exam_id = ?");
+    $delCertStmt->bind_param('i', $b['id']);
+    $delCertStmt->execute();
+    
+    // Dann Prüfung löschen
     $stmt = $mysqli->prepare("DELETE FROM exams WHERE id=?");
     $stmt->bind_param('i', $b['id']);
     if (!$stmt->execute()) json_error('Löschen fehlgeschlagen: '.$stmt->error, 500);

@@ -140,6 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete') {
         require_permission($mysqli, 'delete_courses');
         require_fields($body, ['id']);
+        
+        // Zuerst Buchungen löschen (FK-Constraint)
+        $delBookings = $mysqli->prepare("DELETE FROM course_bookings WHERE course_id = ?");
+        $delBookings->bind_param('i', $body['id']);
+        $delBookings->execute();
+        
+        // Dann Kurs löschen
         $stmt = $mysqli->prepare("DELETE FROM courses WHERE id = ?");
         $stmt->bind_param('i', $body['id']);
         if (!$stmt->execute()) {
