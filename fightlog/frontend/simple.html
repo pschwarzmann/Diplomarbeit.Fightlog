@@ -1345,15 +1345,15 @@
               await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
               navigateWithFade("index.html");
             } else {
-              // Allgemeine Fehlermeldung (keine Account-Enumeration)
+              // Fehlermeldung vom Server anzeigen (inkl. Rate-Limiting)
               await notify.alert(
-                "Login-Daten ungültig. Bitte überprüfen Sie Ihre Eingaben.",
+                data.error || "Login fehlgeschlagen. Bitte überprüfen Sie Ihre Eingaben.",
               );
             }
           } catch (error) {
             console.error("Login error:", error);
             await notify.alert(
-              "Fehler beim Anmelden. Bitte versuchen Sie es erneut.",
+              "Verbindungsfehler. Bitte versuchen Sie es später erneut.",
             );
           } finally {
             submitBtn.disabled = false;

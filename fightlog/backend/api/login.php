@@ -26,8 +26,20 @@ if (empty($identifier)) {
     json_out(['success'=>false, 'error'=>'Login-Daten ungültig'], 401);
 }
 
+// Rate-Limiting prüfen
+if (!Security::checkLoginRateLimit($identifier, $mysqli)) {
+    $remaining = Security::getRemainingLockoutTime($identifier, $mysqli);
+    $minutes = ceil($remaining / 60);
+    json_out([
+        'success' => false, 
+        'error' => "Zu viele Login-Versuche. Bitte warte {$minutes} Minute(n).",
+        'lockout_seconds' => $remaining
+    ], 429);
+}
+
 // Passwort darf nicht leer sein, aber auch nicht getrimmt werden
 if ($password === '' || $password === null) {
+    Security::logLoginAttempt($identifier, false, $mysqli);
     json_out(['success'=>false, 'error'=>'Login-Daten ungültig'], 401);
 }
 
@@ -59,12 +71,16 @@ $res = $stmt->get_result();
 $user = $res->fetch_assoc();
 
 if (!$user) {
+    // Login-Versuch protokollieren (fehlgeschlagen)
+    Security::logLoginAttempt($identifier, false, $mysqli);
     // Allgemeine Fehlermeldung (keine Account-Enumeration)
     json_out(['success'=>false, 'error'=>'Login-Daten ungültig'], 401);
 }
 
 // Prüfe ob password_hash Feld existiert und nicht leer ist
 if (empty($user['password_hash']) || !is_string($user['password_hash']) || strlen($user['password_hash']) < 10) {
+    // Login-Versuch protokollieren (fehlgeschlagen)
+    Security::logLoginAttempt($identifier, false, $mysqli);
     // Hash-Feld ist leer oder ungültig
     json_out(['success'=>false, 'error'=>'Login-Daten ungültig'], 401);
 }
@@ -75,9 +91,14 @@ if (empty($user['password_hash']) || !is_string($user['password_hash']) || strle
 $passwordVerified = password_verify($password, $user['password_hash']);
 
 if (!$passwordVerified) {
+    // Login-Versuch protokollieren (fehlgeschlagen)
+    Security::logLoginAttempt($identifier, false, $mysqli);
     // Allgemeine Fehlermeldung (keine Account-Enumeration)
     json_out(['success'=>false, 'error'=>'Login-Daten ungültig'], 401);
 }
+
+// Login-Versuch protokollieren (erfolgreich)
+Security::logLoginAttempt($identifier, true, $mysqli);
 
 // Hash-Upgrade: NUR wenn ALLE Bedingungen erfüllt sind:
 // 1. password_verify === true (ist bereits sichergestellt durch obigen Check)

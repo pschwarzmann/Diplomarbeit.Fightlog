@@ -100,14 +100,6 @@ export const apiService = {
         });
     },
 
-    uploadCertificate(certificateData) {
-        return request('/upload.php', {
-            method: 'POST',
-            headers: jsonHeaders,
-            body: JSON.stringify(certificateData)
-        });
-    },
-
     getCertificates() {
         return request('/certificates.php');
     },

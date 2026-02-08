@@ -14,18 +14,21 @@ if (ob_get_level() === 0) {
     ob_start();
 }
 
+require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../utils/response.php';
 require_once __DIR__ . '/../utils/request.php';
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../services/PermissionService.php';
 
+// Umgebungsvariablen laden
+Env::load();
+
 // JSON-Header setzen (muss vor jedem Output sein)
 if (!headers_sent()) {
     header('Content-Type: application/json; charset=utf-8');
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-User-ID, X-User-Role');
+    Security::setCorsHeaders();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -47,16 +50,18 @@ function db(): mysqli
 
 function auth_user_id(mysqli $mysqli): ?int
 {
-    // Zuerst echte Session prüfen
+    // Authentifizierung NUR über echte Session (Bearer Token)
     $sessionUserId = AuthService::getAuthenticatedUserId($mysqli);
     if ($sessionUserId) {
         return $sessionUserId;
     }
     
-    // Fallback: X-User-ID Header (für Demo/Entwicklung)
-    $headerUserId = $_SERVER['HTTP_X_USER_ID'] ?? null;
-    if ($headerUserId && is_numeric($headerUserId)) {
-        return (int)$headerUserId;
+    // In Entwicklungsmodus: Fallback auf X-User-ID Header erlauben
+    if (!Env::isProduction()) {
+        $headerUserId = $_SERVER['HTTP_X_USER_ID'] ?? null;
+        if ($headerUserId && is_numeric($headerUserId)) {
+            return (int)$headerUserId;
+        }
     }
     
     return null;
@@ -64,10 +69,12 @@ function auth_user_id(mysqli $mysqli): ?int
 
 function auth_user_role(mysqli $mysqli): ?string
 {
-    // Zuerst aus Header (für Demo)
-    $headerRole = $_SERVER['HTTP_X_USER_ROLE'] ?? null;
-    if ($headerRole) {
-        return $headerRole;
+    // In Entwicklungsmodus: Header akzeptieren
+    if (!Env::isProduction()) {
+        $headerRole = $_SERVER['HTTP_X_USER_ROLE'] ?? null;
+        if ($headerRole) {
+            return $headerRole;
+        }
     }
     
     // Sonst aus DB

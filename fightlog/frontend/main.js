@@ -2830,11 +2830,14 @@ const app = createApp({
                         phone: '' // Zurücksetzen des Telefonfelds
                     };
                 } else {
-                    await window.notify.alert(response.error || 'Login fehlgeschlagen');
+                    // Spezifische Fehlermeldungen vom Server anzeigen (inkl. Rate-Limiting)
+                    const errorMessage = response.error || 'Login fehlgeschlagen. Bitte überprüfe deine Anmeldedaten.';
+                    await window.notify.alert(errorMessage);
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                await window.notify.alert('Login fehlgeschlagen');
+                // Bei Netzwerkfehlern generische Meldung
+                await window.notify.alert('Verbindungsfehler. Bitte versuche es später erneut.');
             }
         },
         
@@ -2952,14 +2955,6 @@ const app = createApp({
              this.currentLanguage = 'de'; // Immer Deutsch
              persistLanguage('de');
          },
-        
-        // Datei-Upload entfernt
-        
-        // Urkunden
-        async uploadCertificate() {
-            // Diese Methode wird nicht mehr genutzt - Urkunden werden automatisch erstellt
-            console.log('uploadCertificate() ist veraltet - Urkunden werden automatisch bei bestandenen Prüfungen erstellt');
-        },
         
         async loadCertificates() {
             try {
@@ -4284,12 +4279,9 @@ const app = createApp({
             this.courseSearch = '';
         },
         async submitCourse() {
-            console.log('submitCourse called');
-            console.log('courseForm:', JSON.stringify(this.courseForm));
             try {
                 // Datum zu ISO-Format konvertieren
                 const isoDate = this.toISODate(this.courseForm.date);
-                console.log('Submitting course with date:', this.courseForm.date, '->', isoDate);
                 
                 // Schüler sind jetzt optional
                 const courseData = {
@@ -4350,7 +4342,6 @@ const app = createApp({
                     ...this.courseEditForm,
                     date: this.toISODate(this.courseEditForm.date)
                 };
-                console.log('Updating course with date:', this.courseEditForm.date, '->', updateData.date);
                 
                 const res = await apiService.updateCourse(updateData);
                 if (res.success) {

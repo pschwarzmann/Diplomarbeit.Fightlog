@@ -172,6 +172,46 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+-- Passkeys/WebAuthn Credentials Tabelle
+CREATE TABLE IF NOT EXISTS passkeys (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    credential_id VARCHAR(255) UNIQUE NOT NULL,
+    public_key TEXT NOT NULL,
+    sign_count INT UNSIGNED DEFAULT 0,
+    transports VARCHAR(100) NULL,
+    friendly_name VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_passkeys_user_id (user_id),
+    INDEX idx_passkeys_credential_id (credential_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Passkey Challenges (temporär für WebAuthn)
+CREATE TABLE IF NOT EXISTS passkey_challenges (
+    user_id INT NOT NULL,
+    challenge VARCHAR(255) NOT NULL,
+    type ENUM('register', 'authenticate') NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, type),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_challenges_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Login-Versuche für Rate-Limiting
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    identifier_hash VARCHAR(64) NOT NULL,
+    success TINYINT(1) NOT NULL DEFAULT 0,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_login_attempts_ip (ip_address),
+    INDEX idx_login_attempts_identifier (identifier_hash),
+    INDEX idx_login_attempts_time (attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Gruppen-Tabelle (für Schülergruppen)
 CREATE TABLE student_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
