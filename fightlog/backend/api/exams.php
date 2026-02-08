@@ -1,4 +1,5 @@
 <?php
+// Prüfungs-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 try {
@@ -22,7 +23,7 @@ if ($method === 'GET'){
     if (isset($_GET['userId']) && $_GET['userId'] !== '') {
         $userId = (int)$_GET['userId'];
         
-        // Berechtigungsprüfung: eigene oder fremde Daten?
+        // Berechtigungsprüfung
         if ($userId !== $viewerId && !has_permission($mysqli, 'view_all_exams')) {
             json_error('Keine Berechtigung für fremde Prüfungen', 403);
         }
@@ -168,7 +169,7 @@ if ($method === 'DELETE') {
     $b = body_json();
     if (empty($b['id'])) json_error('ID fehlt', 400);
     
-    // Zuerst zugehörige Urkunden löschen (FK-Constraint)
+    // Zuerst zugehörige Urkunden löschen
     $delCertStmt = $mysqli->prepare("DELETE FROM certificates WHERE exam_id = ?");
     $delCertStmt->bind_param('i', $b['id']);
     $delCertStmt->execute();

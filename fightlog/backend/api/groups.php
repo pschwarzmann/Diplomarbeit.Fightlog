@@ -1,8 +1,5 @@
 <?php
-/**
- * Gruppen API
- * Verwaltet Schülergruppen
- */
+ // Gruppen API
 
 require_once __DIR__ . '/../core/bootstrap.php';
 
@@ -67,12 +64,11 @@ function handleGet($mysqli, $userId, $userRole, $action) {
         json_out(['success' => true, 'members' => $members]);
     }
     
-    // Alle Gruppen abrufen (für Trainer/Admin)
+    // Alle Gruppen abrufen
     if ($userRole !== 'admin' && $userRole !== 'trainer') {
         json_out(['error' => 'Keine Berechtigung'], 403);
     }
     
-    // Admin sieht alle, Trainer nur eigene
     if ($userRole === 'admin') {
         $stmt = $mysqli->prepare("
             SELECT g.*, 
@@ -213,7 +209,7 @@ function handlePut($mysqli, $userId, $userRole) {
         json_out(['error' => 'Gruppenname ist erforderlich'], 400);
     }
     
-    // Berechtigung prüfen (nur eigene Gruppen oder Admin)
+    // Berechtigung prüfen
     if ($userRole !== 'admin') {
         $checkStmt = $mysqli->prepare("SELECT created_by FROM student_groups WHERE id = ?");
         $checkStmt->bind_param('i', $groupId);
@@ -291,7 +287,7 @@ function handleDelete($mysqli, $userId, $userRole) {
         }
     }
     
-    // Mitglieder und Gruppe löschen (CASCADE sollte das automatisch machen)
+    // Mitglieder und Gruppe löschen
     $stmt = $mysqli->prepare("DELETE FROM student_groups WHERE id = ?");
     $stmt->bind_param('i', $groupId);
     $stmt->execute();

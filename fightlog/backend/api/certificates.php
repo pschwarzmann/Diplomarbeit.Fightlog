@@ -1,6 +1,5 @@
 <?php
-// backend/api/certificates.php
-// Urkunden-API - Urkunden werden automatisch bei bestandenen Prüfungen erstellt
+// Urkunden-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 try {
@@ -65,12 +64,12 @@ if ($method === 'GET') {
     json_error('Keine Berechtigung', 403);
 }
 
-// POST: Manuelle Urkunde erstellen (nur Trainer/Admin)
+// POST: Manuelle Urkunde erstellen
 if ($method === 'POST') {
     $body = read_json_body();
     $action = isset($body['action']) ? $body['action'] : 'create';
     
-    // Einstellungen speichern (nur Admin/Trainer)
+    // Einstellungen speichern
     if ($action === 'saveSettings') {
         // Prüfe ob Admin oder Trainer
         $userRole = auth_user_role($mysqli);
@@ -124,7 +123,7 @@ if ($method === 'POST') {
     json_error('Unbekannte Aktion', 400);
 }
 
-// DELETE: Urkunde löschen (nur manuelle Urkunden, nur Admin)
+// DELETE: Urkunde löschen
 if ($method === 'DELETE') {
     require_permission($mysqli, 'delete_certificates');
     
@@ -139,7 +138,7 @@ if ($method === 'DELETE') {
     
     if (!$result) json_error('Urkunde nicht gefunden', 404);
     
-    // Automatische Urkunden können nicht gelöscht werden (nur durch Löschen der Prüfung)
+    // Automatische Urkunden können nicht gelöscht werden
     if (!$result['is_manual']) {
         json_error('Automatische Urkunden können nicht manuell gelöscht werden. Löschen Sie stattdessen die zugehörige Prüfung.', 400);
     }

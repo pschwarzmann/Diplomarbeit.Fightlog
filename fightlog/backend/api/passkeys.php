@@ -1,7 +1,5 @@
 <?php
-// backend/api/passkeys.php
-// WebAuthn/Passkey Management API
-// Alle Responses sind JSON (kein HTML, keine Redirects)
+// passkeys-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 $mysqli = db();
@@ -54,7 +52,6 @@ if ($method === 'POST') {
     
     if ($action === 'register') {
         // Challenge für Registration generieren
-        // Prüfe ob passkey_challenges-Tabelle existiert
         $challengesTableCheck = @$mysqli->query("SHOW TABLES LIKE 'passkey_challenges'");
         if (!$challengesTableCheck || $challengesTableCheck->num_rows === 0) {
             json_error('Passkey-System nicht verfügbar', 503);
@@ -88,7 +85,7 @@ if ($method === 'POST') {
             json_error('Benutzer nicht gefunden', 404);
         }
         
-        // RP-ID bestimmen (muss zur Domain passen)
+        // RP-ID bestimmen
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
         // Entferne Port falls vorhanden
         $host = preg_replace('/:\d+$/', '', $host);

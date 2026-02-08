@@ -1,6 +1,5 @@
 <?php
-// backend/api/register.php
-// Benutzer-Registrierung (nur für Admin verfügbar)
+// Register-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 $mysqli = db();
@@ -17,7 +16,7 @@ if (!$currentUserId) {
     json_out(['success'=>false, 'error'=>'Nicht authentifiziert'], 401);
 }
 
-// Berechtigungsprüfung: manage_users
+// Berechtigungsprüfung
 require_permission($mysqli, 'manage_users');
 
 // Prüfe, ob Username bereits existiert
@@ -29,7 +28,7 @@ if ($existing) {
     json_out(['success'=>false, 'error'=>'Benutzername oder E-Mail bereits vorhanden'], 400);
 }
 
-// Rolle aus Request (Standard: schueler)
+// Rolle aus Request
 $role = isset($body['role']) && in_array($body['role'], ['schueler', 'trainer', 'admin']) 
     ? $body['role'] 
     : 'schueler';
@@ -46,14 +45,11 @@ if (!filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
 }
 
 // Passwort sicher hashen
-// WICHTIG: Erwarte Klartext-Passwort vom Frontend, hashe genau einmal serverseitig
-// Prüfe dass Passwort nicht leer ist
 if (empty($body['password']) || $body['password'] === '') {
     json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
 }
 
-// Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
-// Bcrypt-Hashes beginnen mit $2y$, $2a$ oder $2b$
+// Prüfe dass Passwort nicht bereits ein Hash ist
 if (preg_match('/^\$2[ayb]\$/', $body['password'])) {
     json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
 }

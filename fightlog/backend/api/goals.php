@@ -1,6 +1,5 @@
 <?php
-// ===== FIGHTLOG - ZIELE API (NEU) =====
-// Neues System mit Templates und Unterzielen
+// Ziel-API
 
 require_once __DIR__ . '/../core/bootstrap.php';
 
@@ -9,9 +8,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $userId = auth_user_id($mysqli);
 $userRole = auth_user_role($mysqli);
 
-// =============================================
 // GET - Daten abrufen
-// =============================================
 if ($method === 'GET') {
     $action = isset($_GET['action']) ? $_GET['action'] : 'userGoals';
     
@@ -40,7 +37,7 @@ if ($method === 'GET') {
         json_out(['success' => true, 'subtasks' => $subtasks]);
     }
     
-    // ALLE Ziele aller User abrufen (nur Admin/Trainer)
+    // ALLE Ziele aller User abrufen
     if ($action === 'allGoals') {
         if ($userRole === 'schueler') {
             json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
@@ -85,7 +82,7 @@ if ($method === 'GET') {
     if ($action === 'userGoals') {
         $targetUserId = isset($_GET['userId']) ? (int)$_GET['userId'] : $userId;
         
-        // Berechtigungsprüfung: eigene oder fremde?
+        // Berechtigungsprüfung
         if ($targetUserId !== $userId && $userRole === 'schueler') {
             json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
         }
@@ -168,7 +165,7 @@ if ($method === 'GET') {
         json_out(['success' => true, 'categories' => $categories]);
     }
     
-    // Ein einzelnes Template mit Unterzielen abrufen (für Bearbeitung)
+    // Ein einzelnes Template mit Unterzielen abrufen
     if ($action === 'templateDetails') {
         $templateId = isset($_GET['templateId']) ? (int)$_GET['templateId'] : 0;
         if (!$templateId) json_out(['success' => false, 'error' => 'templateId erforderlich'], 400);
@@ -193,14 +190,10 @@ if ($method === 'GET') {
     json_out(['success' => false, 'error' => 'Unbekannte Aktion'], 400);
 }
 
-// =============================================
 // POST - Ziel zuweisen / Fortschritt speichern / Templates verwalten
-// =============================================
 if ($method === 'POST') {
     $body = read_json_body();
     $action = isset($body['action']) ? $body['action'] : '';
-    
-    // ========== TEMPLATE CRUD (nur Admin/Trainer) ==========
     
     // Neues Template erstellen
     if ($action === 'createTemplate') {
@@ -321,9 +314,7 @@ if ($method === 'POST') {
         
         if (!$templateId) json_out(['success' => false, 'error' => 'templateId erforderlich'], 400);
         
-        // Berechtigungsprüfung: Nur der eigene Benutzer kann sich Ziele zuweisen
-        // Trainer und Schüler dürfen nur für sich selbst Ziele erstellen
-        // Nur Admins dürfen Ziele für andere Benutzer erstellen
+        // Berechtigungsprüfung
         if ($targetUserId !== $userId && $userRole !== 'admin') {
             json_out(['success' => false, 'error' => 'Ziele können nur für sich selbst erstellt werden'], 403);
         }
@@ -336,7 +327,7 @@ if ($method === 'POST') {
             json_out(['success' => false, 'error' => 'Template nicht gefunden'], 404);
         }
         
-        // Ziel zuweisen (mit oder ohne target_date)
+        // Ziel zuweisen
         if ($targetDate) {
             $stmt = $mysqli->prepare("INSERT INTO user_goals (user_id, template_id, target_date, status) VALUES (?, ?, ?, 'in_progress')");
             $stmt->bind_param('iis', $targetUserId, $templateId, $targetDate);
@@ -454,7 +445,7 @@ if ($method === 'POST') {
         json_out(['success' => true]);
     }
     
-    // Ziel wiederaufnehmen (von cancelled zu in_progress)
+    // Ziel wiederaufnehmen
     if ($action === 'resumeGoal') {
         $userGoalId = isset($body['userGoalId']) ? (int)$body['userGoalId'] : 0;
         if (!$userGoalId) json_out(['success' => false, 'error' => 'userGoalId erforderlich'], 400);

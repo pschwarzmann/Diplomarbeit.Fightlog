@@ -1,5 +1,5 @@
 <?php
-// backend/api/courses.php
+// Kurs-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 try {
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Prüfe auf spezielle Aktionen
     $action = isset($_GET['action']) ? $_GET['action'] : '';
     
-    // Teilnehmer eines Kurses abrufen (für Admin/Trainer)
+    // Teilnehmer eines Kurses abrufen
     if ($action === 'participants') {
         $courseId = isset($_GET['courseId']) ? (int)$_GET['courseId'] : 0;
         if (!$courseId) {
@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         json_out($participants);
     }
     
-    // Standard: Alle Kurse mit Buchungsstatus für aktuellen User
     // current_participants wird dynamisch aus course_bookings berechnet
     $sql = "
         SELECT sc.id, sc.title, sc.instructor, sc.date, sc.duration, 
@@ -69,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = read_json_body();
     $action = isset($body['action']) ? $body['action'] : 'add';
 
-    // Kurs hinzufügen (Admin/Trainer)
+    // Kurs hinzufügen
     if ($action === 'add') {
         require_permission($mysqli, 'create_courses');
         require_fields($body, ['title', 'date', 'instructor', 'duration', 'max_participants', 'price']);
@@ -105,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_out(['success' => true, 'id' => $courseId]);
     }
 
-    // Kurs aktualisieren (Admin/Trainer)
+    // Kurs aktualisieren
     if ($action === 'update') {
         require_permission($mysqli, 'edit_courses');
         require_fields($body, ['id', 'title']);
@@ -136,12 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_out(['success' => true]);
     }
 
-    // Kurs löschen (Admin/Trainer)
+    // Kurs löschen
     if ($action === 'delete') {
         require_permission($mysqli, 'delete_courses');
         require_fields($body, ['id']);
         
-        // Zuerst Buchungen löschen (FK-Constraint)
+        // Zuerst Buchungen löschen
         $delBookings = $mysqli->prepare("DELETE FROM course_bookings WHERE course_id = ?");
         $delBookings->bind_param('i', $body['id']);
         $delBookings->execute();
@@ -263,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_out(['success' => true]);
     }
 
-    // Admin/Trainer: Teilnehmer zum Kurs hinzufügen
+    // Teilnehmer zum Kurs hinzufügen
     if ($action === 'addParticipant') {
         require_permission($mysqli, 'edit_courses');
         require_fields($body, ['courseId', 'userId']);
@@ -301,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_out(['success' => true]);
     }
 
-    // Admin/Trainer: Teilnehmer aus Kurs entfernen
+    // Teilnehmer aus Kurs entfernen
     if ($action === 'removeParticipant') {
         require_permission($mysqli, 'edit_courses');
         require_fields($body, ['courseId', 'userId']);

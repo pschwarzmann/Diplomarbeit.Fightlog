@@ -1,5 +1,5 @@
 <?php
-// backend/api/users.php
+// users-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 $mysqli = db();
@@ -10,7 +10,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     $action = isset($_GET['action']) ? $_GET['action'] : '';
     
-    // Eigenes Profil abrufen - keine Berechtigung nötig
+    // Eigenes Profil abrufen
     if ($action === 'profile') {
         $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.name, u.first_name as firstName, u.last_name as lastName, u.phone, u.school, u.grade_id, g.name as beltLevel FROM users u LEFT JOIN grade g ON u.grade_id = g.id WHERE u.id = ?");
         $stmt->bind_param('i', $currentUserId);
@@ -23,7 +23,7 @@ if ($method === 'GET') {
         json_out(['success'=>true, 'user'=>$user]);
     }
     
-    // Alle Benutzer abrufen - nur mit Berechtigung
+    // Alle Benutzer abrufen
     if (!has_permission($mysqli, 'view_all_users') && !has_permission($mysqli, 'manage_users')) {
         json_error('Keine Berechtigung', 403);
     }
@@ -41,6 +41,7 @@ if ($method === 'GET') {
     json_out($list);
 }
 
+// POST - Benutzer aktualisieren, verifizieren oder löschen
 if ($method === 'POST') {
     $body = read_json_body();
     $action = isset($body['action']) ? $body['action'] : 'update';
@@ -97,6 +98,7 @@ if ($method === 'POST') {
         json_out(['success'=>true]);
     }
 
+    // Trainer verifizieren
     if ($action === 'verify') {
         require_permission($mysqli, 'manage_users');
         require_fields($body, ['id']);
@@ -113,6 +115,7 @@ if ($method === 'POST') {
         json_out(['success'=>true]);
     }
 
+    // Benutzer löschen
     if ($action === 'delete') {
         require_permission($mysqli, 'manage_users');
         require_fields($body, ['id']);
@@ -160,26 +163,21 @@ if ($method === 'POST') {
             $stmt->bind_param('i', $deleteUserId);
             $stmt->execute();
             
-            // 7. Trainingsverlauf löschen
-            $stmt = $mysqli->prepare("DELETE FROM training_history WHERE user_id = ?");
-            $stmt->bind_param('i', $deleteUserId);
-            $stmt->execute();
-            
-            // 8. Sessions löschen
+            // 7. Sessions löschen
             $stmt = $mysqli->prepare("DELETE FROM sessions WHERE user_id = ?");
             $stmt->bind_param('i', $deleteUserId);
             $stmt->execute();
             
-            // 9. Berechtigungen löschen
+            // 8. Berechtigungen löschen
             $stmt = $mysqli->prepare("DELETE FROM user_permissions WHERE user_id = ?");
             $stmt->bind_param('i', $deleteUserId);
             $stmt->execute();
             
-            // 10. Passkeys löschen (falls Tabelle existiert)
+            // 9. Passkeys löschen (falls Tabelle existiert)
             @$mysqli->query("DELETE FROM passkeys WHERE user_id = $deleteUserId");
             @$mysqli->query("DELETE FROM passkey_challenges WHERE user_id = $deleteUserId");
             
-            // 11. Gruppen des Users löschen (created_by)
+            // 10. Gruppen des Users löschen (created_by)
             // Erst Mitglieder aus diesen Gruppen entfernen
             $mysqli->query("DELETE gm FROM group_members gm 
                            INNER JOIN student_groups sg ON gm.group_id = sg.id 
@@ -204,6 +202,7 @@ if ($method === 'POST') {
         }
     }
 
+    // Passwort ändern
     if ($action === 'changePassword') {
         require_permission($mysqli, 'manage_users');
         require_fields($body, ['id', 'newPassword']);
@@ -218,12 +217,11 @@ if ($method === 'POST') {
         }
         
         // Passwort sicher hashen
-        // WICHTIG: Erwarte Klartext-Passwort, hashe genau einmal
         if (empty($body['newPassword']) || $body['newPassword'] === '') {
             json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
         }
         
-        // Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
+        // Prüfe dass Passwort nicht bereits ein Hash ist
         if (preg_match('/^\$2[ayb]\$/', $body['newPassword'])) {
             json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
         }
@@ -234,7 +232,7 @@ if ($method === 'POST') {
             json_out(['success'=>false, 'error'=>'Passwort-Hash konnte nicht generiert werden'], 500);
         }
         
-        // Passwort in Datenbank aktualisieren (NUR password_hash Feld)
+        // Passwort in Datenbank aktualisieren
         $stmt = $mysqli->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
         $stmt->bind_param('si', $hash, $body['id']);
         if (!$stmt->execute()) {
@@ -262,12 +260,11 @@ if ($method === 'POST') {
         }
         
         // Neues Passwort hashen und speichern
-        // WICHTIG: Erwarte Klartext-Passwort, hashe genau einmal
         if (empty($body['newPassword']) || $body['newPassword'] === '') {
             json_out(['success'=>false, 'error'=>'Passwort darf nicht leer sein'], 400);
         }
         
-        // Prüfe dass Passwort nicht bereits ein Hash ist (Double-Hashing verhindern)
+        // Prüfe dass Passwort nicht bereits ein Hash ist
         if (preg_match('/^\$2[ayb]\$/', $body['newPassword'])) {
             json_out(['success'=>false, 'error'=>'Ungültiges Passwort-Format'], 400);
         }
@@ -307,7 +304,7 @@ if ($method === 'PUT') {
         // Name zusammensetzen
         $name = trim($firstName . ' ' . $lastName);
         
-        // E-Mail-Validierung (optional, wenn angegeben)
+        // E-Mail-Validierung
         if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             json_out(['success'=>false, 'error'=>'Ungültige E-Mail-Adresse'], 400);
         }

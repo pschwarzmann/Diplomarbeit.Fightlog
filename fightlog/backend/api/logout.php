@@ -1,6 +1,5 @@
 <?php
-// backend/api/logout.php
-// Session aus Datenbank löschen
+// Logout-API
 require_once __DIR__ . '/../core/bootstrap.php';
 
 $mysqli = db();

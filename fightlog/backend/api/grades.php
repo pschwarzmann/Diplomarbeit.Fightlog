@@ -1,6 +1,5 @@
 <?php
-// backend/api/grades.php
-// API für Grad-Verwaltung (Gürtelgrade)
+// Grad-API
 
 require_once __DIR__ . '/../core/bootstrap.php';
 
@@ -9,9 +8,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $userId = auth_user_id($mysqli);
 $userRole = auth_user_role($mysqli);
 
-// =============================================
 // GET - Grade abrufen
-// =============================================
 if ($method === 'GET') {
     $action = isset($_GET['action']) ? $_GET['action'] : 'list';
     
@@ -57,9 +54,7 @@ if ($method === 'GET') {
     json_out(['success' => false, 'error' => 'Unbekannte Aktion'], 400);
 }
 
-// =============================================
-// POST - Grad erstellen/aktualisieren (nur Admin)
-// =============================================
+// POST - Grad erstellen/aktualisieren
 if ($method === 'POST') {
     if ($userRole !== 'admin') {
         json_out(['success' => false, 'error' => 'Keine Berechtigung'], 403);
