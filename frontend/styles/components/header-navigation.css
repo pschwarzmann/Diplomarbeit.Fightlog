@@ -1,0 +1,158 @@
+/* ===== FIGHTLOG - HEADER & NAVIGATION ===== */
+
+/* Header & Navigation */
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1d1d1f;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: -0.003em;
+}
+
+.logo::before {
+    content: none;
+}
+
+/* Brand: FightLog – markanter, aber cleaner Schriftzug */
+.brand-logo,
+.logo {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #1f2937 0%, #0a84ff 50%, #5e5ce6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* leicht kompakter im Header */
+.header .logo {
+    font-size: 1.35rem;
+}
+
+/* alternative einfarbige Fallback-Farbe bei High-Contrast */
+@media (prefers-contrast: high) {
+    .brand-logo,
+    .logo {
+        -webkit-text-fill-color: currentColor;
+        text-shadow: none;
+        background: none;
+        color: #000;
+    }
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+/* Page Header mit Zurück-Button */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 9999px;
+    position: relative;
+    overflow: hidden; /* für Glanz-Effekt */
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateX(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(10,132,255,0.10);
+}
+
+.back-btn i {
+    font-size: 0.8rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-btn:hover i {
+    transform: translateX(-2px);
+}
+
+/* Glanz/Sheen-Effekt wie bei Buttons */
+.back-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 130%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 30%,
+        rgba(255,255,255,0) 60%);
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.back-btn:hover::after {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+
+.back-btn:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    background: linear-gradient(135deg, #1e293b, #374151);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}

@@ -1,0 +1,27 @@
+# Environment files (contain sensitive credentials)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Uploads (if any)
+uploads/
+
+# PHP dependencies (if using Composer)
+vendor/
+
+# Node dependencies (if any)
+node_modules/

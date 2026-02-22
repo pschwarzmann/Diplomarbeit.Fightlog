@@ -1,0 +1,12 @@
+{
+    "name": "fightlog/backend",
+    "description": "FightLog Backend",
+    "require": {
+        "tecnickcom/tcpdf": "^6.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fightlog\\": "src/"
+        }
+    }
+}

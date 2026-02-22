@@ -1,0 +1,466 @@
+openapi: 3.0.3
+info:
+  title: FightLog API
+  description: API-Dokumentation für die FightLog Anwendung
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Development Server
+  - url: ../backend/api
+    description: Production Server
+
+paths:
+  /login.php:
+    post:
+      summary: Benutzer-Login
+      description: Authentifiziert einen Benutzer und erstellt eine Session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - identifier
+                - password
+              properties:
+                identifier:
+                  type: string
+                  description: Benutzername oder E-Mail-Adresse
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    description: Session-Token
+        '401':
+          description: Login fehlgeschlagen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Zu viele Login-Versuche
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /register.php:
+    post:
+      summary: Benutzer-Registrierung
+      description: Erstellt einen neuen Benutzer (nur für authentifizierte Admins)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 4
+                  maxLength: 128
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                role:
+                  type: string
+                  enum: [schueler, trainer, admin]
+                  default: schueler
+                phone:
+                  type: string
+                school:
+                  type: string
+      responses:
+        '200':
+          description: Registrierung erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  id:
+                    type: integer
+        '400':
+          description: Ungültige Daten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Nicht authentifiziert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Keine Berechtigung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /logout.php:
+    post:
+      summary: Benutzer-Logout
+      description: Beendet die aktuelle Session
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /certificates.php:
+    get:
+      summary: Urkunden abrufen
+      description: Ruft Urkunden ab (eigene oder alle, je nach Berechtigung)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [settings, generalSettings, publicPasswordMinLength]
+          description: Zusätzliche Aktion
+      responses:
+        '200':
+          description: Liste der Urkunden
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Certificate'
+        '403':
+          description: Keine Berechtigung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Urkunde erstellen oder Einstellungen speichern
+      description: Erstellt eine manuelle Urkunde oder speichert Einstellungen
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create, saveSettings, saveGeneralSettings]
+                settings:
+                  type: object
+                  description: Einstellungen (für saveSettings/saveGeneralSettings)
+                userId:
+                  type: integer
+                title:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                level:
+                  type: string
+                instructor:
+                  type: string
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Ungültige Daten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Keine Berechtigung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users.php:
+    get:
+      summary: Benutzer abrufen
+      description: Ruft Benutzer ab (eigene oder alle, je nach Berechtigung)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste der Benutzer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Passwort ändern
+      description: Ändert das Passwort eines Benutzers
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [changePassword, changeOwnPassword]
+                id:
+                  type: integer
+                  description: Benutzer-ID (für changePassword)
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 4
+                  maxLength: 128
+      responses:
+        '200':
+          description: Passwort erfolgreich geändert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Ungültige Daten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Falsches aktuelles Passwort
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /password-reset.php:
+    post:
+      summary: Passwort zurücksetzen
+      description: Fordert einen Passwort-Reset an oder setzt das Passwort zurück
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [request, reset]
+                email:
+                  type: string
+                  format: email
+                  description: E-Mail-Adresse (für request)
+                token:
+                  type: string
+                  description: Reset-Token (für reset)
+                newPassword:
+                  type: string
+                  format: password
+                  description: Neues Passwort (für reset)
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Ungültige Daten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /session.php:
+    get:
+      summary: Session-Status abrufen
+      description: Ruft den Status der aktuellen Session ab
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session-Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  expired:
+                    type: boolean
+                  remaining_seconds:
+                    type: integer
+    post:
+      summary: Session verlängern
+      description: Verlängert die aktuelle Session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [extend]
+      responses:
+        '200':
+          description: Session erfolgreich verlängert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  remaining_seconds:
+                    type: integer
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [schueler, trainer, admin]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        school:
+          type: string
+        beltLevel:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        examId:
+          type: integer
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        gradeName:
+          type: string
+        gradeColor:
+          type: string
+        instructor:
+          type: string
+        category:
+          type: string
+        isManual:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        code:
+          type: integer
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Session-Token im Authorization Header oder Cookie

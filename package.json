@@ -1,0 +1,21 @@
+{
+  "name": "fightlog",
+  "version": "1.0.0",
+  "description": "FightLog - Kampfsporterfolge digital erfassen",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/frontend/src/$1"
+    },
+    "transform": {},
+    "extensionsToTreatAsEsm": []
+  }
+}
