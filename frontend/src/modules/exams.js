@@ -13,7 +13,7 @@ import * as utils from './utils.js';
  */
 export async function addExam(ctx) {
     try {
-        // Prüfe ob Datum in der Zukunft liegt
+        // Prüfe ob Datum in der Zukunft liegt (Datum kann im deutschen Format DD.MM.YYYY vorliegen)
         if (ctx.examForm.date && !forms.validateExamDate(ctx.examForm.date)) {
             window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
             return;

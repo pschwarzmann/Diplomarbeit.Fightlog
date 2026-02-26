@@ -5,6 +5,7 @@
 
 import { apiService } from '../services/api.service.js';
 import * as actions from './actions.js';
+import { invalidateCache } from './actions.js';
 import * as utils from './utils.js';
 
 /**
@@ -36,6 +37,7 @@ export async function submitCourse(ctx) {
                 status: 'approved', userId: null, userIds: [], 
                 studentQuery: '', selectedStudents: [] 
             };
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
@@ -88,6 +90,7 @@ export async function saveCourseEdit(ctx) {
         const res = await apiService.updateCourse(updateData);
         if (res.success) {
             ctx.showCourseEditModal = false;
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert('Fehler beim Speichern: ' + (res.error || 'Unbekannt'));
@@ -108,6 +111,7 @@ export async function removeCourse(ctx, course) {
     if (!ok) return;
     const res = await apiService.deleteCourse(course.id);
     if (res.success) {
+        invalidateCache(ctx, 'courses');
         ctx.courses = ctx.courses.filter(c => c.id !== course.id);
     }
 }
@@ -156,6 +160,7 @@ export async function addParticipantToCourse(ctx, user) {
             ctx.participantsAddMode = false;
             ctx.participantsSearchQuery = '';
             // Kursliste aktualisieren für korrekte Teilnehmerzahl
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert(res.error || 'Fehler beim Hinzufügen');
@@ -212,6 +217,7 @@ export async function addGroupToCourse(ctx, group) {
     ctx.participantsAddMode = false;
     ctx.participantsSearchQuery = '';
     // Kursliste aktualisieren für korrekte Teilnehmerzahl
+    invalidateCache(ctx, 'courses');
     await actions.loadCourses(ctx);
     
     if (failed > 0) {
@@ -234,6 +240,7 @@ export async function removeParticipantFromCourse(ctx, userId) {
             // Teilnehmer aus Liste entfernen
             ctx.participantsList = ctx.participantsList.filter(p => p.user_id !== userId);
             // Kursliste aktualisieren für korrekte Teilnehmerzahl
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert(res.error || 'Fehler beim Entfernen');
@@ -254,6 +261,7 @@ export async function bookCourse(ctx, course) {
         const res = await apiService.bookCourse(course.id);
         if (res.success) {
             window.notify.alert('Erfolgreich angemeldet!');
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert('Anmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));
@@ -276,6 +284,7 @@ export async function cancelBooking(ctx, course) {
         const res = await apiService.cancelCourseBooking(course.id);
         if (res.success) {
             window.notify.alert('Erfolgreich abgemeldet.');
+            invalidateCache(ctx, 'courses');
             await actions.loadCourses(ctx);
         } else {
             window.notify.alert('Abmeldung fehlgeschlagen: ' + (res.error || 'Unbekannt'));

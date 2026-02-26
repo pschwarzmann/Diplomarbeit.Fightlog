@@ -1,6 +1,4 @@
-/* ===== FIGHTLOG - BASE STYLES ===== */
-/* Grundlegende Reset- und Basis-Styles */
-
+﻿/* ===== FIGHTLOG - HAUPTSTYLES ===== */
 * {
     margin: 0;
     padding: 0;
@@ -18,7 +16,6 @@ body {
     letter-spacing: -0.022em;
 }
 
-/* Verhindert Layout-Shift (Header „springt" nicht, wenn Scrollbar ein-/ausblendet) */
-html { 
-    scrollbar-gutter: stable both-edges; 
-}
+/* Verhindert Layout-Shift (Header â€žspringtâ€œ nicht, wenn Scrollbar ein-/ausblendet) */
+html { scrollbar-gutter: stable both-edges; }
+

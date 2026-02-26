@@ -30,6 +30,17 @@ function setCached(ctx, cacheKey, data) {
 }
 
 /**
+ * Cache-Helper: Invalidiert einen bestimmten Cache-Eintrag
+ * @param {Object} ctx - Vue-Komponenten-Kontext
+ * @param {string} cacheKey - Cache-Schlüssel
+ */
+export function invalidateCache(ctx, cacheKey) {
+    if (ctx._apiCache && ctx._apiCache[cacheKey]) {
+        delete ctx._apiCache[cacheKey];
+    }
+}
+
+/**
  * Error-Handler: Loggt Fehler konsistent
  * @param {Error|Object} error - Fehler-Objekt
  * @param {string} context - Kontext (z.B. 'Load certificates')

@@ -79,7 +79,15 @@ export function validateCreateUserForm(ctx) {
  */
 export function validateExamDate(dateStr) {
     if (!dateStr) return true; // Optional
-    const parts = dateStr.split('-');
+    let parts;
+    // Unterstütze sowohl ISO (YYYY-MM-DD) als auch deutsches Format (DD.MM.YYYY)
+    if (dateStr.includes('.')) {
+        const match = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+        if (!match) return false;
+        parts = [match[3], match[2], match[1]];
+    } else {
+        parts = dateStr.split('-');
+    }
     if (parts.length !== 3) return false;
     const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     examDate.setHours(0, 0, 0, 0);

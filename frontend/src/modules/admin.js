@@ -6,6 +6,7 @@
 import { apiService } from '../services/api.service.js';
 import * as forms from './forms.js';
 import * as actions from './actions.js';
+import { invalidateCache } from './actions.js';
 
 // ========== USER MANAGEMENT ==========
 
@@ -279,8 +280,9 @@ export async function deleteUser(ctx, user) {
  * User Passwort ändern
  */
 export async function changeUserPassword(ctx, user) {
-    if (!user._newPassword || user._newPassword.length < 3) {
-        window.notify.alert('Passwort muss mindestens 3 Zeichen lang sein');
+    const minLength = ctx.generalSettings?.password_min_length || 8;
+    if (!user._newPassword || user._newPassword.length < minLength) {
+        window.notify.alert(`Passwort muss mindestens ${minLength} Zeichen lang sein`);
         return;
     }
     
@@ -397,6 +399,7 @@ export async function addStudentGroup(ctx) {
             userIds: ids
         });
         if (response.success) {
+            invalidateCache(ctx, 'groups');
             await actions.loadGroups(ctx);
             resetGroupForm(ctx);
         } else {
@@ -526,6 +529,7 @@ export async function saveGroupEdit(ctx) {
             userIds: userIds
         });
         if (response.success) {
+            invalidateCache(ctx, 'groups');
             await actions.loadGroups(ctx);
             closeGroupEditModal(ctx);
         } else {
@@ -549,6 +553,7 @@ export async function removeGroup(ctx, grp) {
     try {
         const response = await apiService.deleteGroup(grp.id);
         if (response.success) {
+            invalidateCache(ctx, 'groups');
             await actions.loadGroups(ctx);
         } else {
             window.notify.alert(response.error || 'Fehler beim Löschen');
@@ -603,6 +608,7 @@ export async function saveGrade(ctx) {
         
         if (res.success) {
             resetGradeForm(ctx);
+            invalidateCache(ctx, 'grades');
             await actions.loadGrades(ctx);
             window.notify.alert(id ? 'Grad aktualisiert' : 'Grad erstellt');
         } else {
@@ -626,6 +632,7 @@ export async function deleteGrade(ctx, grade) {
     try {
         const res = await apiService.deleteGrade(grade.id);
         if (res.success) {
+            invalidateCache(ctx, 'grades');
             await actions.loadGrades(ctx);
             window.notify.alert('Grad gelöscht');
         } else {

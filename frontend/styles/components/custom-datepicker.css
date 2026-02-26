@@ -1,0 +1,68 @@
+﻿/* ===== Custom Datepicker (matching select style) ===== */
+.cdp-root { position: absolute; left: 0; top: 0; z-index: 1000; display: none; }
+.cdp-root.open { display: block; }
+.cdp-root .cdp-card {
+    background: rgba(255,255,255,0.98);
+    border-radius: 14px;
+    box-shadow: 0 18px 26px rgba(0,0,0,0.12);
+    overflow: hidden;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition: opacity .18s ease, transform .22s ease;
+}
+.cdp-root.visible .cdp-card { opacity: 1; transform: translateY(0); }
+
+.cdp-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; gap: 4px; }
+.cdp-title { 
+    font-weight: 700; 
+    color: #1e293b; 
+    flex: 1; 
+    text-align: center; 
+    cursor: pointer; 
+    padding: 4px 8px; 
+    border-radius: 8px; 
+    transition: background 0.2s ease;
+    user-select: none;
+}
+.cdp-title:hover { background: rgba(142,142,147,0.08); }
+.cdp-title:focus { outline: 2px solid rgba(10,132,255,0.35); outline-offset: 2px; }
+.cdp-nav { 
+    appearance: none; 
+    border: none; 
+    background: rgba(142,142,147,0.12); 
+    border-radius: 10px; 
+    width: 28px; 
+    height: 28px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 16px; 
+    color: #1e293b;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+.cdp-nav:hover { background: rgba(142,142,147,0.18); }
+.cdp-nav:active { transform: scale(0.95); }
+.cdp-prev-year, .cdp-next-year { font-weight: 600; }
+
+.cdp-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 8px 4px; color: #64748b; font-size: 12px; text-align: center; }
+.cdp-weekday { padding: 4px 0; }
+.cdp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 8px 10px; max-height: 240px; overflow: auto; }
+.cdp-cell { appearance: none; border: none; background: transparent; border-radius: 8px; padding: 6px 0; cursor: pointer; color: #1e293b; }
+.cdp-cell:hover { background: rgba(10,132,255,0.08); }
+.cdp-cell.selected { background: rgba(10,132,255,0.12); color: #0a84ff; }
+.cdp-cell.other { color: #94a3b8; }
+
+/* Datepicker Scrollbar */
+.cdp-grid { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,0.35) transparent; }
+.cdp-grid::-webkit-scrollbar { width: 8px; }
+.cdp-grid::-webkit-scrollbar-track { background: transparent; }
+.cdp-grid::-webkit-scrollbar-thumb { background-color: rgba(100,116,139,0.35); border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
+.cdp-grid::-webkit-scrollbar-thumb:hover { background-color: rgba(100,116,139,0.5); }
+
+/* Konsistente HÃ¶he fÃ¼r Date/Select gegenÃ¼ber normalen Inputs */
+select.form-control,
+input[type="date"].form-control {
+    min-height: 48px;
+}
+

@@ -199,15 +199,17 @@ export async function addExam(ctx) {
     try {
         // Prüfe ob Datum in der Zukunft liegt
         if (ctx.examForm.date) {
-            // Parse als lokales Datum (YYYY-MM-DD)
-            const parts = ctx.examForm.date.split('-');
-            const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            examDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (examDate > today) {
-                window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
-                return;
+            const isoDate = toISODate(ctx.examForm.date);
+            if (isoDate) {
+                const parts = isoDate.split('-');
+                const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                examDate.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (examDate > today) {
+                    window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                    return;
+                }
             }
         }
         const targetIds = (ctx.examForm.userIds && ctx.examForm.userIds.length)
@@ -251,16 +253,18 @@ export async function saveExamEdit(ctx) {
         // Konvertiere deutsches Datum zu ISO
         const isoDate = toISODate(ctx.examEditForm.date);
         
-        // Prüfe ob Datum in der Zukunft liegt
+        // Prüfe ob Datum in der Zukunft liegt (toISODate wurde bereits angewandt)
         if (isoDate) {
             const parts = isoDate.split('-');
-            const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            examDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (examDate > today) {
-                window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
-                return;
+            if (parts.length === 3) {
+                const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                examDate.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (examDate > today) {
+                    window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
+                    return;
+                }
             }
         }
         const res = await apiService.updateExam({

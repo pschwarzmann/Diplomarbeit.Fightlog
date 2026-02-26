@@ -1,7 +1,26 @@
 /* ===== FIGHTLOG - CSS EINSTIEGSPUNKT ===== */
 /* Diese Datei importiert alle CSS-Module in der richtigen Reihenfolge */
 
+/* Variablen & Layout */
 @import "./variables.css";
 @import "./layout.css";
-@import "./components/app.css";
+
+/* Komponenten (aufgeteilt aus app.css) */
+@import "./components/base.css";
+@import "./components/header-navigation.css";
+@import "./components/authentication.css";
+@import "./components/dashboard.css";
+@import "./components/forms.css";
+@import "./components/custom-select.css";
+@import "./components/custom-datepicker.css";
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/responsive.css";
+@import "./components/scrollbar.css";
+@import "./components/ios-theme.css";
+@import "./components/utilities.css";
+@import "./components/effects.css";
+@import "./components/admin-overrides.css";
+
+/* Benachrichtigungen */
 @import "./notify.css";

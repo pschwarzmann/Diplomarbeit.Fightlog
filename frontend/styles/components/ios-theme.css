@@ -1,0 +1,471 @@
+﻿/* ===== iOS Look Tweaks ===== */
+:root {
+    --ios-blue: #0a84ff;
+    --ios-green: #34c759;
+    --ios-gray: #8e8e93;
+    --card-bg: rgba(255,255,255,0.9);
+    --border: rgba(0,0,0,0.08);
+}
+
+.auth-card,
+.form-container,
+.nav-card,
+.timeline-content,
+.certificate-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.btn {
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: var(--ios-blue);
+    box-shadow: 0 10px 20px rgba(10,132,255,0.25);
+}
+
+.btn-primary:hover {
+    background: #007aff;
+    box-shadow: 0 14px 28px rgba(10,132,255,0.28);
+}
+
+.btn-secondary {
+    background: rgba(142,142,147,0.12);
+    border: 1px solid rgba(142,142,147,0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(142,142,147,0.18);
+}
+
+/* Kleine Buttons (klassischer Look) */
+.btn-sm {
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    min-height: 32px;
+}
+
+/* Schlichter, weiÃŸer Plain-Button */
+.btn-plain {
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
+}
+.btn-plain:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+/* Dezentere Effekte fÃ¼r kleine Buttons */
+.btn-sm::after { content: none; }
+.btn-sm:hover { box-shadow: 0 0 0 2px rgba(10,132,255,0.06); transform: none; }
+.btn-sm i { font-size: 0.85rem; }
+
+.btn-danger {
+    background: #ffffff;
+    color: #ef4444;
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+/* Wird von spezifischen Regeln fÃ¼r .actions .btn-sm.btn-danger Ã¼berschrieben */
+.btn-danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+    transform: translateY(-1px);
+}
+.btn-danger:active {
+    transform: translateY(0);
+    background: #fecaca;
+}
+/* Kein Sheen/Glow fÃ¼r Danger */
+.btn-danger::after { content: none !important; }
+
+/* Icon-only Delete: perfekt zentriert, gleiche GrÃ¶ÃŸe wie andere btn-sm */
+.btn-sm.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.75rem;
+    min-height: 32px;
+    line-height: 1;
+    transition: all 0.2s ease;
+    /* Wird von spezifischen Regeln fÃ¼r .actions Ã¼berschrieben */
+}
+
+/* Allgemeine btn-sm.btn-danger Regeln - werden von spezifischen Regeln am Ende der Datei Ã¼berschrieben */
+.btn-sm.btn-danger:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
+}
+.btn-sm.btn-danger:active {
+    transform: scale(0.95);
+}
+.btn-sm.btn-danger i {
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Permissions Liste, ruhiger Stil */
+.permissions-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: .4rem .75rem;
+    margin-top: .6rem;
+}
+.perm-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .95rem;
+    color: #334155;
+}
+.perm-item input[type="checkbox"] {
+    accent-color: var(--ios-blue);
+}
+
+.form-control {
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.9);
+}
+
+.form-control:focus {
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.15);
+}
+
+.toggle {
+    width: 54px;
+    height: 32px;
+    background: rgba(142,142,147,0.28);
+    border: none;
+}
+
+.toggle .toggle-knob {
+    width: 28px;
+    height: 28px;
+    top: 2px;
+    left: 2px;
+}
+
+.toggle.active {
+    background: var(--ios-green);
+}
+
+.toggle.active .toggle-knob {
+    transform: translateX(22px);
+}
+
+.logo::before {
+    filter: saturate(120%);
+}
+
+.nav-card::before {
+    background: linear-gradient(90deg, var(--ios-blue), #5e5ce6, #64d2ff);
+}
+
+.status-approved {
+    background: rgba(52,199,89,0.15);
+    color: #1f7a3a;
+}
+
+.status-pending {
+    background: rgba(255,204,0,0.18);
+    color: #8a6d00;
+}
+
+.back-btn {
+    border-radius: 9999px;
+}
+
+/* Leichtere Hover-Effekte fÃ¼r iOS-GefÃ¼hl */
+.nav-card,
+.certificate-card,
+.timeline-content {
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid transparent;
+    background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+                linear-gradient(180deg, rgba(10,132,255,0.16), rgba(100,210,255,0.16)) border-box;
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.22s ease;
+}
+
+/* Vorherigen Top-Balken deaktivieren, Sheen bleibt erlaubt */
+.certificate-card::before,
+.timeline-content::before {
+    content: none !important;
+}
+
+.nav-card:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 16px 28px rgba(0,0,0,0.10),
+                0 0 0 3px rgba(10,132,255,0.12);
+    filter: saturate(1.05) contrast(1.02) brightness(1.01);
+}
+
+/* Admin-User-Karten Grid - Responsive */
+.admin-users-grid,
+div.admin-users-grid,
+.admin-panel .admin-users-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)) !important;
+    gap: 2rem !important;
+    margin-top: 2rem !important;
+}
+
+@media (min-width: 640px) {
+    .admin-users-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-users-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+/* Admin-User-Karten */
+.admin-user-card,
+div.admin-user-card,
+.admin-users-grid .admin-user-card { 
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 16px !important;
+    padding: 1.75rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+    overflow: visible !important;
+    position: relative !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.admin-user-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.admin-user-card.open {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.admin-user-card::after { content: none !important; }
+
+/* Collapsible Header */
+.collapsible { 
+    cursor: pointer; 
+}
+
+.collapsible-header,
+.admin-user-card .collapsible-header,
+div.collapsible-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 1rem 0 !important;
+    gap: 1rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
+
+.user-header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0; /* FÃ¼r Text-Overflow */
+}
+
+.role-emoji { 
+    font-size: 1.75rem; 
+    line-height: 1; 
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+}
+
+.header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-text .name { 
+    font-weight: 600; 
+    color: #1f2937; 
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-text .subtitle { 
+    color: #64748b; 
+    font-size: 0.875rem; 
+}
+
+.caret { 
+    color: #64748b; 
+    transition: transform .2s ease; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.caret.open { transform: rotate(180deg); }
+
+/* Collapsible Body */
+.collapsible-body,
+.admin-user-card .collapsible-body,
+div.collapsible-body { 
+    padding-top: 1.75rem !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
+    border-top: 1px solid #e2e8f0 !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.collapsible:not(.open) .collapsible-body {
+    display: none;
+}
+
+/* Benutzer-Informationen */
+.user-info-section,
+.collapsible-body .user-info-section,
+.admin-user-card .user-info-section {
+    margin-bottom: 1.5rem !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+}
+
+.info-row,
+.user-info-section .info-row,
+.collapsible-body .info-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.info-row:first-child {
+    padding-top: 0 !important;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.info-label i {
+    width: 16px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.info-value {
+    color: #1f2937;
+    font-size: 0.875rem;
+    flex: 1;
+    word-break: break-word;
+}
+
+.info-value .empty-value {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Form-Labels */
+.form-label {
+    display: block;
+    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-label i {
+    color: #64748b;
+    width: 16px;
+}
+
+.collapsible-body .form-group {
+    margin-top: 2rem !important;
+    margin-bottom: 0 !important;
+}
+
+.collapsible-body .form-group:first-of-type {
+    margin-top: 0 !important;
+}
+
+.collapsible-body .form-control { 
+    margin-top: 0;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+/* Select-Element im Admin-Panel */
+.collapsible-body select.form-control.no-custom-select,
+.admin-user-card select.form-control.no-custom-select,
+.modal-content select.form-control.no-custom-select,
+.form-container select.form-control.no-custom-select {
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+}
+

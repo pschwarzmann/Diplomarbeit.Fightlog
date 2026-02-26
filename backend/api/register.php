@@ -20,12 +20,19 @@ if (!$currentUserId) {
 require_permission($mysqli, 'manage_users');
 
 // Prüfe, ob Username bereits existiert
-$checkStmt = $mysqli->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
-$checkStmt->bind_param('ss', $body['username'], $body['email']);
-$checkStmt->execute();
-$existing = $checkStmt->get_result()->fetch_assoc();
-if ($existing) {
-    json_out(['success'=>false, 'error'=>'Benutzername oder E-Mail bereits vorhanden'], 400);
+$checkUsername = $mysqli->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+$checkUsername->bind_param('s', $body['username']);
+$checkUsername->execute();
+if ($checkUsername->get_result()->fetch_assoc()) {
+    json_out(['success'=>false, 'error'=>'Benutzername bereits vorhanden'], 400);
+}
+
+// Prüfe, ob E-Mail bereits existiert
+$checkEmail = $mysqli->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+$checkEmail->bind_param('s', $body['email']);
+$checkEmail->execute();
+if ($checkEmail->get_result()->fetch_assoc()) {
+    json_out(['success'=>false, 'error'=>'E-Mail bereits vorhanden'], 400);
 }
 
 // Rolle aus Request

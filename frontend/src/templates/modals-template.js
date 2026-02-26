@@ -161,7 +161,7 @@ export const modalsTemplate = `
                                     required
                                 >
                                 <span v-if="createUserForm._validationErrors?.password" class="error-message">{{ createUserForm._validationErrors.password }}</span>
-                                <small style="color: #64748b; font-size: 0.8rem;">Mindestens 6 Zeichen</small>
+                                <small style="color: #64748b; font-size: 0.8rem;">Mindestens {{ generalSettings?.password_min_length || 8 }} Zeichen</small>
                             </div>
                             
                             <!-- Rolle -->

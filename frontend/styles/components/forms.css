@@ -1,0 +1,330 @@
+﻿/* Formulare */
+.form-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.form-container h2 {
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Preset Tabs */
+.preset-tabs {
+    display: flex;
+    gap: .5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: .35rem;
+    margin-bottom: 1rem;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: #1e293b;
+    padding: .6rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-btn.active {
+    background: rgba(10,132,255,0.12);
+    color: #0a84ff;
+}
+
+@media (max-width: 640px) {
+    .preset-tabs { gap: .25rem; padding: .3rem; }
+    .tab-btn { padding: .55rem .85rem; }
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+/* Button-Choices (statt Select) */
+.choice-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .6rem;
+}
+
+.choice-btn {
+    appearance: none;
+    border: 1px solid rgba(142,142,147,0.22);
+    background: #fff;
+    color: #1e293b;
+    padding: .7rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.06s ease;
+}
+
+.choice-btn:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.choice-btn.active {
+    background: rgba(10,132,255,0.10);
+    color: #0a84ff;
+    border-color: rgba(10,132,255,0.35);
+    box-shadow: 0 8px 16px rgba(10,132,255,0.15);
+}
+
+@media (pointer: coarse) {
+    .choice-btn { padding: .85rem 1rem; min-height: 44px; }
+}
+
+.form-control {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.8);
+    font-family: inherit;
+    letter-spacing: -0.022em;
+    color: #1e293b;
+    transform: scale(1);
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.9);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.15);
+}
+
+.form-control:hover {
+    border-color: #d1d5db;
+    transform: scale(1.005);
+}
+
+.form-control::placeholder {
+    color: #9ca3af;
+}
+
+/* Deaktiviere native Browser-Validierungsmeldungen */
+form {
+    /* novalidate wird per JavaScript gesetzt, aber CSS unterstÃ¼tzt auch */
+}
+
+input:invalid,
+select:invalid,
+textarea:invalid {
+    /* Keine native Validierung - wir machen es selbst */
+    box-shadow: none;
+}
+
+/* Fehlermeldungen - nur wenn explizit .error Klasse gesetzt ist */
+.form-control.error,
+.cs-trigger.error {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+}
+
+.form-control.error:focus,
+.cs-trigger.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Custom-Select mit Fehler */
+.cs-select .cs-trigger.error {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+}
+
+.cs-select .cs-trigger.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Form-Group mit Platz fÃ¼r Fehlermeldung (verhindert Layout-Shift) */
+.form-group {
+    position: relative;
+    margin-bottom: 0.5rem;
+    padding-bottom: 20px; /* Platz fÃ¼r Fehlermeldung */
+}
+
+/* Nur wenn Fehler vorhanden ist, wird der Platz genutzt */
+.form-group:not(.has-error) {
+    padding-bottom: 0.5rem;
+}
+
+.form-group.has-error {
+    padding-bottom: 0; /* Kein zusÃ¤tzliches Padding, da Fehlermeldung direkt nach Feld kommt */
+}
+
+.form-error {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    color: #dc2626;
+    font-size: 11px;
+    margin-top: 1px;
+    margin-bottom: 0;
+    padding-left: 2px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    animation: errorSlideIn 0.2s ease-out;
+    line-height: 1.2;
+    z-index: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.form-error::before {
+    content: 'âš ';
+    font-size: 12px;
+    line-height: 1.2;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Responsive: Kleinere Schrift auf sehr kleinen Bildschirmen */
+@media (max-width: 480px) {
+    .form-error {
+        font-size: 10px;
+        margin-top: 1px;
+        padding-top: 0px;
+        gap: 3px;
+    }
+    
+    .form-error::before {
+        font-size: 11px;
+    }
+    
+    .form-group.has-error {
+        padding-bottom: 0;
+    }
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fehler-Icon fÃ¼r Input-Felder */
+.form-group.has-error .form-control {
+    border-color: #ef4444;
+    background: rgba(254, 242, 242, 0.5);
+}
+
+.form-group.has-error .form-control:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Selects & Date-Picker: runder, schema-passender Look */
+select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: rgba(255,255,255,0.92);
+    border: none; /* nur Shadow, kein sichtbarer Rand */
+    border-radius: 14px;
+    padding-right: 44px; /* Platz fÃ¼r Pfeil */
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+select.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Entfernt altes IE-Dropdownpfeilchen */
+select.form-control::-ms-expand { display: none; }
+
+/* Date Input: Icon dezenter, klickbar, rund */
+/* Date-Picker: Standard-Verhalten beibehalten, nur dezenter Farbton */
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+    filter: grayscale(20%);
+}
+
+/* Date/Select Hover: softer edge, kein dunkler Rand */
+select.form-control:hover,
+input[type="date"].form-control:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* Date ohne sichtbaren Rand, nur Shadow wie Select */
+input[type="date"].form-control {
+    border: none;
+    border-radius: 14px;
+    background-color: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+input[type="date"].form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Enhanced date input wrapper + indicator */
+.cdp-input-wrap { position: relative; }
+.cdp-enhanced.form-control { padding-right: 44px; }
+.cdp-indicator {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer;
+}
+.cdp-indicator::before {
+    content: '';
+    display: block; width: 16px; height: 16px; margin: 0 auto;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' ry='3' stroke='%2364748b' stroke-width='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 11h18' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+}
+.cdp-indicator:hover { background: rgba(10,132,255,0.08); }
+

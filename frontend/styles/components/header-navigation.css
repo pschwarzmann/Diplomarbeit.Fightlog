@@ -1,6 +1,4 @@
-/* ===== FIGHTLOG - HEADER & NAVIGATION ===== */
-
-/* Header & Navigation */
+﻿/* Header & Navigation */
 .header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -36,7 +34,7 @@
     content: none;
 }
 
-/* Brand: FightLog – markanter, aber cleaner Schriftzug */
+/* Brand: FightLog â€“ markanter, aber cleaner Schriftzug */
 .brand-logo,
 .logo {
     font-weight: 800;
@@ -72,7 +70,7 @@
     color: #64748b;
 }
 
-/* Page Header mit Zurück-Button */
+/* Page Header mit ZurÃ¼ck-Button */
 .page-header {
     display: flex;
     align-items: center;
@@ -98,7 +96,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     border-radius: 9999px;
     position: relative;
-    overflow: hidden; /* für Glanz-Effekt */
+    overflow: hidden; /* fÃ¼r Glanz-Effekt */
 }
 
 .back-btn:hover {
@@ -156,3 +154,4 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+

@@ -1,6 +1,4 @@
-/* ===== FIGHTLOG - DASHBOARD STYLES ===== */
-
-/* Dashboard */
+﻿/* Dashboard */
 .dashboard {
     padding: 2rem 0;
     min-height: calc(100vh - 80px);
@@ -91,3 +89,4 @@
     font-size: 0.9rem;
     line-height: 1.5;
 }
+

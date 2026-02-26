@@ -1,6 +1,3 @@
--- ===== FIGHTLOG - DATENBANKSTRUKTUR =====
--- Backend-Entwickler: Diese SQL-Datei enthält alle benötigten Tabellen
-
 -- Datenbank erstellen
 CREATE DATABASE IF NOT EXISTS fightlog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -16,18 +13,39 @@ CREATE TABLE grade (
 );
 
 -- Standard-Grade einfügen
-INSERT INTO grade (name, sort_order, color) VALUES 
-    ('Weißgurt', 1, '#FFFFFF'),
+INSERT INTO
+    grade (name, sort_order, color)
+VALUES ('Weißgurt', 1, '#FFFFFF'),
     ('Gelbgurt', 2, '#FFEB3B'),
     ('Orangegurt', 3, '#FF9800'),
     ('Grüngurt', 4, '#4CAF50'),
     ('Blaugurt', 5, '#2196F3'),
     ('Braungurt', 6, '#795548'),
-    ('Schwarzgurt 1. Dan', 7, '#000000'),
-    ('Schwarzgurt 2. Dan', 8, '#000000'),
-    ('Schwarzgurt 3. Dan', 9, '#000000'),
-    ('Schwarzgurt 4. Dan', 10, '#000000'),
-    ('Schwarzgurt 5. Dan - Meister', 11, '#000000');
+    (
+        'Schwarzgurt 1. Dan',
+        7,
+        '#000000'
+    ),
+    (
+        'Schwarzgurt 2. Dan',
+        8,
+        '#000000'
+    ),
+    (
+        'Schwarzgurt 3. Dan',
+        9,
+        '#000000'
+    ),
+    (
+        'Schwarzgurt 4. Dan',
+        10,
+        '#000000'
+    ),
+    (
+        'Schwarzgurt 5. Dan - Meister',
+        11,
+        '#000000'
+    );
 
 -- Benutzer-Tabelle
 CREATE TABLE users (
@@ -112,25 +130,25 @@ CREATE TABLE app_settings (
 );
 
 -- Standard-Einstellungen für Urkunden
-INSERT INTO app_settings (setting_key, setting_value) VALUES
-    ('certificate_title', 'Urkunde'),
-    ('certificate_congratulation_text', 'Herzlichen Glückwunsch!\n\nMit dieser Urkunde bestätigen wir, dass du die Prüfung erfolgreich bestanden hast.\n\nWir sind stolz auf deine Leistung und deinen Einsatz. Weiter so!'),
-    ('certificate_school_name', 'Kampfsport Akademie'),
-    ('certificate_footer_text', 'Diese Urkunde wurde automatisch erstellt.');
-
--- Trainingsverlauf-Tabelle
-CREATE TABLE training_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    date DATE NOT NULL,
-    duration INT NOT NULL, -- in Minuten
-    type VARCHAR(100) NOT NULL,
-    instructor VARCHAR(100),
-    focus TEXT,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id)
-);
+INSERT INTO
+    app_settings (setting_key, setting_value)
+VALUES ('password_min_length', '8'),
+    (
+        'certificate_title',
+        'Urkunde'
+    ),
+    (
+        'certificate_congratulation_text',
+        'Herzlichen Glückwunsch!\n\nMit dieser Urkunde bestätigen wir, dass du die Prüfung erfolgreich bestanden hast.\n\nWir sind stolz auf deine Leistung und deinen Einsatz. Weiter so!'
+    ),
+    (
+        'certificate_school_name',
+        'Kampfsport Akademie'
+    ),
+    (
+        'certificate_footer_text',
+        'Diese Urkunde wurde automatisch erstellt.'
+    );
 
 -- Kurse-Tabelle
 CREATE TABLE courses (
@@ -173,7 +191,7 @@ CREATE TABLE sessions (
 );
 
 -- Passkeys/WebAuthn Credentials Tabelle
-CREATE TABLE IF NOT EXISTS passkeys (
+CREATE TABLE passkeys (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     credential_id VARCHAR(255) UNIQUE NOT NULL,
@@ -186,10 +204,10 @@ CREATE TABLE IF NOT EXISTS passkeys (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_passkeys_user_id (user_id),
     INDEX idx_passkeys_credential_id (credential_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Passkey Challenges (temporär für WebAuthn)
-CREATE TABLE IF NOT EXISTS passkey_challenges (
+CREATE TABLE passkey_challenges (
     user_id INT NOT NULL,
     challenge VARCHAR(255) NOT NULL,
     type ENUM('register', 'authenticate') NOT NULL,
@@ -198,10 +216,10 @@ CREATE TABLE IF NOT EXISTS passkey_challenges (
     PRIMARY KEY (user_id, type),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_challenges_expires (expires_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Login-Versuche für Rate-Limiting
-CREATE TABLE IF NOT EXISTS login_attempts (
+CREATE TABLE login_attempts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(45) NOT NULL,
     identifier_hash VARCHAR(64) NOT NULL,
@@ -210,7 +228,7 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     INDEX idx_login_attempts_ip (ip_address),
     INDEX idx_login_attempts_identifier (identifier_hash),
     INDEX idx_login_attempts_time (attempted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Gruppen-Tabelle (für Schülergruppen)
 CREATE TABLE student_groups (
@@ -299,10 +317,6 @@ CREATE INDEX idx_exams_date ON exams (date);
 CREATE INDEX idx_exams_grade ON exams (grade_id);
 
 CREATE INDEX idx_users_grade ON users (grade_id);
-
-CREATE INDEX idx_training_user_id ON training_history (user_id);
-
-CREATE INDEX idx_training_date ON training_history (date);
 
 CREATE INDEX idx_sessions_token ON sessions (token);
 
@@ -1053,50 +1067,253 @@ SET
 WHERE
     username = 'sophia';
 
-
-
 -- Urkunden (certificates) - automatisch erstellte + manuelle
 -- Automatische Urkunden für bestandene Prüfungen
-INSERT INTO certificates (user_id, exam_id, title, date, grade_id, instructor, category, is_manual) VALUES
-    (3, 1, 'Gürtelprüfung Gelbgurt', '2026-03-15', 2, 'Tom Trainer', 'Technik', 0),
-    (3, 2, 'Gürtelprüfung Grüngurt', '2026-04-19', 4, 'Tom Trainer', 'Kampf', 0),
-    (3, 3, 'Gürtelprüfung Schwarzgurt 1. Dan', '2026-05-01', 7, 'Tom Trainer', 'Theorie', 0),
-    (4, 4, 'Gürtelprüfung Weißgurt', '2026-03-20', 1, 'Tom Trainer', 'Kata', 0);
+INSERT INTO
+    certificates (
+        user_id,
+        exam_id,
+        title,
+        date,
+        grade_id,
+        instructor,
+        category,
+        is_manual
+    )
+VALUES (
+        3,
+        1,
+        'Gürtelprüfung Gelbgurt',
+        '2026-03-15',
+        2,
+        'Tom Trainer',
+        'Technik',
+        0
+    ),
+    (
+        3,
+        2,
+        'Gürtelprüfung Grüngurt',
+        '2026-04-19',
+        4,
+        'Tom Trainer',
+        'Kampf',
+        0
+    ),
+    (
+        3,
+        3,
+        'Gürtelprüfung Schwarzgurt 1. Dan',
+        '2026-05-01',
+        7,
+        'Tom Trainer',
+        'Theorie',
+        0
+    ),
+    (
+        4,
+        4,
+        'Gürtelprüfung Weißgurt',
+        '2026-03-20',
+        1,
+        'Tom Trainer',
+        'Kata',
+        0
+    );
 
 -- Manuelle Urkunden
-INSERT INTO certificates (user_id, exam_id, title, date, grade_id, instructor, category, is_manual) VALUES
-    (3, NULL, 'Beste Leistung des Monats', '2026-02-01', NULL, 'Admin Trainer', NULL, 1),
-    (5, NULL, 'Turnierteilnahme Stadtmeisterschaft', '2026-01-28', NULL, 'Tom Trainer', NULL, 1),
-    (7, NULL, 'Trainer-Assistenz Zertifikat', '2026-01-20', NULL, 'Admin Trainer', NULL, 1);
+INSERT INTO
+    certificates (
+        user_id,
+        exam_id,
+        title,
+        date,
+        grade_id,
+        instructor,
+        category,
+        is_manual
+    )
+VALUES (
+        3,
+        NULL,
+        'Beste Leistung des Monats',
+        '2026-02-01',
+        NULL,
+        'Admin Trainer',
+        NULL,
+        1
+    ),
+    (
+        5,
+        NULL,
+        'Turnierteilnahme Stadtmeisterschaft',
+        '2026-01-28',
+        NULL,
+        'Tom Trainer',
+        NULL,
+        1
+    ),
+    (
+        7,
+        NULL,
+        'Trainer-Assistenz Zertifikat',
+        '2026-01-20',
+        NULL,
+        'Admin Trainer',
+        NULL,
+        1
+    );
 
 -- Zugewiesene Ziele (user_goals)
-INSERT INTO user_goals (user_id, template_id, target_date, status, created_at, completed_at) VALUES
-    (3, 1, '2026-03-01', 'completed', '2026-01-01 10:00:00', '2026-02-15 14:30:00'),
-    (3, 2, '2026-04-01', 'in_progress', '2026-01-15 09:00:00', NULL),
-    (3, 5, '2026-05-01', 'in_progress', '2026-01-20 11:00:00', NULL),
-    (4, 1, '2026-04-01', 'in_progress', '2026-01-10 10:00:00', NULL),
-    (4, 3, '2026-05-01', 'in_progress', '2026-01-15 10:00:00', NULL),
-    (5, 4, '2026-03-15', 'completed', '2026-01-05 09:00:00', '2026-03-10 16:00:00'),
-    (5, 6, '2026-04-15', 'in_progress', '2026-01-20 10:00:00', NULL),
-    (6, 1, '2026-04-01', 'in_progress', '2026-01-12 10:00:00', NULL),
-    (6, 2, '2026-05-01', 'cancelled', '2026-01-12 10:00:00', NULL),
-    (7, 7, '2026-03-01', 'completed', '2026-01-01 09:00:00', '2026-02-28 15:00:00'),
-    (7, 8, '2026-04-01', 'in_progress', '2026-02-01 10:00:00', NULL),
-    (8, 1, '2026-05-01', 'in_progress', '2026-01-25 10:00:00', NULL);
+INSERT INTO
+    user_goals (
+        user_id,
+        template_id,
+        target_date,
+        status,
+        created_at,
+        completed_at
+    )
+VALUES (
+        3,
+        1,
+        '2026-03-01',
+        'completed',
+        '2026-01-01 10:00:00',
+        '2026-02-15 14:30:00'
+    ),
+    (
+        3,
+        2,
+        '2026-04-01',
+        'in_progress',
+        '2026-01-15 09:00:00',
+        NULL
+    ),
+    (
+        3,
+        5,
+        '2026-05-01',
+        'in_progress',
+        '2026-01-20 11:00:00',
+        NULL
+    ),
+    (
+        4,
+        1,
+        '2026-04-01',
+        'in_progress',
+        '2026-01-10 10:00:00',
+        NULL
+    ),
+    (
+        4,
+        3,
+        '2026-05-01',
+        'in_progress',
+        '2026-01-15 10:00:00',
+        NULL
+    ),
+    (
+        5,
+        4,
+        '2026-03-15',
+        'completed',
+        '2026-01-05 09:00:00',
+        '2026-03-10 16:00:00'
+    ),
+    (
+        5,
+        6,
+        '2026-04-15',
+        'in_progress',
+        '2026-01-20 10:00:00',
+        NULL
+    ),
+    (
+        6,
+        1,
+        '2026-04-01',
+        'in_progress',
+        '2026-01-12 10:00:00',
+        NULL
+    ),
+    (
+        6,
+        2,
+        '2026-05-01',
+        'cancelled',
+        '2026-01-12 10:00:00',
+        NULL
+    ),
+    (
+        7,
+        7,
+        '2026-03-01',
+        'completed',
+        '2026-01-01 09:00:00',
+        '2026-02-28 15:00:00'
+    ),
+    (
+        7,
+        8,
+        '2026-04-01',
+        'in_progress',
+        '2026-02-01 10:00:00',
+        NULL
+    ),
+    (
+        8,
+        1,
+        '2026-05-01',
+        'in_progress',
+        '2026-01-25 10:00:00',
+        NULL
+    );
 
-
-INSERT INTO user_goal_progress (user_goal_id, subtask_id, completed, completed_at) VALUES
-    (1, 1, 1, '2026-02-15 14:30:00'),
-    (2, 2, 1, '2026-01-25 15:00:00'),
+INSERT INTO
+    user_goal_progress (
+        user_goal_id,
+        subtask_id,
+        completed,
+        completed_at
+    )
+VALUES (
+        1,
+        1,
+        1,
+        '2026-02-15 14:30:00'
+    ),
+    (
+        2,
+        2,
+        1,
+        '2026-01-25 15:00:00'
+    ),
     (2, 3, 0, NULL),
     (3, 8, 0, NULL),
     (4, 1, 0, NULL),
-    (5, 4, 1, '2026-01-28 14:00:00'),
+    (
+        5,
+        4,
+        1,
+        '2026-01-28 14:00:00'
+    ),
     (5, 5, 0, NULL),
-    (6, 9, 1, '2026-03-10 16:00:00'),
+    (
+        6,
+        9,
+        1,
+        '2026-03-10 16:00:00'
+    ),
     (7, 11, 0, NULL),
     (8, 1, 0, NULL),
-    (10, 10, 1, '2026-02-28 15:00:00'),
+    (
+        10,
+        10,
+        1,
+        '2026-02-28 15:00:00'
+    ),
     (12, 1, 0, NULL);
 
 -- Audit-Log-Tabelle für Sicherheitsprotokollierung

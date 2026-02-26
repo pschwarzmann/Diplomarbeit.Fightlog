@@ -1,0 +1,647 @@
+﻿/* ===== UTILITY CLASSES ===== */
+/* HÃ¤ufig verwendete Styles als wiederverwendbare Klassen */
+
+/* Button Varianten */
+.btn-auto {
+    width: auto;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-compact {
+    padding: 0.5rem 1rem;
+}
+
+/* Flex Utilities */
+.flex {
+    display: flex;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-end {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.gap-md {
+    gap: var(--spacing-md);
+}
+
+.gap-lg {
+    gap: var(--spacing-lg);
+}
+
+/* Spacing Utilities */
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mr-sm { margin-right: var(--spacing-sm); }
+.mr-md { margin-right: var(--spacing-md); }
+
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* Text Utilities */
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-muted {
+    color: var(--text-secondary);
+}
+
+.text-tertiary {
+    color: var(--text-tertiary);
+}
+
+/* Position Utilities */
+.position-relative {
+    position: relative;
+}
+
+.position-absolute {
+    position: absolute;
+}
+
+/* Z-Index Utilities */
+.z-1000 {
+    z-index: 1000;
+}
+
+.z-modal {
+    z-index: var(--modal-z-index);
+}
+
+/* Modal Overlay Standard */
+.modal-overlay-standard {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--modal-overlay-bg);
+    z-index: var(--modal-z-index);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content Standard */
+.modal-content-standard {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-md);
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state-title {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-text {
+    color: var(--text-tertiary);
+}
+
+/* Badge Styles */
+.badge {
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-manual {
+    background: #f59e0b;
+    color: white;
+}
+
+.badge-success {
+    background: #10b981;
+    color: white;
+}
+
+.badge-info {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .btn-compact {
+        padding: 0.5rem 0.875rem;
+    }
+    
+    .flex-between-mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+}
+
+/* Text Danger fÃ¼r Fehlermeldungen */
+.text-danger {
+    color: #ef4444;
+}
+
+/* Verbesserte Modal-Responsive */
+@media (max-width: 640px) {
+    .modal-content-standard {
+        max-width: calc(100% - 1rem);
+        padding: var(--spacing-lg);
+    }
+    
+    .modal-overlay-standard {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Verbesserte Button-GrÃ¶ÃŸen auf Mobile */
+@media (max-width: 480px) {
+    .btn {
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+    }
+    
+    .form-control {
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+    }
+}
+
+.collapsible-body select.form-control.no-custom-select:hover,
+.admin-user-card select.form-control.no-custom-select:hover,
+.modal-content select.form-control.no-custom-select:hover,
+.form-container select.form-control.no-custom-select:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.05) !important;
+}
+
+.collapsible-body select.form-control.no-custom-select:focus,
+.admin-user-card select.form-control.no-custom-select:focus,
+.modal-content select.form-control.no-custom-select:focus,
+.form-container select.form-control.no-custom-select:focus {
+    outline: none !important;
+    border-color: #007aff !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* Passwort-Sektion */
+.password-section,
+.collapsible-body .password-section,
+.admin-user-card .password-section {
+    margin-top: 2rem !important;
+    padding-top: 2rem !important;
+    padding-bottom: 0 !important;
+    border-top: 1px solid #e2e8f0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.password-input-group,
+.password-section .password-input-group,
+.collapsible-body .password-input-group {
+    display: flex !important;
+    gap: 1rem !important;
+    flex-wrap: wrap !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.password-input-group .form-control {
+    flex: 1;
+    min-width: 150px;
+}
+
+.password-change-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.password-success {
+    color: #10b981;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-success i {
+    font-size: 0.9rem;
+}
+
+/* Aktions-Buttons */
+.collapsible .actions,
+.admin-user-card .actions,
+.collapsible-body .actions,
+div.actions {
+    margin-top: 2rem !important;
+    padding-top: 2rem !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    gap: 1.25rem !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.actions .btn,
+.collapsible .actions .btn,
+.admin-user-card .actions .btn,
+div.actions .btn {
+    flex: 1 !important;
+    min-width: 120px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0.75rem 1.5rem !important;
+    min-height: 44px !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+    flex-direction: row !important;
+}
+
+.actions .btn i,
+.collapsible .actions .btn i,
+.admin-user-card .actions .btn i,
+div.actions .btn i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.actions .btn .btn-text,
+.collapsible .actions .btn .btn-text,
+.admin-user-card .actions .btn .btn-text,
+div.actions .btn .btn-text {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    white-space: nowrap !important;
+}
+
+/* Spezifische Styles fÃ¼r Speichern-Button im Admin-Panel */
+.actions .btn-primary,
+.collapsible .actions .btn-primary,
+.admin-user-card .actions .btn-primary {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+.actions .btn-primary:hover,
+.collapsible .actions .btn-primary:hover,
+.admin-user-card .actions .btn-primary:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+.actions .btn-primary:active,
+.collapsible .actions .btn-primary:active,
+.admin-user-card .actions .btn-primary:active {
+    transform: translateY(0) scale(0.99) !important;
+    background: #1d4ed8 !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25) !important;
+}
+
+.btn-text {
+    display: inline;
+}
+
+/* Edit-Toggle Button Animation */
+.edit-toggle-btn {
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.edit-toggle-btn.btn-primary {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+}
+
+.edit-toggle-btn.saving {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.edit-toggle-btn .btn-text {
+    transition: opacity 0.2s ease;
+}
+
+/* Error Messages */
+.error-message {
+    display: block;
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.form-control.error,
+input.form-control.error,
+select.form-control.error,
+textarea.form-control.error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    background-color: #fef2f2 !important;
+}
+
+.form-control.error:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Smooth transition fÃ¼r Edit-Mode */
+.user-info-section {
+    transition: all 0.3s ease;
+}
+
+.user-info-section .form-group {
+    margin-bottom: 1.25rem !important;
+}
+
+.user-info-section .form-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Mobile-Optimierung */
+@media (max-width: 640px) {
+    .admin-users-grid {
+        gap: 1.5rem !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    .admin-user-card {
+        padding: 1.5rem !important;
+    }
+    
+    .collapsible-header {
+        padding: 0.875rem 0 !important;
+    }
+    
+    .collapsible-body {
+        padding-top: 1.5rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    .user-info-section {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .info-row {
+        padding: 0.75rem 0 !important;
+        gap: 0.5rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .info-row .info-label {
+        min-width: auto !important;
+        width: 100% !important;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-row .info-value {
+        width: 100% !important;
+        padding-left: 0 !important;
+    }
+    
+    .collapsible-body .form-group {
+        margin-top: 1.5rem !important;
+    }
+    
+    .password-section {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+    }
+    
+    .password-input-group {
+        gap: 0.875rem !important;
+        margin-top: 0.875rem !important;
+    }
+    
+    .collapsible .actions {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+        gap: 1rem !important;
+    }
+    
+    .role-emoji {
+        font-size: 1.5rem;
+        width: 36px;
+    }
+    
+    .header-text .name {
+        font-size: 0.95rem;
+    }
+    
+    .header-text .subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .info-label {
+        min-width: 100px;
+        font-size: 0.8rem;
+    }
+    
+    .info-value {
+        font-size: 0.85rem;
+    }
+    
+    .password-input-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .password-input-group .form-control {
+        min-width: 100%;
+    }
+    
+    .password-change-btn {
+        width: 100%;
+    }
+    
+    .actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .actions .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .btn-text {
+        display: inline;
+    }
+}
+
+/* Kleinere Dropdown-GrÃ¶ÃŸe fÃ¼r Admin-Panel */
+.collapsible-body .cs-trigger {
+    padding: 10px 36px 10px 14px;
+    font-size: 0.9rem;
+    min-height: 36px;
+}
+.collapsible-body .cs-trigger::after {
+    right: 10px;
+    width: 14px;
+    height: 14px;
+}
+.collapsible-body .cs-menu {
+    border-radius: 10px;
+    box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+}
+.collapsible-body .cs-option {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+}
+
+/* sanfte Ein-/Ausblendung mit v-if */
+.collapse-enter-active {
+    transition: all .22s ease;
+    overflow: hidden;
+}
+.collapse-leave-active {
+    transition: all .22s ease;
+    overflow: hidden;
+}
+.collapse-enter-from {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.collapse-enter-to {
+    max-height: 600px;
+    opacity: 1;
+}
+.collapse-leave-from {
+    max-height: 600px;
+    opacity: 1;
+}
+.collapse-leave-to {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.nav-card:active {
+    transform: translateY(-1px) scale(0.998);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.10),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+/* Tastaturfokus fÃ¼r Kacheln */
+.nav-card:focus-visible {
+    outline: 3px solid rgba(10,132,255,0.35);
+    outline-offset: 3px;
+}
+
+/* Sheen-Glanz wie bei Buttons */
+.nav-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 130%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 30%,
+        rgba(255,255,255,0) 60%);
+    transform: skewX(-20deg) translateX(0);
+    transition: transform 0.9s ease, opacity 0.1s ease;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.nav-card:hover::after {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 1;
+    transition: transform 0.9s ease, opacity 0.1s ease;
+}
+
+.nav-card:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0);
+    opacity: 0;
+    transition: transform 0s ease, opacity 0.1s ease;
+}
+

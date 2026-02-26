@@ -1,0 +1,242 @@
+﻿/* ===== WICHTIG: Spezifische Styles fÃ¼r LÃ¶schen-Button im Admin-Panel - muss am Ende stehen ===== */
+/* Diese Regeln mÃ¼ssen nach allen anderen btn-danger Regeln kommen, damit sie PrioritÃ¤t haben */
+/* Verwende die GLEICHEN Werte wie beim Speichern-Button fÃ¼r konsistente Ausrichtung */
+.admin-user-card .actions .btn.btn-danger.btn-sm,
+.admin-user-card .actions .btn.btn-sm.btn-danger,
+.collapsible .actions .btn.btn-danger.btn-sm,
+.collapsible .actions .btn.btn-sm.btn-danger,
+.actions .btn.btn-danger.btn-sm,
+.actions .btn.btn-sm.btn-danger,
+div.admin-user-card .actions .btn.btn-danger.btn-sm,
+div.admin-user-card .actions .btn.btn-sm.btn-danger {
+    /* Gleiche Werte wie .actions .btn - keine Ãœberschreibung der Flex-Eigenschaften */
+    background: #ef4444 !important;
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border: 1px solid #ef4444 !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25) !important;
+    /* Flex-Eigenschaften werden von .actions .btn Ã¼bernommen - nicht Ã¼berschreiben! */
+}
+
+/* Sheen-Effekt fÃ¼r LÃ¶schen-Button aktivieren */
+.admin-user-card .actions .btn.btn-danger.btn-sm::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger::after,
+.collapsible .actions .btn.btn-danger.btn-sm::after,
+.collapsible .actions .btn.btn-sm.btn-danger::after,
+.actions .btn.btn-danger.btn-sm::after,
+.actions .btn.btn-sm.btn-danger::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -150% !important;
+    width: 130% !important;
+    height: 100% !important;
+    background: linear-gradient(120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 30%,
+        rgba(255,255,255,0) 60%) !important;
+    transform: skewX(-20deg) translateX(0) !important;
+    transition: transform 0.9s ease, opacity 0.1s ease !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    opacity: 0 !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:hover::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger:hover::after,
+.collapsible .actions .btn.btn-danger.btn-sm:hover::after,
+.collapsible .actions .btn.btn-sm.btn-danger:hover::after,
+.actions .btn.btn-danger.btn-sm:hover::after,
+.actions .btn.btn-sm.btn-danger:hover::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:hover::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:hover::after {
+    transform: translateX(250%) skewX(-20deg) !important;
+    opacity: 1 !important;
+    transition: transform 0.9s ease, opacity 0.1s ease !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.admin-user-card .actions .btn.btn-sm.btn-danger:not(:hover)::after,
+.collapsible .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.collapsible .actions .btn.btn-sm.btn-danger:not(:hover)::after,
+.actions .btn.btn-danger.btn-sm:not(:hover)::after,
+.actions .btn.btn-sm.btn-danger:not(:hover)::after,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:not(:hover)::after,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:not(:hover)::after {
+    transform: skewX(-20deg) translateX(0) !important;
+    opacity: 0 !important;
+    transition: transform 0s ease, opacity 0.1s ease !important;
+}
+
+/* Z-Index fÃ¼r Icon und Text, damit sie Ã¼ber dem Sheen-Effekt liegen */
+.admin-user-card .actions .btn.btn-danger.btn-sm > *,
+.admin-user-card .actions .btn.btn-sm.btn-danger > *,
+.collapsible .actions .btn.btn-danger.btn-sm > *,
+.collapsible .actions .btn.btn-sm.btn-danger > *,
+.actions .btn.btn-danger.btn-sm > *,
+.actions .btn.btn-sm.btn-danger > *,
+div.admin-user-card .actions .btn.btn-danger.btn-sm > *,
+div.admin-user-card .actions .btn.btn-sm.btn-danger > * {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm i,
+.admin-user-card .actions .btn.btn-sm.btn-danger i,
+.collapsible .actions .btn.btn-danger.btn-sm i,
+.collapsible .actions .btn.btn-sm.btn-danger i,
+.actions .btn.btn-danger.btn-sm i,
+.actions .btn.btn-sm.btn-danger i,
+div.admin-user-card .actions .btn.btn-danger.btn-sm i,
+div.admin-user-card .actions .btn.btn-sm.btn-danger i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm .btn-text,
+.admin-user-card .actions .btn.btn-sm.btn-danger .btn-text,
+.collapsible .actions .btn.btn-danger.btn-sm .btn-text,
+.collapsible .actions .btn.btn-sm.btn-danger .btn-text,
+.actions .btn.btn-danger.btn-sm .btn-text,
+.actions .btn.btn-sm.btn-danger .btn-text,
+div.admin-user-card .actions .btn.btn-danger.btn-sm .btn-text,
+div.admin-user-card .actions .btn.btn-sm.btn-danger .btn-text {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    white-space: nowrap !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:hover,
+.admin-user-card .actions .btn.btn-sm.btn-danger:hover,
+.collapsible .actions .btn.btn-danger.btn-sm:hover,
+.collapsible .actions .btn.btn-sm.btn-danger:hover,
+.actions .btn.btn-danger.btn-sm:hover,
+.actions .btn.btn-sm.btn-danger:hover,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:hover,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:hover {
+    background: #dc2626 !important;
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+.admin-user-card .actions .btn.btn-danger.btn-sm:active,
+.admin-user-card .actions .btn.btn-sm.btn-danger:active,
+.collapsible .actions .btn.btn-danger.btn-sm:active,
+.collapsible .actions .btn.btn-sm.btn-danger:active,
+.actions .btn.btn-danger.btn-sm:active,
+.actions .btn.btn-sm.btn-danger:active,
+div.admin-user-card .actions .btn.btn-danger.btn-sm:active,
+div.admin-user-card .actions .btn.btn-sm.btn-danger:active {
+    transform: translateY(0) scale(0.99) !important;
+    background: #b91c1c !important;
+    background-color: #b91c1c !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25) !important;
+}
+
+.passkey-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #1e293b;
+}
+
+.passkey-info i {
+    color: #8b5cf6;
+}
+
+.btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.text-muted {
+    color: #64748b;
+    font-style: italic;
+} 
+
+/* Fade-Out fÃ¼r saubere Seitenwechsel (Logout) */
+.app-fade-out {
+    opacity: 0;
+    transition: opacity .25s ease;
+    will-change: opacity;
+} 
+
+/* Crossfade-Overlay fÃ¼r SeitenÃ¼bergÃ¤nge */
+.page-transition {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease;
+    z-index: 9998;
+}
+.page-transition.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Skeleton Loader Styles */
+.skeleton-loader {
+    padding: 1rem;
+}
+
+.skeleton-line {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.dark-mode .skeleton-line {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-loader.card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.dark-mode .skeleton-loader.card {
+    background: rgba(30, 30, 30, 0.95);
+}
+
+.skeleton-loader.list .skeleton-line {
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-loader.table {
+    display: table-row;
+}
+
+.skeleton-loader.table .skeleton-line {
+    display: table-cell;
+    padding: 0.5rem;
+    margin-bottom: 0;
+}

@@ -1,0 +1,101 @@
+﻿/* ===== Custom Select (animated, rounded) ===== */
+.cs-select {
+    position: relative;
+    display: block;
+    z-index: 1; /* Basis z-index fÃ¼r Dropdown-Kontext */
+}
+
+.cs-select.open {
+    z-index: 9999; /* HÃ¶herer z-index wenn offen, damit es Ã¼ber anderen Elementen liegt */
+}
+
+.cs-trigger {
+    width: 100%;
+    text-align: left;
+    padding: 16px 44px 16px 20px;
+    background: rgba(255,255,255,0.92);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    font: inherit;
+    color: #1e293b;
+    cursor: pointer;
+    position: relative;
+}
+
+.cs-trigger::after {
+    content: '';
+    position: absolute;
+    right: 14px; top: 50%;
+    width: 16px; height: 16px;
+    transform: translateY(-50%);
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+}
+
+.cs-select.open .cs-trigger {
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.cs-menu {
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 6px);
+    background: rgba(255,255,255,0.98);
+    border-radius: 14px;
+    box-shadow: 0 18px 26px rgba(0,0,0,0.12);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
+    z-index: 10000; /* Sehr hoher z-index, damit es Ã¼ber anderen Elementen liegt */
+}
+
+.cs-select.open .cs-menu {
+    max-height: 260px;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: auto;
+    display: block; /* Stelle sicher, dass das MenÃ¼ sichtbar ist */
+}
+
+.cs-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    color: #1e293b;
+}
+
+.cs-option:hover {
+    background: rgba(10,132,255,0.08);
+}
+
+.cs-option.selected {
+    background: rgba(10,132,255,0.12);
+    color: #0a84ff;
+}
+
+/* Scrollbar nur fÃ¼r Dropdown-MenÃ¼ verfeinern */
+.cs-menu {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(100,116,139,0.35) transparent;
+}
+
+.cs-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cs-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cs-menu::-webkit-scrollbar-thumb {
+    background-color: rgba(100,116,139,0.35); /* slate */
+    border-radius: 9999px;
+    border: 2px solid transparent; /* optische Schlankheit */
+    background-clip: content-box;
+}
+
+.cs-menu::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100,116,139,0.5);
+}
+
