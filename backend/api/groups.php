@@ -292,7 +292,12 @@ function handleDelete($mysqli, $userId, $userRole) {
         }
     }
     
-    // Mitglieder und Gruppe löschen
+    // Zuerst Mitglieder löschen (wegen FK-Constraint)
+    $memberStmt = $mysqli->prepare("DELETE FROM group_members WHERE group_id = ?");
+    $memberStmt->bind_param('i', $groupId);
+    $memberStmt->execute();
+    
+    // Dann Gruppe löschen
     $stmt = $mysqli->prepare("DELETE FROM student_groups WHERE id = ?");
     $stmt->bind_param('i', $groupId);
     $stmt->execute();

@@ -7,17 +7,22 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // Session-Status abrufen (verbleibende Zeit)
+    // Token aus Header ODER Query-Parameter (Fallback für Apache)
     $token = bearer_token();
+    if (!$token && !empty($_GET['token'])) {
+        $token = $_GET['token'];
+    }
     if (!$token) {
         json_out(['success' => false, 'error' => 'Kein Token'], 401);
     }
     
+    $tokenHash = hash('sha256', $token);
     $stmt = $mysqli->prepare("SELECT expires_at FROM sessions WHERE token = ? AND expires_at > NOW() LIMIT 1");
     if (!$stmt) {
         json_out(['success' => false, 'error' => 'Datenbankfehler'], 500);
     }
     
-    $stmt->bind_param('s', $token);
+    $stmt->bind_param('s', $tokenHash);
     $stmt->execute();
     $result = $stmt->get_result();
     $session = $result->fetch_assoc();
@@ -49,13 +54,14 @@ if ($method === 'POST') {
             json_out(['success' => false, 'error' => 'Kein Token'], 401);
         }
         
+        $tokenHash = hash('sha256', $token);
         // Prüfe ob Session existiert und noch gültig ist
         $checkStmt = $mysqli->prepare("SELECT user_id FROM sessions WHERE token = ? AND expires_at > NOW() LIMIT 1");
         if (!$checkStmt) {
             json_out(['success' => false, 'error' => 'Datenbankfehler'], 500);
         }
         
-        $checkStmt->bind_param('s', $token);
+        $checkStmt->bind_param('s', $tokenHash);
         $checkStmt->execute();
         $session = $checkStmt->get_result()->fetch_assoc();
         
@@ -70,7 +76,7 @@ if ($method === 'POST') {
             json_out(['success' => false, 'error' => 'Datenbankfehler'], 500);
         }
         
-        $updateStmt->bind_param('ss', $newExpiresAt, $token);
+        $updateStmt->bind_param('ss', $newExpiresAt, $tokenHash);
         if (!$updateStmt->execute()) {
             json_out(['success' => false, 'error' => 'Session konnte nicht verlängert werden'], 500);
         }

@@ -20,7 +20,11 @@ export function useSession(ctx) {
             ctx.sessionCheckInterval = setInterval(async () => {
                 await ctx.checkSessionTimeout();
             }, 30000);
-            ctx.checkSessionTimeout();
+            
+            // Erste Prüfung verzögern (gibt Apache/PHP Zeit den Header zu verarbeiten)
+            setTimeout(() => {
+                ctx.checkSessionTimeout();
+            }, 2000);
         },
         
         stopSessionTimeoutCheck() {

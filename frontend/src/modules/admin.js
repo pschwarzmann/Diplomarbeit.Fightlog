@@ -748,6 +748,7 @@ export async function deleteGoalTemplate(ctx, template) {
         const res = await apiService.deleteGoalTemplate(template.id);
         if (res.success) {
             window.notify.alert('Ziel-Vorlage gelöscht!');
+            invalidateCache(ctx, 'goalTemplates');
             await actions.loadGoalTemplates(ctx);
         } else {
             // Bessere Fehlermeldung für "wird noch verwendet"

@@ -15,10 +15,11 @@ if ($userId) {
     $token = bearer_token();
     
     if ($token) {
-        // Spezifische Session löschen
+        // Spezifische Session löschen (Token gehasht vergleichen)
+        $tokenHash = hash('sha256', $token);
         $stmt = $mysqli->prepare("DELETE FROM sessions WHERE token = ?");
         if ($stmt) {
-            $stmt->bind_param('s', $token);
+            $stmt->bind_param('s', $tokenHash);
             $stmt->execute();
         }
     } else {

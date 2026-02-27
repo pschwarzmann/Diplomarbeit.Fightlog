@@ -188,7 +188,7 @@ export const adminTemplate = `
                                                                 placeholder="Neues Passwort (leer lassen, um nicht zu ändern)"
                                                             >
                                                             <span v-if="user._validationErrors.newPassword" class="error-message">{{ user._validationErrors.newPassword }}</span>
-                                                            <small style="color: #64748b; font-size: 0.8rem;">Mindestens 6 Zeichen, wenn angegeben</small>
+
                                                         </div>
                                                         
                                                         <!-- Rolle ändern -->

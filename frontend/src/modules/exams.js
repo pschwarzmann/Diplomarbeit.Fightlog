@@ -13,8 +13,9 @@ import * as utils from './utils.js';
  */
 export async function addExam(ctx) {
     try {
-        // Prüfe ob Datum in der Zukunft liegt (Datum kann im deutschen Format DD.MM.YYYY vorliegen)
-        if (ctx.examForm.date && !forms.validateExamDate(ctx.examForm.date)) {
+        // Datum zu ISO konvertieren für konsistente Validierung
+        const isoDate = utils.toISODate(ctx.examForm.date);
+        if (isoDate && !forms.validateExamDate(isoDate)) {
             window.notify.alert('Das Prüfungsdatum darf nicht in der Zukunft liegen.');
             return;
         }
@@ -22,11 +23,11 @@ export async function addExam(ctx) {
             ? ctx.examForm.userIds
             : (ctx.examForm.userId ? [ctx.examForm.userId] : []);
         if (!targetIds.length) return window.notify.alert('Bitte mindestens einen Schüler auswählen.');
+        let lastResponse = null;
         for (const uid of targetIds) {
-            await apiService.addExam({ ...ctx.examForm, userId: uid });
+            lastResponse = await apiService.addExam({ ...ctx.examForm, date: isoDate, userId: uid });
         }
-        const response = { success: true };
-        if (response.success) {
+        if (!lastResponse || lastResponse.success !== false) {
             window.notify.alert('Prüfung erfolgreich eingetragen!');
             ctx.examForm = {
                 date: '',
@@ -40,6 +41,7 @@ export async function addExam(ctx) {
                 studentQuery: '',
                 selectedStudents: []
             };
+            actions.invalidateCache(ctx, `exams_${ctx.currentUser?.id || 'all'}`);
             await actions.loadExams(ctx);
         }
     } catch (error) {
@@ -111,6 +113,7 @@ export async function saveExamEdit(ctx) {
         if (res.success) {
             window.notify.alert('Prüfung erfolgreich aktualisiert!');
             ctx.showExamEditModal = false;
+            actions.invalidateCache(ctx, `exams_${ctx.currentUser?.id || 'all'}`);
             await actions.loadExams(ctx);
         } else {
             window.notify.alert('Fehler beim Speichern: ' + (res.error || 'Unbekannter Fehler'));

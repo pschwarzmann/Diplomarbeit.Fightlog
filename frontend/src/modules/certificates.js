@@ -4,6 +4,7 @@
  */
 
 import { apiService } from '../services/api.service.js';
+import { invalidateCache } from './actions.js';
 
 /**
  * Error-Handler: Loggt Fehler konsistent
@@ -27,6 +28,7 @@ export async function deleteCertificate(ctx, cert) {
     try {
         const res = await apiService.deleteCertificate(cert.id);
         if (res.success) {
+            invalidateCache(ctx, 'certificates');
             ctx.certificates = ctx.certificates.filter(c => c.id !== cert.id);
             window.notify.alert('Urkunde gelöscht!');
         } else {

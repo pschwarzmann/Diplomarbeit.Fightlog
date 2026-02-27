@@ -1090,7 +1090,7 @@
           if (verifyData.success && verifyData.user) {
             // Session-Token speichern (falls vorhanden)
             if (verifyData.token) {
-              localStorage.setItem("fightlog_token", verifyData.token);
+              localStorage.setItem("auth_token", verifyData.token);
             }
 
             // User-Daten speichern
@@ -1136,7 +1136,7 @@
       // Registriere neuen Passkey
       async function registerPasskey() {
         // Prüfe ob User bereits eingeloggt ist (Token vorhanden)
-        const token = localStorage.getItem("fightlog_token");
+        const token = localStorage.getItem("auth_token");
         const userData = localStorage.getItem("fightlog_user");
 
         if (!token || !userData) {
@@ -1320,7 +1320,7 @@
             if (data.success && data.user) {
               // Session-Token speichern (falls vorhanden)
               if (data.token) {
-                localStorage.setItem("fightlog_token", data.token);
+                localStorage.setItem("auth_token", data.token);
               }
 
               // User-Daten speichern

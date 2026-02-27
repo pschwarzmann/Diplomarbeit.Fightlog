@@ -21,20 +21,6 @@ function getRequestKey(path, options) {
     return `${method}:${path}:${body}`;
 }
 
-// Holt den aktuellen User aus localStorage
-function getCurrentUser() {
-    try {
-        // Prüfe fightlog_user (session-store)
-        const userData = localStorage.getItem('fightlog_user');
-        if (userData) {
-            return JSON.parse(userData);
-        }
-    } catch (e) {
-        console.warn('Error reading user from localStorage:', e);
-    }
-    return null;
-}
-
 // Holt den Auth-Token aus localStorage
 function getAuthToken() {
     try {
@@ -44,21 +30,16 @@ function getAuthToken() {
     }
 }
 
-// Erstellt Header mit Authorization (Bearer Token + User-ID für Rückwärtskompatibilität)
+// Erstellt Header mit Authorization (Bearer Token)
 function getAuthHeaders() {
-    const user = getCurrentUser();
     const token = getAuthToken();
     const headers = { ...jsonHeaders };
     
-    // Bearer Token für session.php und andere Token-basierte Endpunkte
+    // Bearer Token für sichere Authentifizierung
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // X-User-ID für Rückwärtskompatibilität (falls Backend es noch verwendet)
-    if (user && user.id) {
-        headers['X-User-ID'] = String(user.id);
-        headers['X-User-Role'] = user.role || 'schueler';
+        // Workaround: X-Authorization Header für Apache-Setups die Authorization filtern
+        headers['X-Authorization'] = `Bearer ${token}`;
     }
     
     return headers;
@@ -85,8 +66,18 @@ async function request(path, options = {}) {
             
             // Credentials für Cookies/Sessions mitsenden
             options.credentials = options.credentials || 'include';
+            // Browser-Cache umgehen für stets aktuelle API-Daten
+            options.cache = options.cache || 'no-store';
             
-            const response = await fetch(`${BASE_URL}${path}`, options);
+            // Token als Query-Parameter hinzufügen (Fallback für Apache-Setups die Header filtern)
+            const token = getAuthToken();
+            let finalPath = path;
+            if (token && !path.includes('token=')) {
+                const separator = path.includes('?') ? '&' : '?';
+                finalPath = `${path}${separator}token=${encodeURIComponent(token)}`;
+            }
+            
+            const response = await fetch(`${BASE_URL}${finalPath}`, options);
             
             // 401 Unauthorized für Session-Calls still behandeln (kein Error-Spam)
             if (response.status === 401 && path.includes('session.php')) {

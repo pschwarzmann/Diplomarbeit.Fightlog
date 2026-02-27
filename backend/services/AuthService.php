@@ -7,10 +7,20 @@ class AuthService
 {
     public static function getAuthenticatedUserId(mysqli $connection): ?int
     {
+        // Token aus Header holen
         $token = bearer_token();
+        
+        // Fallback: Token aus Query-Parameter (für Apache-Setups die Header filtern)
+        if (!$token && !empty($_GET['token'])) {
+            $token = $_GET['token'];
+        }
+        
         if (!$token) {
             return null;
         }
+
+        // Token hashen für Vergleich (in DB wird nur der Hash gespeichert)
+        $tokenHash = hash('sha256', $token);
 
         $stmt = $connection->prepare(
             "SELECT user_id FROM sessions WHERE token=? AND expires_at>NOW()"
@@ -19,7 +29,7 @@ class AuthService
             return null;
         }
 
-        $stmt->bind_param('s', $token);
+        $stmt->bind_param('s', $tokenHash);
         if (!$stmt->execute()) {
             return null;
         }

@@ -79,17 +79,24 @@ export function validateCreateUserForm(ctx) {
  */
 export function validateExamDate(dateStr) {
     if (!dateStr) return true; // Optional
-    let parts;
+    const str = String(dateStr).trim();
+    if (!str) return true;
+    let year, month, day;
     // Unterstütze sowohl ISO (YYYY-MM-DD) als auch deutsches Format (DD.MM.YYYY)
-    if (dateStr.includes('.')) {
-        const match = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-        if (!match) return false;
-        parts = [match[3], match[2], match[1]];
+    const germanMatch = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    const isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (germanMatch) {
+        day = parseInt(germanMatch[1], 10);
+        month = parseInt(germanMatch[2], 10);
+        year = parseInt(germanMatch[3], 10);
+    } else if (isoMatch) {
+        year = parseInt(isoMatch[1], 10);
+        month = parseInt(isoMatch[2], 10);
+        day = parseInt(isoMatch[3], 10);
     } else {
-        parts = dateStr.split('-');
+        return false;
     }
-    if (parts.length !== 3) return false;
-    const examDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const examDate = new Date(year, month - 1, day);
     examDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);

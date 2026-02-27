@@ -32,7 +32,7 @@ class Security
         }
         
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-CSRF-Token');
         header('Access-Control-Max-Age: 86400'); // 24 Stunden Cache für Preflight
     }
     
@@ -44,6 +44,10 @@ class Security
         if (headers_sent()) {
             return;
         }
+        
+        // Cache-Kontrolle: API-Antworten nicht cachen
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
         
         // XSS-Schutz: X-Content-Type-Options verhindert MIME-Sniffing
         header('X-Content-Type-Options: nosniff');

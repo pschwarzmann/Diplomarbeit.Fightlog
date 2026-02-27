@@ -123,6 +123,7 @@ $token = null;
 $sessionsCheck = @$mysqli->query("SHOW TABLES LIKE 'sessions'");
 if ($sessionsCheck && $sessionsCheck->num_rows > 0) {
     $token = bin2hex(random_bytes(32));
+    $tokenHash = hash('sha256', $token);
     $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
     
     // Alte Sessions des Users löschen
@@ -132,10 +133,10 @@ if ($sessionsCheck && $sessionsCheck->num_rows > 0) {
         $deleteStmt->execute();
     }
     
-    // Neue Session speichern
+    // Neue Session speichern (nur Hash, nicht Klartext-Token)
     $sessionStmt = $mysqli->prepare("INSERT INTO sessions (user_id, token, expires_at, created_at) VALUES (?, ?, ?, NOW())");
     if ($sessionStmt) {
-        $sessionStmt->bind_param('iss', $user['id'], $token, $expiresAt);
+        $sessionStmt->bind_param('iss', $user['id'], $tokenHash, $expiresAt);
         $sessionStmt->execute();
         // Fehler beim Session-Speichern ignorieren
     }

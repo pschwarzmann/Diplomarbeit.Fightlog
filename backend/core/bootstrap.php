@@ -135,28 +135,12 @@ function auth_user_id(mysqli $mysqli): ?int
         return $sessionUserId;
     }
     
-    // In Entwicklungsmodus: Fallback auf X-User-ID Header erlauben
-    if (!Env::isProduction()) {
-        $headerUserId = $_SERVER['HTTP_X_USER_ID'] ?? null;
-        if ($headerUserId && is_numeric($headerUserId)) {
-            return (int)$headerUserId;
-        }
-    }
-    
     return null;
 }
 
 function auth_user_role(mysqli $mysqli): ?string
 {
-    // In Entwicklungsmodus: Header akzeptieren
-    if (!Env::isProduction()) {
-        $headerRole = $_SERVER['HTTP_X_USER_ROLE'] ?? null;
-        if ($headerRole) {
-            return $headerRole;
-        }
-    }
-    
-    // Sonst aus DB
+    // Rolle aus DB anhand authentifiziertem User
     $userId = auth_user_id($mysqli);
     if (!$userId) return null;
     
