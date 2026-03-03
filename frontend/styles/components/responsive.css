@@ -1,4 +1,4 @@
-﻿/* Responsive Design */
+/* Responsive Design */
 @media (max-width: 1024px) {
     .container {
         padding: 0 1rem;
@@ -153,6 +153,13 @@
     
     .container {
         padding: 0 0.5rem;
+    }
+    
+    /* Tabellen/Listen auf Mobile horizontal scrollbar */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
     }
     
     .nav {
@@ -327,7 +334,8 @@
     .modal-content {
         max-width: 100%;
         border-radius: 12px;
-        max-height: 95vh;
+        max-height: 90vh;
+        overflow-y: auto;
     }
     
     .modal-header {
@@ -358,8 +366,8 @@
     }
 }
 
-/* Responsive Optimierungen fÃ¼r sehr kleine Screens */
-@media (max-width: 360px) {
+/* Responsive Optimierungen für sehr kleine Screens (360–400px, iPhone SE/14) */
+@media (max-width: 400px) {
     body {
         font-size: 14px;
     }
@@ -379,6 +387,7 @@
     .btn {
         padding: 12px 16px;
         font-size: 15px;
+        min-height: 44px;
     }
     
     .form-control {
@@ -403,12 +412,31 @@
         padding: 0.875rem;
     }
     
+    /* Header: Logo + Buttons nicht überlaufen */
+    .header .container {
+        padding: 0 0.5rem;
+    }
+    
+    .logo {
+        font-size: 1rem;
+    }
+    
+    .user-info {
+        gap: 0.25rem;
+    }
+    
+    .user-info .btn-compact {
+        padding: 0.4rem;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
     /* Kompaktere Spacing auf sehr kleinen Screens */
     .mt-md { margin-top: var(--spacing-sm); }
     .mb-md { margin-bottom: var(--spacing-sm); }
     .p-xl { padding: var(--spacing-md); }
     
-    /* Flex-Wrap fÃ¼r Buttons */
+    /* Flex-Wrap für Buttons */
     .flex-end {
         flex-wrap: wrap;
     }
@@ -427,6 +455,14 @@
     
     .nav-grid {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* Modals auf sehr kleinen Screens: volle Breite mit Rand, unabhängig von inline max-width */
+@media (max-width: 480px) {
+    .modal-content {
+        max-width: calc(100% - 1rem) !important;
+        width: 100% !important;
     }
 }
 

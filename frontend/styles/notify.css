@@ -140,6 +140,13 @@
   .notify-input{ font-size: 16px; padding: 14px 18px; border-radius: 12px; }
 }
 
+/* Zusätzliche Optimierung für sehr kleine Screens (≤ 400px) */
+@media (max-width:400px){
+  .notify-box{ max-width: 94%; border-radius: 14px; }
+  .notify-content{ padding: 18px 14px 0; }
+  .notify-actions{ padding: 0 14px 14px; }
+}
+
 @keyframes notifySlideIn {
   from { opacity: 0; transform: translateY(6px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }

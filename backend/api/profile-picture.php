@@ -74,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc() && $row['profile_picture']) {
+    $row = $result->fetch_assoc();
+    if ($row && !empty($row['profile_picture'])) {
         $oldPath = $uploadDir . basename($row['profile_picture']);
         if (file_exists($oldPath)) {
             @unlink($oldPath);
@@ -106,8 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    if ($row = $result->fetch_assoc() && $row['profile_picture']) {
+    $row = $result->fetch_assoc();
+    if ($row && !empty($row['profile_picture'])) {
         $filePath = $uploadDir . basename($row['profile_picture']);
         if (file_exists($filePath)) {
             @unlink($filePath);

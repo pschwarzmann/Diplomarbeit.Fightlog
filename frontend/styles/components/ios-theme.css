@@ -1,4 +1,4 @@
-﻿/* ===== iOS Look Tweaks ===== */
+/* ===== iOS Look Tweaks ===== */
 :root {
     --ios-blue: #0a84ff;
     --ios-green: #34c759;
@@ -461,11 +461,3 @@ div.collapsible-body {
 }
 
 /* Select-Element im Admin-Panel */
-.collapsible-body select.form-control.no-custom-select,
-.admin-user-card select.form-control.no-custom-select,
-.modal-content select.form-control.no-custom-select,
-.form-container select.form-control.no-custom-select {
-    appearance: auto !important;
-    -webkit-appearance: menulist !important;
-}
-

@@ -17,8 +17,9 @@ Thumbs.db
 *.log
 logs/
 
-# Uploads (if any)
+# Uploads (if any) - .htaccess für Sicherheit wird mitgeführt
 uploads/
+!backend/uploads/.htaccess
 
 # PHP dependencies (if using Composer)
 vendor/

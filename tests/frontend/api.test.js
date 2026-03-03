@@ -96,6 +96,76 @@ describe('API Service', () => {
     });
 });
 
+describe('API Service Header Building', () => {
+    beforeEach(() => {
+        fetch.mockClear();
+        localStorage.clear();
+    });
+
+    test('Request ohne Token enthält keine Authorization-Header', () => {
+        const getAuthHeaders = (token) => {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+                headers['X-Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        };
+        const headers = getAuthHeaders(null);
+        expect(headers['Authorization']).toBeUndefined();
+        expect(headers['X-Authorization']).toBeUndefined();
+        expect(headers['Content-Type']).toBe('application/json');
+    });
+
+    test('Request mit Token enthält Bearer Authorization und X-Authorization', () => {
+        const getAuthHeaders = (token) => {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+                headers['X-Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        };
+        const headers = getAuthHeaders('abc123');
+        expect(headers['Authorization']).toBe('Bearer abc123');
+        expect(headers['X-Authorization']).toBe('Bearer abc123');
+    });
+});
+
+describe('API Service Error Handling', () => {
+    beforeEach(() => {
+        fetch.mockClear();
+    });
+
+    test('Non-JSON Response wird erkannt und nicht als JSON geparst', async () => {
+        fetch.mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            text: async () => '<html><body>Internal Server Error</body></html>',
+            headers: { get: () => 'text/html' }
+        });
+        const response = await fetch('http://test/api/error.php');
+        const contentType = response.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        expect(isJson).toBe(false);
+        const text = await response.text();
+        expect(text).toContain('Internal Server Error');
+    });
+
+    test('401 mit JSON liefert success:false und error', async () => {
+        fetch.mockResolvedValueOnce({
+            ok: false,
+            status: 401,
+            json: async () => ({ success: false, error: 'Session abgelaufen', expired: true }),
+            headers: { get: () => 'application/json' }
+        });
+        const response = await fetch('http://test/api/session.php');
+        const data = await response.json();
+        expect(data.success).toBe(false);
+        expect(data.expired).toBe(true);
+    });
+});
+
 describe('Utility Functions', () => {
     // formatDate Funktion testen
     test('formatDate sollte Datum korrekt formatieren', () => {

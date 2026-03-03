@@ -1,4 +1,4 @@
-﻿/* ===== UTILITY CLASSES ===== */
+/* ===== UTILITY CLASSES ===== */
 /* HÃ¤ufig verwendete Styles als wiederverwendbare Klassen */
 
 /* Button Varianten */
@@ -83,6 +83,11 @@
 
 .text-tertiary {
     color: var(--text-tertiary);
+}
+
+/* Cursor Utility */
+.cursor-pointer {
+    cursor: pointer;
 }
 
 /* Position Utilities */

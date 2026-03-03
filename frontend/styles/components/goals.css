@@ -1,0 +1,166 @@
+/* Ziele-Seite (Admin + Schüler) */
+
+.goals-section-subtitle {
+    color: #64748b;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.goals-icon {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.goals-icon--admin   { color: #8b5cf6; }
+.goals-icon--new     { color: #3b82f6; }
+.goals-icon--active  { color: #f59e0b; }
+.goals-icon--done    { color: #10b981; }
+.goals-icon--cancel  { color: #ef4444; }
+.goals-icon--details { color: #3b82f6; }
+
+.goals-card {
+    text-align: left;
+}
+
+.goals-card--completed {
+    border-left: 4px solid #10b981;
+}
+
+.goals-card--cancelled {
+    border-left: 4px solid #ef4444;
+    opacity: 0.85;
+}
+
+.goals-card--in_progress {
+    border-left: 4px solid #3b82f6;
+}
+
+.goals-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.goals-card-status-badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.goals-card-status-badge--completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.goals-card-status-badge--cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.goals-card-status-badge--in_progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.goals-card-meta {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+.goals-card-meta i {
+    margin-right: 0.25rem;
+}
+
+.goals-progress {
+    margin-top: 0.75rem;
+}
+
+.goals-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.goals-progress-label {
+    color: #64748b;
+}
+
+.goals-progress-value {
+    font-weight: 600;
+}
+
+.goals-progress-bar {
+    background: #e5e7eb;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.goals-progress-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.goals-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.goals-btn-cancel {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.goals-btn-cancel:hover {
+    background: #d97706;
+}
+
+.goals-btn-delete {
+    /* auf iOS-Style aufbauen, aber etwas kompakter */
+}
+
+.goals-cancelled-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.goals-cancelled-count {
+    color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+    .goals-card-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .goals-card-actions {
+        justify-content: flex-end;
+    }
+}
+
+/* Ziele auf sehr kleinen Screens (360–430px) */
+@media (max-width: 430px) {
+    .goals-card-actions {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    
+    .goals-card-actions .btn-sm {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .goals-icon {
+        font-size: 1rem;
+    }
+    
+    .goals-section-subtitle {
+        font-size: 0.9rem;
+    }
+}
+

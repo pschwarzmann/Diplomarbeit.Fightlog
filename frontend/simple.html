@@ -490,6 +490,16 @@
         margin-bottom: 0;
       }
 
+      /* Gleichmäßige Abstände der Login-Buttons */
+      #loginForm .btn + .btn {
+        margin-top: 8px;
+      }
+
+      /* Passkey-Registrierungsbutton initial verstecken (wird per JS angezeigt) */
+      #passkeyRegisterBtn {
+        display: none;
+      }
+
       .demo-info {
         text-align: center;
         margin-top: 32px;
@@ -687,10 +697,14 @@
           font-size: 14px;
         }
 
-        .modal-body .form-group input,
-        .modal-body .form-group select {
+        .modal-body .form-group input {
           padding: 12px 16px;
           font-size: 16px; /* Verhindert Zoom auf iOS */
+        }
+
+        .modal-body .form-group select.form-control {
+          padding: 12px 44px 12px 16px; /* rechts Platz für Custom-Pfeil */
+          font-size: 16px;
         }
       }
 
@@ -714,11 +728,23 @@
         .btn {
           padding: 10px 16px;
           font-size: 15px;
+          min-height: 44px;
         }
 
         .demo-info {
           font-size: 12px;
         }
+      }
+
+      /* Login-Buttons einheitlich: gleiche Höhe, Radius */
+      #loginForm .btn,
+      .button-group .btn,
+      .btn-danger,
+      .btn-success,
+      .btn-purple,
+      .passkey-login-btn {
+        min-height: 44px;
+        border-radius: 12px;
       }
 
       /* Modal Styles - Apple Design - am Ende für höchste Priorität */
@@ -832,7 +858,6 @@
             type="button"
             class="btn btn-danger"
             onclick="showForgotPassword()"
-            style="margin-top: 8px"
           >
             Passwort vergessen
           </button>
@@ -842,7 +867,6 @@
             class="btn btn-purple"
             id="passkeyRegisterBtn"
             onclick="registerPasskey()"
-            style="display: none"
           >
             Passkey registrieren
           </button>
@@ -922,16 +946,8 @@
               <label for="regRole">Rolle</label>
               <select
                 id="regRole"
+                class="form-control"
                 required
-                style="
-                  width: 100%;
-                  padding: 16px 20px;
-                  border: 1px solid #d2d2d7;
-                  border-radius: 12px;
-                  font-size: 17px;
-                  background: rgba(255, 255, 255, 0.8);
-                  font-family: inherit;
-                "
               >
                 <option value="schueler" selected>Schüler (Standard)</option>
               </select>
@@ -959,8 +975,58 @@
     </div>
 
     <script>
-      // API Base URL - relativ zum frontend Ordner
-      const API_BASE = "../backend/api";
+      // API Base URL - wie SPA: window.FIGHTLOG_API_URL oder relativer Pfad
+      const API_BASE =
+        typeof window !== "undefined" && window.FIGHTLOG_API_URL
+          ? window.FIGHTLOG_API_URL
+          : "../backend/api";
+
+      // Demo-Modus: localStorage-Registrierung nur wenn explizit aktiviert
+      const isDemoMode = !!(
+        (typeof window !== "undefined" && window.FIGHTLOG_DEMO_MODE === "true") ||
+        (typeof window !== "undefined" && window.FIGHTLOG_ENV === "development")
+      );
+
+      // Hilfsfunktionen für WebAuthn (Base64 ⇄ Uint8Array)
+      function base64ToUint8Array(base64) {
+        const normalized = base64.replace(/-/g, "+").replace(/_/g, "/");
+        const binaryString = atob(normalized);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      }
+
+      function buildRegistrationPublicKeyOptions(registerData) {
+        return {
+          challenge: base64ToUint8Array(registerData.challenge),
+          rp: registerData.rp,
+          user: {
+            ...registerData.user,
+            id: base64ToUint8Array(registerData.user.id),
+          },
+          pubKeyCredParams: registerData.pubKeyCredParams,
+          authenticatorSelection: registerData.authenticatorSelection,
+          timeout: registerData.timeout,
+          attestation: registerData.attestation,
+        };
+      }
+
+      function buildLoginPublicKeyOptions(options) {
+        return {
+          challenge: base64ToUint8Array(options.challenge),
+          rpId: options.rpId,
+          allowCredentials: (options.allowCredentials || []).map((cred) => ({
+            type: cred.type,
+            id: base64ToUint8Array(cred.id),
+            transports: cred.transports || ["internal", "usb", "nfc", "ble"],
+          })),
+          timeout: options.timeout,
+          userVerification: options.userVerification,
+        };
+      }
 
       // Prüfe ob bereits authentifiziert
       function checkExistingAuth() {
@@ -980,67 +1046,50 @@
 
       // Zeige Passkey-Option an
       function showPasskeyOption() {
+        // Verhindere mehrfaches Hinzufügen
+        if (document.querySelector(".passkey-login-btn")) return;
+
         const passkeyButton = document.createElement("button");
         passkeyButton.type = "button";
-        passkeyButton.className = "btn";
-        passkeyButton.style.marginTop = "1rem";
-        passkeyButton.style.backgroundColor = "#10b981";
+        passkeyButton.className = "btn btn-success passkey-login-btn";
         passkeyButton.innerHTML =
           '<i class="fas fa-key"></i> Mit Passkey anmelden';
-        passkeyButton.onclick = attemptPasskeyLogin;
+        passkeyButton.addEventListener("click", attemptPasskeyLogin);
 
         const form = document.getElementById("loginForm");
         form.parentNode.insertBefore(passkeyButton, form.nextSibling);
       }
 
-      // Versuche Passkey-Anmeldung
-      async function attemptPasskeyLogin() {
-        const button = event.target;
-        const originalText = button.innerHTML;
+      // Versuche Passkey-Anmeldung (serverseitig mit WebAuthn)
+      async function attemptPasskeyLogin(event) {
+        const identifierInput = document.getElementById("identifier");
+        const identifier = identifierInput.value.trim();
+
+        if (!identifier) {
+          await notify.alert(
+            "Bitte geben Sie zuerst Ihren Benutzernamen oder Ihre E-Mail ein, bevor Sie die Passkey-Anmeldung verwenden.",
+          );
+          identifierInput.focus();
+          return;
+        }
+
+        const btn =
+          (event && event.currentTarget) ||
+          (event && event.target && event.target.closest("button")) ||
+          document.querySelector(".passkey-login-btn");
+        if (!btn) return;
+
+        const originalText = btn.innerHTML;
 
         try {
           // Zeige Ladeindikator
-          button.innerHTML =
+          btn.innerHTML =
             '<i class="fas fa-spinner fa-spin"></i> Passkey wird überprüft...';
-          button.disabled = true;
+          btn.disabled = true;
 
-          // Starte Passkey-Authentifizierung über API
-          const authResponse = await fetch(
-            `${API_BASE}/passkeys.php?action=authenticate`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-            },
-          );
-
-          if (!authResponse.ok) {
-            throw new Error("Server-Fehler bei Passkey-Authentifizierung");
-          }
-
-          const contentType = authResponse.headers.get("content-type") || "";
-          if (!contentType.includes("application/json")) {
-            const text = await authResponse.text();
-            console.error("Non-JSON response:", text.substring(0, 500));
-            throw new Error("Server returned non-JSON response");
-          }
-
-          const authData = await authResponse.json();
-
-          if (!authData.success || !authData.options) {
-            throw new Error(authData.error || "Keine Passkeys registriert");
-          }
-
-          // Erstelle Passkey-Assertion mit WebAuthn
-          const assertion = await navigator.credentials.get({
-            publicKey: authData.options,
-          });
-
-          // Verifiziere Passkey-Authentifizierung beim Server
-          const verifyResponse = await fetch(
-            `${API_BASE}/passkeys.php?action=verifyAuth`,
+          // Schritt 1: Passkey-Login beginnen (Challenge + Optionen holen)
+          const beginResponse = await fetch(
+            `${API_BASE}/passkeys_login.php`,
             {
               method: "POST",
               headers: {
@@ -1048,6 +1097,48 @@
               },
               credentials: "include",
               body: JSON.stringify({
+                action: "login_begin",
+                identifier: identifier,
+              }),
+            },
+          );
+
+          if (!beginResponse.ok) {
+            throw new Error("Server-Fehler bei Passkey-Authentifizierung");
+          }
+
+          const contentType = beginResponse.headers.get("content-type") || "";
+          if (!contentType.includes("application/json")) {
+            const text = await beginResponse.text();
+            console.error("Non-JSON response:", text.substring(0, 500));
+            throw new Error("Server returned non-JSON response");
+          }
+
+          const beginData = await beginResponse.json();
+
+          if (!beginData.success || !beginData.options) {
+            throw new Error(beginData.error || "Keine Passkeys registriert");
+          }
+
+          const loginOptions = buildLoginPublicKeyOptions(beginData.options);
+          const challenge = beginData.options.challenge;
+
+          // Schritt 2: Passkey-Assertion mit WebAuthn erstellen
+          const assertion = await navigator.credentials.get({
+            publicKey: loginOptions,
+          });
+
+          // Schritt 3: Passkey-Authentifizierung beim Server verifizieren
+          const verifyResponse = await fetch(
+            `${API_BASE}/passkeys_login.php`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                action: "login_finish",
                 credential: {
                   id: assertion.id,
                   rawId: Array.from(new Uint8Array(assertion.rawId)),
@@ -1069,6 +1160,8 @@
                   },
                   type: assertion.type,
                 },
+                challenge: challenge,
+                identifier: identifier,
               }),
             },
           );
@@ -1128,8 +1221,8 @@
           );
         } finally {
           // Stelle Button wieder her
-          button.innerHTML = originalText;
-          button.disabled = false;
+          btn.innerHTML = originalText;
+          btn.disabled = false;
         }
       }
 
@@ -1167,17 +1260,17 @@
 
         try {
           // Starte Passkey-Registrierung über API
-          const registerResponse = await fetch(
-            `${API_BASE}/passkeys.php?action=register`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              credentials: "include",
+          const registerResponse = await fetch(`${API_BASE}/passkeys.php`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
-          );
+            credentials: "include",
+            body: JSON.stringify({
+              action: "register",
+            }),
+          });
 
           if (!registerResponse.ok) {
             throw new Error("Server-Fehler bei Passkey-Registrierung");
@@ -1193,44 +1286,52 @@
 
           const registerData = await registerResponse.json();
 
-          if (!registerData.success || !registerData.options) {
+          if (
+            !registerData.success ||
+            !registerData.challenge ||
+            !registerData.rp ||
+            !registerData.user
+          ) {
             throw new Error(
               registerData.error || "Passkey-Registrierung fehlgeschlagen",
             );
           }
 
+          const publicKeyOptions =
+            buildRegistrationPublicKeyOptions(registerData);
+
           // Erstelle Passkey mit WebAuthn
           const credential = await navigator.credentials.create({
-            publicKey: registerData.options,
+            publicKey: publicKeyOptions,
           });
 
           // Verifiziere Passkey-Registrierung beim Server
-          const verifyResponse = await fetch(
-            `${API_BASE}/passkeys.php?action=verify`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              credentials: "include",
-              body: JSON.stringify({
-                credential: {
-                  id: credential.id,
-                  rawId: Array.from(new Uint8Array(credential.rawId)),
-                  response: {
-                    attestationObject: Array.from(
-                      new Uint8Array(credential.response.attestationObject),
-                    ),
-                    clientDataJSON: Array.from(
-                      new Uint8Array(credential.response.clientDataJSON),
-                    ),
-                  },
-                  type: credential.type,
-                },
-              }),
+          const verifyResponse = await fetch(`${API_BASE}/passkeys.php`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
-          );
+            credentials: "include",
+            body: JSON.stringify({
+              action: "verify",
+              credential: {
+                id: credential.id,
+                rawId: Array.from(new Uint8Array(credential.rawId)),
+                response: {
+                  attestationObject: Array.from(
+                    new Uint8Array(credential.response.attestationObject),
+                  ),
+                  clientDataJSON: Array.from(
+                    new Uint8Array(credential.response.clientDataJSON),
+                  ),
+                },
+                type: credential.type,
+              },
+              challenge: registerData.challenge,
+              friendlyName: "FightLog Passkey",
+            }),
+          });
 
           if (!verifyResponse.ok) {
             throw new Error("Server-Fehler bei Passkey-Verifizierung");
@@ -1247,6 +1348,12 @@
           const verifyData = await verifyResponse.json();
 
           if (verifyData.success) {
+            // Markiere, dass mindestens ein Passkey vorhanden ist
+            try {
+              localStorage.setItem("fightlog_passkey_available", "true");
+            } catch (e) {
+              // Ignorieren – nur UI-Hinweis
+            }
             await notify.alert(
               "Passkey erfolgreich registriert! Sie können sich jetzt mit dem Passkey anmelden.",
             );
@@ -1415,8 +1522,14 @@
         closeForgotPassword();
       }
 
-      // Registrierung Modal anzeigen
+      // Registrierung Modal anzeigen (nur im Demo-Modus)
       function showRegisterForm() {
+        if (!isDemoMode) {
+          notify.alert(
+            "Registrierung ist nur im Demo-Modus verfügbar. Kontaktieren Sie Ihren Administrator für einen Account."
+          );
+          return;
+        }
         document.getElementById("registerModal").style.display = "flex";
       }
 
@@ -1430,13 +1543,8 @@
       let passwordMinLength = 8; // Fallback-Wert
       (async function loadPasswordMinLength() {
         try {
-          // Verwende window.FIGHTLOG_API_URL falls gesetzt, sonst relativen Pfad
-          const baseUrl =
-            typeof window !== "undefined" && window.FIGHTLOG_API_URL
-              ? window.FIGHTLOG_API_URL
-              : "../backend/api";
           const response = await fetch(
-            `${baseUrl}/settings.php?action=publicPasswordMinLength`,
+            `${API_BASE}/settings.php?action=publicPasswordMinLength`,
           );
           if (response.ok) {
             const data = await response.json();
@@ -1452,11 +1560,17 @@
         }
       })();
 
-      // Registrierung verarbeiten
+      // Registrierung verarbeiten (nur im Demo-Modus: localStorage)
       document
         .getElementById("registerForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
+          if (!isDemoMode) {
+            await notify.alert(
+              "Registrierung ist nur im Demo-Modus verfügbar. Kontaktieren Sie Ihren Administrator für einen Account."
+            );
+            return;
+          }
 
           const username = document.getElementById("regUsername").value;
           const email = document.getElementById("regEmail").value;

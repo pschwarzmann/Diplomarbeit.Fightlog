@@ -1,5 +1,17 @@
 // ===== FIGHTLOG - PASSKEY/WEBATUHN IMPLEMENTATION =====
-// Echte WebAuthn-Passkey-Funktionalität für FightLog
+// Lokale Demo-Implementierung: Nur im Demo-Modus aktiv.
+// Produktion: Server-basierte Passkeys über simple.html / passkeys.php
+
+const isPasskeyDemoMode = !!(
+    (typeof window !== 'undefined' && window.FIGHTLOG_DEMO_MODE === 'true') ||
+    (typeof window !== 'undefined' && window.FIGHTLOG_ENV === 'development')
+);
+
+function requireDemoMode() {
+    if (!isPasskeyDemoMode) {
+        throw new Error('Lokale Passkey-Funktionen nur im Demo-Modus. Verwenden Sie die Anmelde-Seite für server-basierte Passkeys.');
+    }
+}
 
 class PasskeyManager {
     constructor() {
@@ -14,8 +26,9 @@ class PasskeyManager {
                  window.navigator.credentials.get);
     }
 
-    // Registriere neuen Passkey für Benutzer
+    // Registriere neuen Passkey für Benutzer (nur Demo-Modus)
     async registerPasskey(username, displayName = username) {
+        requireDemoMode();
         if (!this.isSupported) {
             throw new Error('WebAuthn wird von diesem Browser nicht unterstützt');
         }
@@ -81,8 +94,9 @@ class PasskeyManager {
         }
     }
 
-    // Authentifiziere mit Passkey
+    // Authentifiziere mit Passkey (nur Demo-Modus)
     async authenticateWithPasskey(username) {
+        requireDemoMode();
         if (!this.isSupported) {
             throw new Error('WebAuthn wird von diesem Browser nicht unterstützt');
         }
@@ -140,8 +154,9 @@ class PasskeyManager {
         return true;
     }
 
-    // Speichere Passkey-Daten
+    // Speichere Passkey-Daten (nur Demo-Modus)
     savePasskeyData(passkeyData) {
+        requireDemoMode();
         const existingData = JSON.parse(localStorage.getItem('fightlog_passkeys') || '{}');
         existingData[passkeyData.username] = passkeyData;
         localStorage.setItem('fightlog_passkeys', JSON.stringify(existingData));
@@ -161,8 +176,9 @@ class PasskeyManager {
         return !!this.getPasskeyData(username);
     }
 
-    // Entferne Passkey
+    // Entferne Passkey (nur Demo-Modus)
     removePasskey(username) {
+        requireDemoMode();
         const existingData = JSON.parse(localStorage.getItem('fightlog_passkeys') || '{}');
         delete existingData[username];
         localStorage.setItem('fightlog_passkeys', JSON.stringify(existingData));
@@ -174,8 +190,9 @@ class PasskeyManager {
         }
     }
 
-    // Liste alle verfügbaren Passkeys
+    // Liste alle verfügbaren Passkeys (nur Demo-Modus)
     listPasskeys() {
+        if (!isPasskeyDemoMode) return [];
         const allData = JSON.parse(localStorage.getItem('fightlog_passkeys') || '{}');
         return Object.keys(allData);
     }

@@ -1,10 +1,11 @@
-﻿/* Buttons */
+/* Buttons - einheitlich: Höhe, Padding, Radius, Font, Icon+Text Abstand */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     padding: 12px 20px;
+    min-height: 44px;
     background: #007aff;
     color: white;
     border: none;

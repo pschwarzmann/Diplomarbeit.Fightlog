@@ -1,4 +1,4 @@
-﻿/* Formulare */
+/* Formulare */
 .form-container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -265,7 +265,9 @@ textarea:invalid {
 }
 
 /* Selects & Date-Picker: runder, schema-passender Look */
-select.form-control {
+/* no-custom-select: nur Custom-Pfeil, kein Browser-Doppelpfeil */
+select.form-control,
+select.form-control.no-custom-select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;

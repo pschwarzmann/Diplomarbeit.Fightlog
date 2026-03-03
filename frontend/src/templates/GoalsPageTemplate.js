@@ -5,7 +5,7 @@
 
 export const GoalsPageTemplate = `
                  <div v-else-if="currentPage === 'goals'">
-                     <div style="padding: 2rem 0;">
+                     <div class="p-xl">
                          <div class="container">
                              <div class="page-header">
                                  <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
@@ -18,8 +18,8 @@ export const GoalsPageTemplate = `
                             <!-- ADMIN-ANSICHT: Alle Ziele aller User -->
                             <div v-if="currentUser && currentUser.role === 'admin'">
                                 <div class="form-container">
-                                    <h2><i class="fas fa-users" style="color: #8b5cf6;"></i> Alle Schüler-Ziele</h2>
-                                    <p style="color: #64748b; margin-bottom: 1rem;">Übersicht aller Ziele aller Schüler</p>
+                                    <h2><i class="fas fa-users goals-icon goals-icon--admin" aria-hidden="true"></i> Alle Schüler-Ziele</h2>
+                                    <p class="goals-section-subtitle">Übersicht aller Ziele aller Schüler</p>
                                     
                                     <!-- Filter nach Status -->
                                     <div class="form-row" style="margin-bottom: 1rem;">
@@ -46,53 +46,54 @@ export const GoalsPageTemplate = `
                                         <div 
                                             v-for="goal in filteredAllUsersGoals" 
                                             :key="goal.id" 
-                                            class="nav-card"
-                                            style="text-align: left;"
-                                            :style="{
-                                                borderLeft: goal.status === 'completed' ? '4px solid #10b981' : 
-                                                           goal.status === 'cancelled' ? '4px solid #ef4444' : 
-                                                           '4px solid #3b82f6'
+                                            class="nav-card goals-card"
+                                            :class="{
+                                                'goals-card--completed': goal.status === 'completed',
+                                                'goals-card--cancelled': goal.status === 'cancelled',
+                                                'goals-card--in_progress': goal.status === 'in_progress'
                                             }"
                                         >
-                                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <div class="goals-card-header">
                                                 <div>
                                                     <span style="background: #8b5cf6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.5rem; display: inline-block;">
                                                         {{ goal.user_name }}
                                                     </span>
                                                     <h3 style="margin: 0.25rem 0 0.5rem 0;">{{ goal.title }}</h3>
                                                 </div>
-                                                <span :style="{
-                                                    padding: '0.15rem 0.5rem', 
-                                                    borderRadius: '4px', 
-                                                    fontSize: '0.75rem',
-                                                    background: goal.status === 'completed' ? '#dcfce7' : 
-                                                               goal.status === 'cancelled' ? '#fee2e2' : '#dbeafe',
-                                                    color: goal.status === 'completed' ? '#166534' : 
-                                                          goal.status === 'cancelled' ? '#991b1b' : '#1e40af'
-                                                }">
+                                                <span 
+                                                    class="goals-card-status-badge"
+                                                    :class="{
+                                                        'goals-card-status-badge--completed': goal.status === 'completed',
+                                                        'goals-card-status-badge--cancelled': goal.status === 'cancelled',
+                                                        'goals-card-status-badge--in_progress': goal.status === 'in_progress'
+                                                    }"
+                                                >
                                                     {{ goal.status === 'completed' ? 'Abgeschlossen' : 
                                                        goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
                                                 </span>
                                             </div>
                                             <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                            <p style="color: #94a3b8; font-size: 0.8rem;">
-                                                <i class="fas fa-folder"></i> {{ goal.category }}
+                                            <p class="goals-card-meta">
+                                                <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
                                                 <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
                                             </p>
                                             
-                                            <div style="margin-top: 0.75rem;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                                                    <span style="font-size: 0.85rem; color: #64748b;">Fortschritt</span>
-                                                    <span style="font-size: 0.85rem; font-weight: 600;" :style="{ color: goal.status === 'completed' ? '#10b981' : '#3b82f6' }">
+                                            <div class="goals-progress">
+                                                <div class="goals-progress-header">
+                                                    <span class="goals-progress-label">Fortschritt</span>
+                                                    <span 
+                                                        class="goals-progress-value"
+                                                        :style="{ color: goal.status === 'completed' ? '#10b981' : '#3b82f6' }"
+                                                    >
                                                         {{ goal.completed_subtasks }}/{{ goal.total_subtasks }} ({{ goal.progress }}%)
                                                     </span>
                                                 </div>
-                                                <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div class="goals-progress-bar">
                                                     <div 
+                                                        class="goals-progress-bar-fill"
                                                         :style="{ 
                                                             background: goal.status === 'completed' ? '#10b981' : '#3b82f6', 
-                                                            width: goal.progress + '%', 
-                                                            height: '100%'
+                                                            width: goal.progress + '%'
                                                         }"
                                                     ></div>
                                                 </div>
@@ -111,7 +112,7 @@ export const GoalsPageTemplate = `
                             
                             <!-- Neues Ziel auswählen (nur für Schüler und Trainer) -->
                             <div v-if="currentUser && currentUser.role !== 'admin'" class="form-container">
-                                <h2><i class="fas fa-plus-circle" style="color: #3b82f6;"></i> Neues Ziel starten</h2>
+                                <h2><i class="fas fa-plus-circle goals-icon goals-icon--new" aria-hidden="true"></i> Neues Ziel starten</h2>
                                 
                                 <div class="form-row">
                                     <!-- Kategorie Dropdown -->
@@ -152,8 +153,7 @@ export const GoalsPageTemplate = `
                                 </div>
                                 
                                 <button 
-                                    class="btn btn-primary" 
-                                    style="margin-top: 1rem;"
+                                    class="btn btn-primary mt-md"
                                     :disabled="!selectedTemplateId"
                                     @click="assignGoalToSelf"
                                 >
@@ -162,8 +162,8 @@ export const GoalsPageTemplate = `
                             </div>
                             
                             <!-- Aktive Ziele (In Bearbeitung) -->
-                            <div class="form-container" style="margin-top: 1.5rem;">
-                                <h2><i class="fas fa-clock" style="color: #f59e0b;"></i> Aktive Ziele</h2>
+                            <div class="form-container mt-lg">
+                                <h2><i class="fas fa-clock goals-icon goals-icon--active" aria-hidden="true"></i> Aktive Ziele</h2>
                                 <div v-if="pendingGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
                                     Keine aktiven Ziele. Wähle oben ein Ziel aus, um zu starten!
                                 </div>
@@ -171,41 +171,39 @@ export const GoalsPageTemplate = `
                                     <div 
                                         v-for="goal in pendingGoals" 
                                         :key="goal.id" 
-                                        class="nav-card"
-                                        style="text-align: left; cursor: pointer;"
+                                        class="nav-card goals-card goals-card--in_progress cursor-pointer"
                                         @click="openGoalDetails(goal)"
                                     >
-                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
-                                            <div style="display: flex; gap: 0.5rem;">
-                                                <button class="btn btn-sm" @click.stop="cancelGoal(goal)" title="Ziel abbrechen" style="width: auto; padding: 0.25rem 0.5rem; background: #f59e0b; color: white;">
-                                                    <i class="fas fa-ban"></i>
+                                            <div class="goals-card-actions">
+                                                <button class="btn btn-sm goals-btn-cancel" @click.stop="cancelGoal(goal)" title="Ziel abbrechen">
+                                                    <i class="fas fa-ban" aria-hidden="true"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                    <i class="fas fa-trash"></i>
+                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen">
+                                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
                                         <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                        <p style="color: #94a3b8; font-size: 0.8rem;">
-                                            <i class="fas fa-folder"></i> {{ goal.category }}
+                                        <p class="goals-card-meta">
+                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
                                             <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
                                         </p>
                                         
-                                        <div style="margin-top: 1rem;">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                                                <span style="font-size: 0.85rem; color: #64748b;">Fortschritt</span>
-                                                <span style="font-size: 0.85rem; font-weight: 600; color: #3b82f6;">
+                                        <div class="goals-progress" style="margin-top: 1rem;">
+                                            <div class="goals-progress-header">
+                                                <span class="goals-progress-label">Fortschritt</span>
+                                                <span class="goals-progress-value" style="color: #3b82f6;">
                                                     {{ goal.completed_subtasks }}/{{ goal.total_subtasks }} ({{ goal.progress }}%)
                                                 </span>
                                             </div>
-                                            <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                            <div class="goals-progress-bar">
                                                 <div 
+                                                    class="goals-progress-bar-fill"
                                                     :style="{ 
                                                         background: '#3b82f6', 
-                                                        width: goal.progress + '%', 
-                                                        height: '100%',
-                                                        transition: 'width 0.3s ease'
+                                                        width: goal.progress + '%'
                                                     }"
                                                 ></div>
                                             </div>
@@ -218,8 +216,8 @@ export const GoalsPageTemplate = `
                             </div>
                             
                             <!-- Erreichte Ziele -->
-                            <div class="form-container" style="margin-top: 1.5rem;">
-                                <h2><i class="fas fa-check-circle" style="color: #10b981;"></i> Erreichte Ziele</h2>
+                            <div class="form-container mt-lg">
+                                <h2><i class="fas fa-check-circle goals-icon goals-icon--done" aria-hidden="true"></i> Erreichte Ziele</h2>
                                 <div v-if="completedGoals.length === 0" style="color: #64748b; padding: 1rem 0;">
                                     Noch keine Ziele erreicht.
                                 </div>
@@ -227,21 +225,20 @@ export const GoalsPageTemplate = `
                                     <div 
                                         v-for="goal in completedGoals" 
                                         :key="goal.id" 
-                                        class="nav-card"
-                                        style="text-align: left; border-left: 4px solid #10b981;"
+                                        class="nav-card goals-card goals-card--completed"
                                     >
-                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
-                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                <i class="fas fa-trash"></i>
+                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
                                             </button>
                                         </div>
                                         <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                        <p style="color: #94a3b8; font-size: 0.8rem;">
-                                            <i class="fas fa-folder"></i> {{ goal.category }}
+                                        <p class="goals-card-meta">
+                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
                                         </p>
                                         <p style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem;">
-                                            <i class="fas fa-trophy"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
+                                            <i class="fas fa-trophy" aria-hidden="true"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
                                         </p>
                                         
                                         <div style="margin-top: 1rem;">
@@ -257,35 +254,37 @@ export const GoalsPageTemplate = `
                             </div>
                             
                             <!-- Abgebrochene Ziele (zusammengeklappt) -->
-                            <div v-if="cancelledGoals.length > 0" class="form-container" style="margin-top: 1.5rem;">
-                                <h2 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
+                            <div v-if="cancelledGoals.length > 0" class="form-container mt-lg">
+                                <h2 class="goals-cancelled-header"
                                     @click="showCancelledGoals = !showCancelledGoals">
-                                    <span><i class="fas fa-times-circle" style="color: #ef4444;"></i> Abgebrochene Ziele ({{ cancelledGoals.length }})</span>
-                                    <i :class="showCancelledGoals ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" style="color: #94a3b8;"></i>
+                                    <span>
+                                        <i class="fas fa-times-circle goals-icon goals-icon--cancel" aria-hidden="true"></i>
+                                        Abgebrochene Ziele <span class="goals-cancelled-count">({{ cancelledGoals.length }})</span>
+                                    </span>
+                                    <i :class="showCancelledGoals ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" style="color: #94a3b8;" aria-hidden="true"></i>
                                 </h2>
                                 <div v-if="showCancelledGoals" class="nav-grid">
                                     <div 
                                         v-for="goal in cancelledGoals" 
                                         :key="goal.id" 
-                                        class="nav-card"
-                                        style="text-align: left; border-left: 4px solid #ef4444; opacity: 0.7;"
+                                        class="nav-card goals-card goals-card--cancelled"
                                     >
-                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0; text-decoration: line-through;">{{ goal.title }}</h3>
-                                            <div style="display: flex; gap: 0.35rem;">
-                                                <button class="btn btn-success btn-sm" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                    <i class="fas fa-redo"></i>
+                                            <div class="goals-card-actions">
+                                                <button class="btn btn-success btn-sm" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen">
+                                                    <i class="fas fa-redo" aria-hidden="true"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen" style="width: auto; padding: 0.25rem 0.5rem;">
-                                                    <i class="fas fa-trash"></i>
+                                                <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen">
+                                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        <p style="color: #94a3b8; font-size: 0.8rem;">
-                                            <i class="fas fa-folder"></i> {{ goal.category }}
+                                        <p class="goals-card-meta">
+                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
                                         </p>
                                         <p style="color: #ef4444; font-size: 0.85rem;">
-                                            <i class="fas fa-ban"></i> Abgebrochen
+                                            <i class="fas fa-ban" aria-hidden="true"></i> Abgebrochen
                                         </p>
                                     </div>
                                 </div>
@@ -300,7 +299,7 @@ export const GoalsPageTemplate = `
                 <div v-if="showGoalDetailsModal" class="modal-overlay modal-overlay-standard" @click.self="showGoalDetailsModal = false" role="dialog" aria-labelledby="goal-details-title" aria-modal="true">
                     <div class="modal-content form-container" style="max-width:500px;">
                         <div class="modal-header flex-between mb-md">
-                            <h2 id="goal-details-title"><i class="fas fa-bullseye" style="color: #3b82f6;" aria-hidden="true"></i> Unterziele</h2>
+                            <h2 id="goal-details-title"><i class="fas fa-bullseye goals-icon goals-icon--details" aria-hidden="true"></i> Unterziele</h2>
                             <button @click="showGoalDetailsModal = false" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;" aria-label="Modal schließen">
                                 <i class="fas fa-times" aria-hidden="true"></i>
                             </button>

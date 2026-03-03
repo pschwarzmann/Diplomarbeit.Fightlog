@@ -20,13 +20,18 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: #3b82f6;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 18px;
+            min-height: 44px;
+            border-radius: 12px;
             cursor: pointer;
             margin: 5px;
+            font-size: 16px;
         }
         .btn:hover {
             background: #2563eb;
@@ -98,6 +103,13 @@
             window.alert = function(msg){
                 try { window._notifyQueue.push(msg); } catch(e){ _nativeAlert(msg); }
             };
+        })();
+        // Demo-Seite nur im Demo-Modus zugänglich
+        (function(){
+            const isDemo = !!(window.FIGHTLOG_DEMO_MODE === 'true' || window.FIGHTLOG_ENV === 'development');
+            if (!isDemo) {
+                window.location.replace('simple.html');
+            }
         })();
     </script>
     <script src="./src/services/passkey.service.js"></script>
