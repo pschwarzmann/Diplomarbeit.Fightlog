@@ -1347,7 +1347,8 @@
             } else {
               // Fehlermeldung vom Server anzeigen (inkl. Rate-Limiting)
               await notify.alert(
-                data.error || "Login fehlgeschlagen. Bitte überprüfen Sie Ihre Eingaben.",
+                data.error ||
+                  "Login fehlgeschlagen. Bitte überprüfen Sie Ihre Eingaben.",
               );
             }
           } catch (error) {
@@ -1430,10 +1431,13 @@
       (async function loadPasswordMinLength() {
         try {
           // Verwende window.FIGHTLOG_API_URL falls gesetzt, sonst relativen Pfad
-          const baseUrl = (typeof window !== 'undefined' && window.FIGHTLOG_API_URL) 
-            ? window.FIGHTLOG_API_URL 
-            : '../backend/api';
-          const response = await fetch(`${baseUrl}/certificates.php?action=publicPasswordMinLength`);
+          const baseUrl =
+            typeof window !== "undefined" && window.FIGHTLOG_API_URL
+              ? window.FIGHTLOG_API_URL
+              : "../backend/api";
+          const response = await fetch(
+            `${baseUrl}/settings.php?action=publicPasswordMinLength`,
+          );
           if (response.ok) {
             const data = await response.json();
             if (data.success && data.password_min_length) {
@@ -1441,7 +1445,10 @@
             }
           }
         } catch (error) {
-          console.warn('Could not load password min length, using default:', error);
+          console.warn(
+            "Could not load password min length, using default:",
+            error,
+          );
         }
       })();
 

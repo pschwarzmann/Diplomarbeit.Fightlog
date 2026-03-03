@@ -78,14 +78,8 @@ CREATE TABLE permissions (
     label VARCHAR(150) NOT NULL
 );
 
--- Zuordnung Benutzer <-> Rechte
-CREATE TABLE user_permissions (
-    user_id INT NOT NULL,
-    permission_id INT NOT NULL,
-    PRIMARY KEY (user_id, permission_id),
-    FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (permission_id) REFERENCES permissions (id)
-);
+-- HINWEIS: Berechtigungen werden ausschließlich über role_permissions vergeben.
+-- Die Tabelle user_permissions ist nicht mehr nötig.
 
 -- Prüfungen-Tabelle (muss VOR certificates kommen wegen FK)
 CREATE TABLE exams (
@@ -185,7 +179,7 @@ CREATE TABLE sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(255) UNIQUE NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
@@ -698,31 +692,6 @@ INSERT INTO
     role_permissions (role, permission_id)
 SELECT 'admin', id
 FROM permissions;
-
--- Rechte-Zuordnung für bestehende Benutzer
--- Admin: alle Rechte
-INSERT INTO
-    user_permissions (user_id, permission_id)
-SELECT 1 as user_id, id
-FROM permissions;
-
--- Trainer: Trainer-Rechte
-INSERT INTO
-    user_permissions (user_id, permission_id)
-SELECT 2 as user_id, permission_id
-FROM role_permissions
-WHERE
-    role = 'trainer';
-
--- Schüler: Schüler-Rechte (User 3-8)
-INSERT INTO
-    user_permissions (user_id, permission_id)
-SELECT u.id, rp.permission_id
-FROM users u
-    CROSS JOIN role_permissions rp
-WHERE
-    u.role = 'schueler'
-    AND rp.role = 'schueler';
 
 INSERT INTO
     courses (

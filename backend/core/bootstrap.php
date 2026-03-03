@@ -129,18 +129,25 @@ function db(): mysqli
 
 function auth_user_id(mysqli $mysqli): ?int
 {
-    // Authentifizierung NUR über echte Session (Bearer Token)
-    $sessionUserId = AuthService::getAuthenticatedUserId($mysqli);
-    if ($sessionUserId) {
-        return $sessionUserId;
-    }
+    static $cachedUserId = null;
+    static $resolved = false;
     
-    return null;
+    if ($resolved) return $cachedUserId;
+    $resolved = true;
+    
+    // Authentifizierung NUR über echte Session (Bearer Token)
+    $cachedUserId = AuthService::getAuthenticatedUserId($mysqli);
+    return $cachedUserId;
 }
 
 function auth_user_role(mysqli $mysqli): ?string
 {
-    // Rolle aus DB anhand authentifiziertem User
+    static $cachedRole = null;
+    static $resolved = false;
+    
+    if ($resolved) return $cachedRole;
+    $resolved = true;
+    
     $userId = auth_user_id($mysqli);
     if (!$userId) return null;
     
@@ -149,9 +156,9 @@ function auth_user_role(mysqli $mysqli): ?string
     $stmt->execute();
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {
-        return $row['role'];
+        $cachedRole = $row['role'];
     }
-    return null;
+    return $cachedRole;
 }
 
 /**

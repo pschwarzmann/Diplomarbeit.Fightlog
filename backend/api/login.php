@@ -120,26 +120,52 @@ if ($passwordVerified && password_needs_rehash($user['password_hash'], PASSWORD_
 
 // Session-Token erstellen
 $token = null;
+
+// Vorherige Statements/Results sauber schließen (verhindert "Commands out of sync")
+if (isset($res) && $res instanceof mysqli_result) {
+    $res->free();
+}
+if (isset($stmt) && $stmt instanceof mysqli_stmt) {
+    $stmt->close();
+}
+
 $sessionsCheck = @$mysqli->query("SHOW TABLES LIKE 'sessions'");
 if ($sessionsCheck && $sessionsCheck->num_rows > 0) {
-    $token = bin2hex(random_bytes(32));
-    $tokenHash = hash('sha256', $token);
+    $sessionsCheck->free();
+    
+    $rawToken = bin2hex(random_bytes(32));
+    $tokenHash = hash('sha256', $rawToken);
     $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
     
     // Alte Sessions des Users löschen
     $deleteStmt = $mysqli->prepare("DELETE FROM sessions WHERE user_id = ?");
     if ($deleteStmt) {
-        $deleteStmt->bind_param('i', $user['id']);
+        $userId = (int)$user['id'];
+        $deleteStmt->bind_param('i', $userId);
         $deleteStmt->execute();
+        $deleteStmt->close();
     }
     
     // Neue Session speichern (nur Hash, nicht Klartext-Token)
-    $sessionStmt = $mysqli->prepare("INSERT INTO sessions (user_id, token, expires_at, created_at) VALUES (?, ?, ?, NOW())");
+    $sessionStmt = $mysqli->prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)");
     if ($sessionStmt) {
-        $sessionStmt->bind_param('iss', $user['id'], $tokenHash, $expiresAt);
-        $sessionStmt->execute();
-        // Fehler beim Session-Speichern ignorieren
+        $userId = (int)$user['id'];
+        $sessionStmt->bind_param('iss', $userId, $tokenHash, $expiresAt);
+        $insertOk = $sessionStmt->execute();
+        
+        if ($insertOk && $sessionStmt->affected_rows === 1) {
+            // INSERT erfolgreich — Token für Client merken
+            $token = $rawToken;
+        } else {
+            // INSERT fehlgeschlagen — Token NICHT an Client senden
+            error_log('[FightLog] Session INSERT fehlgeschlagen: ' . ($sessionStmt->error ?: 'affected_rows=' . $sessionStmt->affected_rows));
+        }
+        $sessionStmt->close();
+    } else {
+        error_log('[FightLog] Session INSERT prepare fehlgeschlagen: ' . $mysqli->error);
     }
+} else {
+    error_log('[FightLog] Sessions-Tabelle nicht gefunden');
 }
 
 // Berechtigungen des Users laden

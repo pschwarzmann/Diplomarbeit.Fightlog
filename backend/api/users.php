@@ -39,12 +39,22 @@ if ($method === 'GET') {
         json_error('Datenbankfehler', 500);
     }
     $res = $stmt->get_result();
+    
+    // Alle Rollen-Berechtigungen in einem Query laden (statt N+1)
+    $rolePerms = [];
+    $permRes = $mysqli->query("SELECT rp.role, p.`key` FROM role_permissions rp JOIN permissions p ON rp.permission_id = p.id ORDER BY p.`key`");
+    if ($permRes) {
+        while ($permRow = $permRes->fetch_assoc()) {
+            $rolePerms[$permRow['role']][] = $permRow['key'];
+        }
+    }
+    
     $list = [];
     while ($row = $res->fetch_assoc()) {
         $row['id'] = (int)$row['id'];
         $row['verifiedTrainer'] = (bool)$row['verifiedTrainer'];
-        // Berechtigungen des Benutzers laden
-        $row['permissions'] = PermissionService::getUserPermissions($mysqli, (int)$row['id']);
+        // Berechtigungen aus dem bereits geladenen Rollen-Mapping zuweisen
+        $row['permissions'] = $rolePerms[$row['role']] ?? [];
         $row['passkeys'] = [];
         $list[] = $row;
     }
@@ -101,10 +111,8 @@ if ($method === 'POST') {
             json_out(['success'=>false, 'error'=>'Update fehlgeschlagen'], 500);
         }
         
-        // Wenn sich die Rolle geändert hat, Berechtigungen neu zuweisen
-        if ($oldRole !== $role) {
-            PermissionService::assignRolePermissions($mysqli, (int)$body['id'], $role);
-        }
+        // Berechtigungen werden automatisch über die Rolle vergeben (role_permissions)
+        // Kein manuelles Zuweisen nötig
         
         AuditService::log($mysqli, 'user_updated', $currentUserId, 'user', (int)$body['id'], [
             'target_user_id' => (int)$body['id'],
@@ -128,8 +136,7 @@ if ($method === 'POST') {
             json_out(['success'=>false, 'error'=>'Verify fehlgeschlagen'], 500);
         }
         
-        // Trainer-Berechtigungen zuweisen
-        PermissionService::assignRolePermissions($mysqli, (int)$body['id'], 'trainer');
+        // Berechtigungen werden automatisch über die Rolle vergeben (role_permissions)
         
         json_out(['success'=>true]);
     }
@@ -191,12 +198,7 @@ if ($method === 'POST') {
             $stmt->bind_param('i', $deleteUserId);
             $stmt->execute();
             
-            // 8. Berechtigungen löschen
-            $stmt = $mysqli->prepare("DELETE FROM user_permissions WHERE user_id = ?");
-            $stmt->bind_param('i', $deleteUserId);
-            $stmt->execute();
-            
-            // 9. Passkeys löschen (falls Tabelle existiert) - SQL Injection Schutz: Prepared Statement
+            // 8. Passkeys löschen (falls Tabelle existiert) - SQL Injection Schutz: Prepared Statement
             $passkeyDeleteStmt = $mysqli->prepare("DELETE FROM passkeys WHERE user_id = ?");
             if ($passkeyDeleteStmt) {
                 $passkeyDeleteStmt->bind_param('i', $deleteUserId);

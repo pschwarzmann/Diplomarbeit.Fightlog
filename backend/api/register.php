@@ -91,8 +91,8 @@ if (!$stmt->execute()) {
 
 $newUserId = $stmt->insert_id;
 
-// Automatisch Berechtigungen der Rolle zuweisen
-PermissionService::assignRolePermissions($mysqli, $newUserId, $role);
+// Berechtigungen werden automatisch über die Rolle vergeben (role_permissions)
+// Kein manuelles Zuweisen nötig
 
 json_out(['success'=>true, 'id'=>$newUserId]);
 ?>

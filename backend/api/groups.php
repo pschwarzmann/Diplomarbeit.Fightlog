@@ -100,32 +100,42 @@ function handleGet($mysqli, $userId, $userRole, $action) {
     
     $result = $stmt->get_result();
     $groups = [];
+    $groupIds = [];
     
+    // Erst alle Gruppen sammeln
     while ($row = $result->fetch_assoc()) {
-        // Mitglieder-IDs abrufen
-        $groupId = $row['id'];
-        $memberStmt = $mysqli->prepare("SELECT user_id FROM group_members WHERE group_id = ?");
-        $memberStmt->bind_param('i', $groupId);
-        $memberStmt->execute();
-        $memberResult = $memberStmt->get_result();
-        
-        $userIds = [];
-        while ($member = $memberResult->fetch_assoc()) {
-            $userIds[] = intval($member['user_id']);
-        }
-        
-        $groups[] = [
-            'id' => intval($row['id']),
+        $gid = intval($row['id']);
+        $groupIds[] = $gid;
+        $groups[$gid] = [
+            'id' => $gid,
             'name' => $row['name'],
             'description' => $row['description'],
             'created_by' => intval($row['created_by']),
             'created_by_name' => $row['created_by_name'],
             'member_count' => intval($row['member_count']),
-            'userIds' => $userIds
+            'userIds' => []
         ];
     }
     
-    json_out(['success' => true, 'groups' => $groups]);
+    // Alle Mitglieder in einem einzigen Query laden (statt N+1)
+    if (!empty($groupIds)) {
+        $placeholders = implode(',', array_fill(0, count($groupIds), '?'));
+        $types = str_repeat('i', count($groupIds));
+        $memberStmt = $mysqli->prepare("SELECT group_id, user_id FROM group_members WHERE group_id IN ($placeholders)");
+        $memberStmt->bind_param($types, ...$groupIds);
+        $memberStmt->execute();
+        $memberResult = $memberStmt->get_result();
+        while ($member = $memberResult->fetch_assoc()) {
+            $gid = intval($member['group_id']);
+            if (isset($groups[$gid])) {
+                $groups[$gid]['userIds'][] = intval($member['user_id']);
+            }
+        }
+        $memberStmt->close();
+    }
+    
+    // Zu indexiertem Array konvertieren
+    json_out(['success' => true, 'groups' => array_values($groups)]);
 }
 
 function handlePost($mysqli, $userId, $userRole) {

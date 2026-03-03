@@ -189,7 +189,7 @@ export const apiService = {
     },
     
     getPasswordMinLength() {
-        return request('/certificates.php?action=publicPasswordMinLength');
+        return request('/settings.php?action=publicPasswordMinLength');
     },
     
     getSessionStatus() {
@@ -228,11 +228,11 @@ export const apiService = {
     },
     
     getCertificateSettings() {
-        return request('/certificates.php?action=settings');
+        return request('/settings.php?action=settings');
     },
     
     saveCertificateSettings(settings) {
-        return request('/certificates.php', {
+        return request('/settings.php', {
             method: 'POST',
             headers: jsonHeaders,
             body: JSON.stringify({ action: 'saveSettings', settings })
@@ -240,11 +240,11 @@ export const apiService = {
     },
     
     getGeneralSettings() {
-        return request('/certificates.php?action=generalSettings');
+        return request('/settings.php?action=generalSettings');
     },
     
     saveGeneralSettings(settings) {
-        return request('/certificates.php', {
+        return request('/settings.php', {
             method: 'POST',
             headers: jsonHeaders,
             body: JSON.stringify({ action: 'saveGeneralSettings', settings })

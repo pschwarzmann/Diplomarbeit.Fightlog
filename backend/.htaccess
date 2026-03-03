@@ -25,9 +25,11 @@
 </IfModule>
 
 # PHP-spezifisch: Header direkt übergeben
-<IfModule mod_php.c>
-    SetEnv HTTP_AUTHORIZATION %{HTTP:Authorization}
-</IfModule>
+# HINWEIS: SetEnv unterstützt KEINE Variablen-Interpolation.
+# Der mod_rewrite RewriteRule oben erledigt das bereits korrekt.
+# <IfModule mod_php.c>
+#     SetEnv HTTP_AUTHORIZATION %{HTTP:Authorization}
+# </IfModule>
 
 # CORS für API-Zugriffe
 <IfModule mod_headers.c>
