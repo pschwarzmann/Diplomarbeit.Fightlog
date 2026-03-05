@@ -175,7 +175,9 @@ if ($action === 'login_begin') {
     // Challenge generieren und speichern
     $challengeHex = bin2hex(random_bytes(32));
 
-    $challengeStmt = $mysqli->prepare("INSERT INTO passkey_challenges (user_id, challenge, type, expires_at) VALUES (?, ?, 'login', DATE_ADD(NOW(), INTERVAL 5 MINUTE)) ON DUPLICATE KEY UPDATE challenge = VALUES(challenge), expires_at = VALUES(expires_at)");
+    // Wichtig: type muss mit dem ENUM der Tabelle übereinstimmen ('register', 'authenticate')
+    // Wir verwenden hier 'authenticate', da es sich um eine Authentifizierungs-Challenge handelt.
+    $challengeStmt = $mysqli->prepare("INSERT INTO passkey_challenges (user_id, challenge, type, expires_at) VALUES (?, ?, 'authenticate', DATE_ADD(NOW(), INTERVAL 5 MINUTE)) ON DUPLICATE KEY UPDATE challenge = VALUES(challenge), expires_at = VALUES(expires_at)");
     if (!$challengeStmt) {
         json_error('Challenge konnte nicht gespeichert werden', 500);
     }
@@ -221,8 +223,8 @@ if ($action === 'login_finish') {
     }
     $challengeHex = bin2hex($challengeBin);
 
-    // Challenge-Eintrag suchen
-    $challengeStmt = $mysqli->prepare("SELECT user_id FROM passkey_challenges WHERE challenge = ? AND type = 'login' AND expires_at > NOW()");
+    // Challenge-Eintrag suchen (Typ muss mit oben verwendeter ENUM-Variante übereinstimmen)
+    $challengeStmt = $mysqli->prepare("SELECT user_id FROM passkey_challenges WHERE challenge = ? AND type = 'authenticate' AND expires_at > NOW()");
     if (!$challengeStmt) {
         json_error('Datenbankfehler', 500);
     }
@@ -270,7 +272,7 @@ if ($action === 'login_finish') {
     }
 
     // Verwendete Challenge entfernen
-    $deleteStmt = $mysqli->prepare("DELETE FROM passkey_challenges WHERE challenge = ? AND type = 'login'");
+    $deleteStmt = $mysqli->prepare("DELETE FROM passkey_challenges WHERE challenge = ? AND type = 'authenticate'");
     if ($deleteStmt) {
         $deleteStmt->bind_param('s', $challengeHex);
         $deleteStmt->execute();

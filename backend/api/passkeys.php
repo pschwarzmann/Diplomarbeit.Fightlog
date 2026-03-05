@@ -192,6 +192,42 @@ if ($method === 'POST') {
         json_out(['success' => true, 'message' => 'Passkey erfolgreich registriert']);
     }
     
+    if ($action === 'rename') {
+        // Passkey-Namen (friendly_name) aktualisieren
+        require_fields($body, ['id', 'friendlyName']);
+        
+        $passkeysTableCheck = @$mysqli->query("SHOW TABLES LIKE 'passkeys'");
+        if (!$passkeysTableCheck || $passkeysTableCheck->num_rows === 0) {
+            json_error('Passkey-System nicht verfügbar', 503);
+        }
+        
+        $passkeyId = (int)$body['id'];
+        $friendlyName = trim((string)$body['friendlyName']);
+        if ($friendlyName === '') {
+            $friendlyName = 'Passkey';
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE passkeys SET friendly_name = ? WHERE id = ? AND user_id = ?");
+        if (!$stmt) {
+            json_error('Datenbankfehler', 500);
+        }
+        $stmt->bind_param('sii', $friendlyName, $passkeyId, $currentUserId);
+        
+        if (!$stmt->execute()) {
+            json_error('Passkey konnte nicht aktualisiert werden', 500);
+        }
+        
+        if ($stmt->affected_rows === 0) {
+            json_error('Passkey nicht gefunden oder keine Berechtigung', 404);
+        }
+        
+        AuditService::log($mysqli, 'passkey_renamed', $currentUserId, 'passkey', $passkeyId, [
+            'friendly_name' => $friendlyName
+        ]);
+        
+        json_out(['success' => true, 'message' => 'Passkey-Name aktualisiert']);
+    }
+    
     if ($action === 'authenticate') {
         // Challenge für Authentication generieren
         $passkeysTableCheck = @$mysqli->query("SHOW TABLES LIKE 'passkeys'");

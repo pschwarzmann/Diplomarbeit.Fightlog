@@ -131,7 +131,6 @@
 // ===== END INLINE NOTIFY SYSTEM =====
 
 import { translations } from './src/constants/translations.js';
-import { demoData } from './src/data/demo-data.js';
 import { apiService } from './src/services/api.service.js';
 import { registerGlobalComponents } from './src/components/registerGlobalComponents.js';
 import {
@@ -224,6 +223,9 @@ const app = createApp({
             showRegister: false,
             showPassword: false,
             showPasskeyModal: false,
+            passkeys: [],
+            passkeysLoading: false,
+            passkeysError: null,
             showCreateUserModal: false,
             darkModeEnabled: darkMode.isDarkMode(),
             
@@ -791,6 +793,18 @@ const app = createApp({
             return ui.getAvailablePasskeys(this);
         },
         
+        async renamePasskey(passkey) {
+            return ui.renamePasskey(this, passkey);
+        },
+        
+        async initPasskeys() {
+            // Schutz: Falls ältere Version von ui.js aus dem Browser-Cache geladen wird
+            if (ui && typeof ui.initPasskeys === 'function') {
+                return ui.initPasskeys(this);
+            }
+            return;
+        },
+        
         togglePassword() {
             return ui.togglePassword(this);
         },
@@ -1239,37 +1253,30 @@ const app = createApp({
         
             if (isAuthenticated && user) {
                 this.isLoggedIn = true;
-                
-                // Behalte ID aus localStorage, verwende demoData nur für Fallback-Felder
+
+                // Aktuellen Benutzer ausschließlich aus den gespeicherten Backend-Daten ableiten
+                const firstName = user.firstName || user.first_name || '';
+                const lastName = user.lastName || user.last_name || '';
+                const fullName = (user.name || `${firstName} ${lastName}`).trim();
+
                 this.currentUser = {
-                    ...demoData.user,
-                    ...user, // Überschreibt mit gespeicherten Daten (inkl. id, role, username)
+                    ...user,
+                    name: fullName,
+                    beltLevel: user.beltLevel || user.belt_level || null,
                 };
                 
                 // Performance: Parallele API-Calls beim initialen Laden
                 await Promise.all([
                     this.loadExams(),
                     this.loadCourses(),
-                    this.loadGrades()
+                    this.loadGrades(),
+                    this.initPasskeys()
                 ]);
                 
                 // Starte Session-Timeout-Check nur wenn Token vorhanden ist
                 const token = localStorage.getItem('auth_token');
                 if (token) {
                     this.startSessionTimeoutCheck();
-                }
-            } else {
-                // Fallback zu altem System
-                const savedUsername = getCachedUsername();
-                if (savedUsername) {
-                    this.isLoggedIn = true;
-                    this.currentUser = demoData.user;
-                    // Performance: Parallele API-Calls
-                    await Promise.all([
-                        this.loadExams(),
-                        this.loadCourses(),
-                        this.loadGrades()
-                    ]);
                 }
             }
             

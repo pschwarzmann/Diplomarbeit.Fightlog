@@ -37,8 +37,6 @@
         };
       })();
     </script>
-    <!-- Passkey Manager -->
-    <script src="./src/services/passkey.service.js"></script>
     <script src="./src/services/notify.service.js?v=20260203090913"></script>
     <script src="./src/utils/custom-select.js"></script>
     <script src="./src/utils/custom-datepicker.js"></script>
@@ -831,7 +829,7 @@
             />
           </div>
 
-          <div class="form-group">
+          <div class="form-group" id="passwordGroup" style="display: none;">
             <label for="password">Passwort</label>
             <div class="password-container">
               <input
@@ -852,7 +850,19 @@
             </div>
           </div>
 
-          <button type="submit" class="btn">Anmelden</button>
+          <!-- Primärer Login per Passkey -->
+          <button
+            type="button"
+            class="btn btn-success passkey-login-btn"
+            id="passkeyLoginBtn"
+          >
+            <i class="fas fa-key"></i> Mit Passkey anmelden
+          </button>
+
+          <!-- Klassischer Login per Passwort (zweistufig: erst anzeigen, dann absenden) -->
+          <button type="button" class="btn" id="passwordLoginBtn">
+            Mit Passwort anmelden
+          </button>
 
           <button
             type="button"
@@ -1036,7 +1046,7 @@
         }
       }
 
-      // Prüfe auf Passkey-Verfügbarkeit
+      // Prüfe auf Passkey-Verfügbarkeit (nur für optionale UI, Login selbst prüft immer beim Server)
       function checkPasskeyAvailability() {
         const hasPasskey = localStorage.getItem("fightlog_passkey_available");
         if (hasPasskey) {
@@ -1044,11 +1054,20 @@
         }
       }
 
-      // Zeige Passkey-Option an
+      // Zeige Passkey-Option an / aktiviere bestehenden Button
       function showPasskeyOption() {
-        // Verhindere mehrfaches Hinzufügen
-        if (document.querySelector(".passkey-login-btn")) return;
+        // Falls im Markup bereits ein Passkey-Button existiert, nur Handler binden und anzeigen
+        const existing = document.querySelector(".passkey-login-btn");
+        if (existing) {
+          if (!existing.dataset.passkeyBound) {
+            existing.addEventListener("click", attemptPasskeyLogin);
+            existing.dataset.passkeyBound = "true";
+          }
+          existing.style.display = "block";
+          return;
+        }
 
+        // Fallback: Button dynamisch erzeugen (für ältere Versionen ohne statischen Button)
         const passkeyButton = document.createElement("button");
         passkeyButton.type = "button";
         passkeyButton.className = "btn btn-success passkey-login-btn";
@@ -1199,13 +1218,6 @@
               }),
             );
 
-            const roleLabel =
-              verifyData.user.role === "admin"
-                ? "Admin"
-                : verifyData.user.role === "trainer"
-                  ? "Trainer"
-                  : "Schüler";
-            await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
             navigateWithFade("index.html");
           } else {
             throw new Error(
@@ -1443,13 +1455,6 @@
                 }),
               );
 
-              const roleLabel =
-                data.user.role === "admin"
-                  ? "Admin"
-                  : data.user.role === "trainer"
-                    ? "Trainer"
-                    : "Schüler";
-              await notify.alert(`Login erfolgreich!\nRolle: ${roleLabel}`);
               navigateWithFade("index.html");
             } else {
               // Fehlermeldung vom Server anzeigen (inkl. Rate-Limiting)
@@ -1649,6 +1654,46 @@
       checkExistingAuth();
       checkPasskeyAvailability();
       checkRegisteredUsers();
+
+      // Zweistufiger Passwort-Login: zuerst Passwortfeld einblenden, dann Formular absenden
+      (function setupPasswordLoginFlow() {
+        const passwordGroup = document.getElementById("passwordGroup");
+        const passwordBtn = document.getElementById("passwordLoginBtn");
+        const passwordInput = document.getElementById("password");
+
+        if (!passwordGroup || !passwordBtn || !passwordInput) return;
+
+        let passwordStepActive = false;
+
+        passwordBtn.addEventListener("click", function () {
+          // Schritt 1: Passwortfeld anzeigen
+          if (!passwordStepActive) {
+            passwordGroup.style.display = "block";
+            passwordStepActive = true;
+            passwordBtn.textContent = "Anmelden";
+            // Button jetzt als Submit verwenden
+            passwordBtn.type = "submit";
+            // Fokus ins Passwortfeld setzen
+            setTimeout(() => {
+              try {
+                passwordInput.focus();
+              } catch (e) {}
+            }, 0);
+            return;
+          }
+          // Schritt 2: Bei erneutem Klick übernimmt der Form-Submit-Handler den Login
+        });
+      })();
+
+      // Passkey-Login-Button immer aktivieren (unabhängig von LocalStorage-Flag)
+      (function setupPasskeyLoginButton() {
+        const passkeyBtn = document.getElementById("passkeyLoginBtn");
+        if (!passkeyBtn) return;
+        if (!passkeyBtn.dataset.passkeyBound) {
+          passkeyBtn.addEventListener("click", attemptPasskeyLogin);
+          passkeyBtn.dataset.passkeyBound = "true";
+        }
+      })();
 
       // Hilfsfunktion: Navigation mit Page-Transition-Overlay (Crossfade)
       function navigateWithFade(url) {

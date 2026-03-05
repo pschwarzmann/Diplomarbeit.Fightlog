@@ -1,4 +1,4 @@
-﻿/* ===== Auswahleffekt (iOS-Glanz) fÃ¼r Kacheln ===== */
+/* ===== Auswahleffekt (iOS-Glanz) fÃ¼r Kacheln ===== */
 @keyframes glossSweepOnce {
     0% { transform: translateY(-110%) skewY(-8deg); opacity: 0.0; }
     35% { opacity: 0.45; }
@@ -294,15 +294,43 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.85rem 1rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: all 0.2s;
 }
 
 .passkey-item:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
+}
+
+.passkey-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.passkey-info i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    background: #e0f2fe;
+    color: #0f172a;
+}
+
+.passkey-name {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.passkey-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 

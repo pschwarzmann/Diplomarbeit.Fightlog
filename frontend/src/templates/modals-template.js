@@ -353,6 +353,10 @@ export const modalsOutsideMainTemplate = `
                     </div>
                     
                     <div class="modal-body">
+                        <p v-if="passkeysError" class="text-danger" style="margin-bottom: 1rem;">
+                            {{ passkeysError }}
+                        </p>
+
                         <div class="passkey-section">
                             <h3>Neuen Passkey registrieren</h3>
                             <p>Registrieren Sie einen neuen Passkey für schnelle und sichere Anmeldung.</p>
@@ -364,14 +368,42 @@ export const modalsOutsideMainTemplate = `
                         <div class="passkey-section" v-if="getAvailablePasskeys().length > 0">
                             <h3>Registrierte Passkeys</h3>
                             <div class="passkey-list" role="list" aria-label="Registrierte Passkeys">
-                                <div v-for="passkey in getAvailablePasskeys()" :key="passkey" class="passkey-item" role="listitem">
+                                <div
+                                    v-for="p in getAvailablePasskeys()"
+                                    :key="p.id"
+                                    class="passkey-item"
+                                    role="listitem"
+                                >
                                     <div class="passkey-info">
                                         <i class="fas fa-key" aria-hidden="true"></i>
-                                        <span>{{ passkey }}</span>
+                                        <div>
+                                            <span class="passkey-name">{{ p.friendlyName || 'Passkey' }}</span>
+                                            <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">
+                                                <span v-if="p.lastUsedAt">
+                                                    Zuletzt verwendet: {{ formatDateTime(p.lastUsedAt) }}
+                                                </span>
+                                                <span v-else>
+                                                    Erstellt am: {{ formatDateTime(p.createdAt) }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button @click="removePasskey(passkey)" class="btn btn-danger btn-sm" :aria-label="'Passkey ' + passkey + ' entfernen'">
-                                        <i class="fas fa-trash" aria-hidden="true"></i>
-                                    </button>
+                                    <div class="passkey-actions">
+                                        <button
+                                            @click="renamePasskey(p)"
+                                            class="btn btn-secondary btn-sm"
+                                            :aria-label="'Passkey ' + (p.friendlyName || p.id) + ' umbenennen'"
+                                        >
+                                            <i class="fas fa-pen" aria-hidden="true"></i>
+                                        </button>
+                                        <button
+                                            @click="removePasskey(p.id)"
+                                            class="btn btn-danger btn-sm"
+                                            :aria-label="'Passkey ' + (p.friendlyName || p.id) + ' entfernen'"
+                                        >
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
