@@ -54,8 +54,12 @@
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
           Arial, sans-serif;
-        background: #f5f5f7;
-        color: #1d1d1f;
+        background:
+          radial-gradient(circle at top left, #4f46e5 0, transparent 55%),
+          radial-gradient(circle at top right, #0ea5e9 0, transparent 55%),
+          radial-gradient(circle at bottom, #22c55e 0, transparent 60%),
+          #020617;
+        color: #e5e7eb;
         line-height: 1.47;
         font-size: 17px;
         font-weight: 400;
@@ -68,8 +72,20 @@
         align-items: center;
         min-height: 100vh;
         padding: 24px;
-        background: #ffffff;
         position: relative;
+        overflow: hidden;
+      }
+
+      .simple-login::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(148, 163, 253, 0.16), transparent 55%),
+          radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
+          radial-gradient(circle at 50% 100%, rgba(74, 222, 128, 0.14), transparent 60%);
+        opacity: 1;
+        pointer-events: none;
       }
 
       .login-card {
@@ -804,6 +820,12 @@
         padding: 0 32px 32px !important;
       }
 
+      .field-error {
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+        color: #ef4444;
+      }
+
       .modal-overlay .close-btn {
         display: none !important;
         visibility: hidden !important;
@@ -816,7 +838,7 @@
         <h1><span class="brand-logo">FightLog</span></h1>
         <p class="login-subtitle">Kampfsporterfolge digital erfassen</p>
 
-        <form id="loginForm">
+        <form id="loginForm" novalidate>
           <div class="form-group">
             <label for="identifier">Benutzername oder E-Mail</label>
             <input
@@ -824,9 +846,9 @@
               id="identifier"
               name="identifier"
               placeholder="Benutzername oder E-Mail"
-              required
               autocomplete="username"
             />
+            <p id="identifierError" class="field-error" style="display: none;"></p>
           </div>
 
           <div class="form-group" id="passwordGroup" style="display: none;">
@@ -837,7 +859,6 @@
                 id="password"
                 name="password"
                 placeholder="Passwort"
-                required
                 autocomplete="current-password"
               />
               <button
@@ -848,7 +869,9 @@
                 <i id="passwordToggleIcon" class="fas fa-eye"></i>
               </button>
             </div>
+            <p id="passwordError" class="field-error" style="display: none;"></p>
           </div>
+
 
           <!-- Primärer Login per Passkey -->
           <button
@@ -1392,18 +1415,36 @@
           const identifier = document.getElementById("identifier").value.trim();
           const password = document.getElementById("password").value;
 
-          if (!identifier || !password) {
-            await notify.alert(
-              "Bitte geben Sie Benutzername oder E-Mail und Passwort ein.",
+          // vorherige Fehlermeldungen zurücksetzen
+          clearFieldErrors();
+
+          let hasError = false;
+          if (!identifier) {
+            setFieldError(
+              "identifierError",
+              "Bitte geben Sie einen Benutzernamen oder eine E-Mail-Adresse ein.",
             );
+            hasError = true;
+          }
+          if (!password) {
+            setFieldError(
+              "passwordError",
+              "Bitte geben Sie Ihr Passwort ein.",
+            );
+            hasError = true;
+          }
+          if (hasError) {
             return;
           }
 
-          const submitBtn = e.target.querySelector('button[type="submit"]');
-          const originalText = submitBtn.innerHTML;
-          submitBtn.disabled = true;
-          submitBtn.innerHTML =
-            '<i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...';
+          // Button für Ladezustand ermitteln (Passwort-Login-Button)
+          const submitBtn = document.getElementById("passwordLoginBtn");
+          const originalText = submitBtn ? submitBtn.innerHTML : null;
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...';
+          }
 
           try {
             // API-Login mit Username ODER Email - KEINE Hardcodings!
@@ -1458,19 +1499,22 @@
               navigateWithFade("index.html");
             } else {
               // Fehlermeldung vom Server anzeigen (inkl. Rate-Limiting)
-              await notify.alert(
+              const message =
                 data.error ||
-                  "Login fehlgeschlagen. Bitte überprüfen Sie Ihre Eingaben.",
-              );
+                "Login fehlgeschlagen. Bitte überprüfen Sie Benutzername/E-Mail und Passwort.";
+              setFieldError("passwordError", message);
             }
           } catch (error) {
             console.error("Login error:", error);
-            await notify.alert(
+            setFieldError(
+              "passwordError",
               "Verbindungsfehler. Bitte versuchen Sie es später erneut.",
             );
           } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+            }
           }
         });
 
@@ -1660,19 +1704,19 @@
         const passwordGroup = document.getElementById("passwordGroup");
         const passwordBtn = document.getElementById("passwordLoginBtn");
         const passwordInput = document.getElementById("password");
+        const form = document.getElementById("loginForm");
 
         if (!passwordGroup || !passwordBtn || !passwordInput) return;
 
         let passwordStepActive = false;
 
-        passwordBtn.addEventListener("click", function () {
+        passwordBtn.addEventListener("click", function (event) {
+          event.preventDefault();
           // Schritt 1: Passwortfeld anzeigen
           if (!passwordStepActive) {
             passwordGroup.style.display = "block";
             passwordStepActive = true;
             passwordBtn.textContent = "Anmelden";
-            // Button jetzt als Submit verwenden
-            passwordBtn.type = "submit";
             // Fokus ins Passwortfeld setzen
             setTimeout(() => {
               try {
@@ -1681,7 +1725,12 @@
             }, 0);
             return;
           }
-          // Schritt 2: Bei erneutem Klick übernimmt der Form-Submit-Handler den Login
+          // Schritt 2: Bei erneutem Klick Formular-Submit programmatisch auslösen
+          if (form) {
+            form.dispatchEvent(
+              new Event("submit", { cancelable: true, bubbles: true }),
+            );
+          }
         });
       })();
 
@@ -1694,6 +1743,23 @@
           passkeyBtn.dataset.passkeyBound = "true";
         }
       })();
+
+      function setFieldError(id, message) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (message) {
+          el.textContent = message;
+          el.style.display = "block";
+        } else {
+          el.textContent = "";
+          el.style.display = "none";
+        }
+      }
+
+      function clearFieldErrors() {
+        setFieldError("identifierError", "");
+        setFieldError("passwordError", "");
+      }
 
       // Hilfsfunktion: Navigation mit Page-Transition-Overlay (Crossfade)
       function navigateWithFade(url) {

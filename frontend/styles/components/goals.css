@@ -69,6 +69,8 @@
 
 .goals-card-meta i {
     margin-right: 0.25rem;
+    font-size: 1rem;
+    vertical-align: middle;
 }
 
 .goals-progress {
@@ -106,6 +108,20 @@
 .goals-card-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+/* Kompaktere Icon-Buttons in Zielkarten */
+.goals-card-actions .btn {
+    width: auto;
+    min-width: 0;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.9rem;
+    border-radius: 9999px;
+    box-shadow: none;
+}
+
+.goals-card-actions .btn i {
+    margin: 0;
 }
 
 .goals-btn-cancel {
@@ -161,6 +177,29 @@
     
     .goals-section-subtitle {
         font-size: 0.9rem;
+    }
+}
+
+/* Hinweis unter Schüler-Zielen (Klick für Unterziele) */
+.goals-click-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #3b82f6;
+}
+
+.goals-click-hint i {
+    font-size: 1rem;
+}
+
+@media (max-width: 430px) {
+    .goals-click-hint {
+        font-size: 0.75rem;
+    }
+    
+    .goals-click-hint i {
+        display: none;
     }
 }
 

@@ -995,6 +995,9 @@ const app = createApp({
         removePasskey(user, key) {
             return admin.removePasskey(this, user, key);
         },
+        async removeOwnPasskey(passkeyId) {
+            return ui.removePasskey(this, passkeyId);
+        },
         async deleteUser(user) {
             return admin.deleteUser(this, user);
         },

@@ -345,31 +345,39 @@ if ($method === 'POST') {
 
 if ($method === 'DELETE') {
     // Passkey löschen
-    require_fields($body, ['id']);
-    
     $passkeysTableCheck = @$mysqli->query("SHOW TABLES LIKE 'passkeys'");
     if (!$passkeysTableCheck || $passkeysTableCheck->num_rows === 0) {
         json_error('Passkey-System nicht verfügbar', 503);
     }
-    
-    $passkeyId = (int)$body['id'];
-    
+
+    // ID robust ermitteln: zuerst aus JSON-Body, sonst aus Query-Parameter
+    $passkeyId = null;
+    if (isset($body['id'])) {
+        $passkeyId = (int)$body['id'];
+    } elseif (isset($_GET['id'])) {
+        $passkeyId = (int)$_GET['id'];
+    }
+
+    if (!$passkeyId) {
+        json_error('Feld fehlt: id', 400);
+    }
+
     $stmt = $mysqli->prepare("DELETE FROM passkeys WHERE id = ? AND user_id = ?");
     if (!$stmt) {
         json_error('Datenbankfehler', 500);
     }
     $stmt->bind_param('ii', $passkeyId, $currentUserId);
-    
+
     if (!$stmt->execute()) {
         json_error('Passkey konnte nicht gelöscht werden', 500);
     }
-    
+
     if ($stmt->affected_rows === 0) {
         json_error('Passkey nicht gefunden oder keine Berechtigung', 404);
     }
-    
+
     AuditService::log($mysqli, 'passkey_deleted', $currentUserId, 'passkey', $passkeyId);
-    
+
     json_out(['success' => true, 'message' => 'Passkey erfolgreich gelöscht']);
 }
 

@@ -397,7 +397,7 @@ export const modalsOutsideMainTemplate = `
                                             <i class="fas fa-pen" aria-hidden="true"></i>
                                         </button>
                                         <button
-                                            @click="removePasskey(p.id)"
+                                            @click="removeOwnPasskey(p.id)"
                                             class="btn btn-danger btn-sm"
                                             :aria-label="'Passkey ' + (p.friendlyName || p.id) + ' entfernen'"
                                         >

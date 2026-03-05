@@ -300,17 +300,15 @@ export async function removePasskey(ctx, passkeyId) {
         }
 
         const API_BASE = getApiBase();
-        const url = `${API_BASE}/passkeys.php?token=${encodeURIComponent(token)}`;
+        const url = `${API_BASE}/passkeys.php?token=${encodeURIComponent(token)}&id=${encodeURIComponent(passkeyId)}`;
 
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`,
             },
             credentials: 'include',
-            body: JSON.stringify({ id: passkeyId }),
         });
 
         const contentType = response.headers.get('content-type') || '';

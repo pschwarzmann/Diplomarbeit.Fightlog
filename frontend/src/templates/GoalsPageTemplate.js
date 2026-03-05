@@ -208,8 +208,9 @@ export const GoalsPageTemplate = `
                                                 ></div>
                                             </div>
                                         </div>
-                                        <p style="color: #3b82f6; font-size: 0.8rem; margin-top: 0.75rem;">
-                                            <i class="fas fa-hand-pointer"></i> Klicken um Unterziele zu bearbeiten
+                                        <p class="goals-click-hint" style="margin-top: 0.75rem;">
+                                            <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+                                            <span>Klicken, um Unterziele zu bearbeiten</span>
                                         </p>
                                     </div>
                                 </div>
