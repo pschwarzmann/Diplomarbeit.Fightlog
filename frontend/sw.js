@@ -1,7 +1,7 @@
 // frontend/sw.js
 // Service Worker für PWA Offline-Fähigkeit
 
-const CACHE_NAME = 'fightlog-v2';
+const CACHE_NAME = 'fightlog-v3';
 const OFFLINE_PAGE = './offline.html';
 
 // Assets relativ zu sw.js (frontend-Ordner)
@@ -79,7 +79,23 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
-    // Statische Assets: Cache First, dann Network
+    // CSS & JS: Network First, dann optional Cache (damit Design/Logik immer aktuell sind)
+    if (request.destination === 'style' || request.destination === 'script') {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response.ok) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(request))
+        );
+        return;
+    }
+    
+    // Übrige statische Assets: Cache First, dann Network
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {

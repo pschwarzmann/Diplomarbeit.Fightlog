@@ -73,10 +73,16 @@ export const GoalsPageTemplate = `
                                                 </span>
                                             </div>
                                             <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                            <p class="goals-card-meta">
-                                                <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
-                                                <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
-                                            </p>
+                                            <div class="goals-meta-row" v-if="goal.category || goal.target_date">
+                                                <span v-if="goal.category" class="goals-meta-pill goals-meta-pill--category">
+                                                    <i class="fas fa-folder" aria-hidden="true"></i>
+                                                    <span>{{ goal.category }}</span>
+                                                </span>
+                                                <span v-if="goal.target_date" class="goals-meta-pill goals-meta-pill--date">
+                                                    <i class="fas fa-calendar" aria-hidden="true"></i>
+                                                    <span>{{ formatDate(goal.target_date) }}</span>
+                                                </span>
+                                            </div>
                                             
                                             <div class="goals-progress">
                                                 <div class="goals-progress-header">
@@ -99,8 +105,9 @@ export const GoalsPageTemplate = `
                                                 </div>
                                             </div>
                                             
-                                            <p v-if="goal.completed_at" style="color: #10b981; font-size: 0.8rem; margin-top: 0.5rem;">
-                                                <i class="fas fa-trophy"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
+                                            <p v-if="goal.completed_at" class="goals-completed-meta">
+                                                <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
+                                                <span>Abgeschlossen am {{ formatDate(goal.completed_at) }}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -230,26 +237,48 @@ export const GoalsPageTemplate = `
                                     >
                                         <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
-                                            <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen">
-                                                <i class="fas fa-trash" aria-hidden="true"></i>
-                                            </button>
+                                            <div class="goals-card-actions">
+                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen">
+                                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                        <p class="goals-card-meta">
-                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
-                                        </p>
-                                        <p style="color: #10b981; font-size: 0.85rem; margin-top: 0.5rem;">
-                                            <i class="fas fa-trophy" aria-hidden="true"></i> Abgeschlossen am {{ formatDate(goal.completed_at) }}
-                                        </p>
-                                        
-                                        <div style="margin-top: 1rem;">
-                                            <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                                                <div style="background: #10b981; width: 100%; height: 100%;"></div>
-                                            </div>
-                                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #10b981;">
-                                                <i class="fas fa-check"></i> Alle {{ goal.total_subtasks }} Unterziele erledigt
-                                            </p>
+                                        <div class="goals-meta-row" v-if="goal.category || goal.completed_at">
+                                            <span v-if="goal.category" class="goals-meta-pill goals-meta-pill--category">
+                                                <i class="fas fa-folder" aria-hidden="true"></i>
+                                                <span>{{ goal.category }}</span>
+                                            </span>
+                                            <span v-if="goal.completed_at" class="goals-meta-pill goals-meta-pill--date">
+                                                <i class="fas fa-calendar" aria-hidden="true"></i>
+                                                <span>{{ formatDate(goal.completed_at) }}</span>
+                                            </span>
                                         </div>
+
+                                        <div class="goals-progress" style="margin-top: 1rem;">
+                                            <div class="goals-progress-header">
+                                                <span class="goals-progress-label">Fortschritt</span>
+                                                <span class="goals-progress-value" style="color: #10b981;">
+                                                    {{ goal.completed_subtasks }}/{{ goal.total_subtasks }} ({{ goal.progress }}%)
+                                                </span>
+                                            </div>
+                                            <div class="goals-progress-bar">
+                                                <div 
+                                                    class="goals-progress-bar-fill"
+                                                    :style="{ 
+                                                        background: '#10b981', 
+                                                        width: goal.progress + '%'
+                                                    }"
+                                                ></div>
+                                            </div>
+                                        </div>
+                                        <p class="goals-completed-meta">
+                                            <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
+                                            <span>
+                                                Abgeschlossen am {{ formatDate(goal.completed_at) }}
+                                                <span v-if="goal.total_subtasks"> · Alle {{ goal.total_subtasks }} Unterziele erledigt</span>
+                                            </span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>

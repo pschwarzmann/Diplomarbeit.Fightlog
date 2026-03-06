@@ -18,6 +18,19 @@
 .goals-icon--cancel  { color: #ef4444; }
 .goals-icon--details { color: #3b82f6; }
 
+/* Zielkacheln: exakt gleiche Höhe und Breite im Grid */
+.nav-grid .goals-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+.nav-grid .goals-card::after {
+    content: '';
+    flex: 1;
+    min-height: 0.5rem;
+}
+
 .goals-card {
     text-align: left;
 }
@@ -71,6 +84,41 @@
     margin-right: 0.25rem;
     font-size: 1rem;
     vertical-align: middle;
+}
+
+/* Admin-Zielkarten: Kategorie/Datum als Badges */
+.goals-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.goals-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 9999px;
+    font-weight: 500;
+}
+
+.goals-meta-pill i {
+    font-size: 0.9rem !important;
+    line-height: 1;
+    margin-bottom: 0; 
+    transform: translateY(1px); /* optische Zentrierung neben Text */
+}
+
+.goals-meta-pill--category {
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.goals-meta-pill--date {
+    background: #ecfeff;
+    color: #0e7490;
 }
 
 .goals-progress {
@@ -189,8 +237,30 @@
     color: #3b82f6;
 }
 
-.goals-click-hint i {
-    font-size: 1rem;
+.nav-card .goals-click-hint i {
+    font-size: 0.9rem !important;
+}
+
+/* Pokal-Icon: .nav-card i setzt display:block + margin-bottom:1rem – muss überschrieben werden */
+.goals-completed-meta .goals-trophy-icon {
+    font-size: 0.9rem !important;
+    line-height: 1;
+    vertical-align: middle;
+    display: inline !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+.nav-card:hover .goals-completed-meta .goals-trophy-icon {
+    transform: none !important;
+}
+
+.goals-completed-meta {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #10b981;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 }
 
 @media (max-width: 430px) {
