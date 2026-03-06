@@ -121,6 +121,13 @@
     color: #0e7490;
 }
 
+.goals-meta-pill--cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+    margin-top: 0.5rem;
+    display: inline-flex;
+}
+
 .goals-progress {
     margin-top: 0.75rem;
 }
@@ -158,31 +165,57 @@
     gap: 0.5rem;
 }
 
-/* Kompaktere Icon-Buttons in Zielkarten */
+/* Zielkarten-Buttons: dezentes, einheitliches Design */
 .goals-card-actions .btn {
     width: auto;
     min-width: 0;
-    padding: 0.45rem 0.9rem;
+    padding: 0.5rem 0.85rem;
     font-size: 0.9rem;
-    border-radius: 9999px;
+    border-radius: 10px;
     box-shadow: none;
+    border: none;
+    transition: all 0.2s ease;
 }
 
 .goals-card-actions .btn i {
     margin: 0;
+    color: inherit;
 }
 
-.goals-btn-cancel {
-    background: #f59e0b;
-    color: #ffffff;
+/* Abbrechen: warmes Amber, weich */
+.goals-card-actions .goals-btn-cancel {
+    background: #fef3c7;
+    color: #b45309;
 }
 
-.goals-btn-cancel:hover {
-    background: #d97706;
+.goals-card-actions .goals-btn-cancel:hover {
+    background: #fde68a;
+    color: #92400e;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
 }
 
-.goals-btn-delete {
-    /* auf iOS-Style aufbauen, aber etwas kompakter */
+/* Löschen: weiches Rot */
+.goals-card-actions .btn-danger {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.goals-card-actions .btn-danger:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* Wiederaufnehmen: weiches Grün */
+.goals-card-actions .btn-success {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.goals-card-actions .btn-success:hover {
+    background: #d1fae5;
+    color: #047857;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 .goals-cancelled-header {
@@ -228,7 +261,7 @@
     }
 }
 
-/* Hinweis unter Schüler-Zielen (Klick für Unterziele) */
+/* Hinweis unter Schüler-Zielen (Klick für Unterziele) – Icons symmetrisch zentriert */
 .goals-click-hint {
     display: inline-flex;
     align-items: center;
@@ -237,8 +270,16 @@
     color: #3b82f6;
 }
 
-.nav-card .goals-click-hint i {
+.goals-click-hint i {
     font-size: 0.9rem !important;
+    line-height: 1;
+    vertical-align: middle;
+    display: inline !important;
+    margin: 0 !important;
+    transform: translateY(1px);
+}
+.nav-card:hover .goals-click-hint i {
+    transform: translateY(1px) !important;
 }
 
 /* Pokal-Icon: .nav-card i setzt display:block + margin-bottom:1rem – muss überschrieben werden */
@@ -269,7 +310,7 @@
     }
     
     .goals-click-hint i {
-        display: none;
+        display: none !important;
     }
 }
 

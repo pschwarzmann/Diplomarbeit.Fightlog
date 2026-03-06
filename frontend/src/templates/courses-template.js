@@ -90,7 +90,7 @@ export const coursesTemplate = `
                                             <button class="btn btn-secondary" @click="clearCourseSearch">{{ t('clearFilter') }}</button>
                                         </div>
                                     </div>
-                                    <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
+                                    <div class="certificates-grid">
                                         <div v-for="c in filteredCourses" :key="c.id" class="certificate-card" style="text-align:left;">
                                             <h4>{{ c.title }}</h4>
                                             <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>

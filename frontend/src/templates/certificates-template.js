@@ -6,7 +6,7 @@
 export const certificatesTemplate = `
                 <!-- Urkunden -->
                 <div v-else-if="currentPage === 'certificates'">
-                    <div style="padding: 2rem 0;">
+                    <div class="p-xl">
                         <div class="container">
                             <div class="page-header">
                                 <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
@@ -76,16 +76,13 @@ export const certificatesTemplate = `
                             </div>
                             
                             <!-- Urkunden-Kacheln -->
-                            <div v-else class="certificates-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                            <div v-else class="certificates-grid">
                                 <div 
                                     v-for="cert in displayedCertificates" 
                                     :key="cert.id" 
                                     class="certificate-card form-container position-relative"
-                                    style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                                     @click="openCertificateDetail(cert)"
                                     @keydown.enter="openCertificateDetail(cert)"
-                                    @mouseenter="$event.target.style.transform = 'translateY(-4px)'; $event.target.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)'"
-                                    @mouseleave="$event.target.style.transform = ''; $event.target.style.boxShadow = ''"
                                     role="button"
                                     tabindex="0"
                                     :aria-label="'Urkunde anzeigen: ' + cert.title"
@@ -98,7 +95,7 @@ export const certificatesTemplate = `
                                         <span class="badge badge-manual" aria-label="Manuell erstellte Urkunde">MANUELL</span>
                                     </div>
                                     
-                                    <div class="text-center p-lg" style="padding: 1.5rem 1rem;">
+                                    <div class="certificate-card-body text-center">
                                         <!-- Urkunden-Icon mit Grad-Farbe -->
                                         <div class="flex-center mb-md" style="width: 70px; height: 70px; margin: 0 auto 1rem; border-radius: 50%; font-size: 2rem;" :style="{ backgroundColor: (cert.gradeColor || '#e2e8f0') + '20', color: cert.gradeColor || '#64748b' }" aria-hidden="true">
                                             <i class="fas fa-award"></i>

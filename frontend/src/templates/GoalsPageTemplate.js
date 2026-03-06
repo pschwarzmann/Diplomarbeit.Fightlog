@@ -193,10 +193,16 @@ export const GoalsPageTemplate = `
                                             </div>
                                         </div>
                                         <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
-                                        <p class="goals-card-meta">
-                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
-                                            <span v-if="goal.target_date"> | <i class="fas fa-calendar"></i> {{ formatDate(goal.target_date) }}</span>
-                                        </p>
+                                        <div class="goals-meta-row" v-if="goal.category || goal.target_date">
+                                            <span v-if="goal.category" class="goals-meta-pill goals-meta-pill--category">
+                                                <i class="fas fa-folder" aria-hidden="true"></i>
+                                                <span>{{ goal.category }}</span>
+                                            </span>
+                                            <span v-if="goal.target_date" class="goals-meta-pill goals-meta-pill--date">
+                                                <i class="fas fa-calendar" aria-hidden="true"></i>
+                                                <span>{{ formatDate(goal.target_date) }}</span>
+                                            </span>
+                                        </div>
                                         
                                         <div class="goals-progress" style="margin-top: 1rem;">
                                             <div class="goals-progress-header">
@@ -310,12 +316,16 @@ export const GoalsPageTemplate = `
                                                 </button>
                                             </div>
                                         </div>
-                                        <p class="goals-card-meta">
-                                            <i class="fas fa-folder" aria-hidden="true"></i> {{ goal.category }}
-                                        </p>
-                                        <p style="color: #ef4444; font-size: 0.85rem;">
-                                            <i class="fas fa-ban" aria-hidden="true"></i> Abgebrochen
-                                        </p>
+                                        <div class="goals-meta-row" v-if="goal.category">
+                                            <span class="goals-meta-pill goals-meta-pill--category">
+                                                <i class="fas fa-folder" aria-hidden="true"></i>
+                                                <span>{{ goal.category }}</span>
+                                            </span>
+                                        </div>
+                                        <span class="goals-meta-pill goals-meta-pill--cancelled">
+                                            <i class="fas fa-ban" aria-hidden="true"></i>
+                                            <span>Abgebrochen</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
