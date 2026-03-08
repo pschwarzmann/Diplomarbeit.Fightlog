@@ -33,8 +33,8 @@ export const GoalsPageTemplate = `
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label>Schüler suchen</label>
-                                            <input type="text" v-model="adminGoalSearch" class="form-control" placeholder="Name eingeben...">
+                                            <label>Suchen</label>
+                                            <input type="text" v-model="adminGoalSearch" class="form-control" placeholder="Schüler, Ziel">
                                         </div>
                                     </div>
                                     
@@ -60,17 +60,22 @@ export const GoalsPageTemplate = `
                                                     </span>
                                                     <h3 style="margin: 0.25rem 0 0.5rem 0;">{{ goal.title }}</h3>
                                                 </div>
-                                                <span 
-                                                    class="goals-card-status-badge"
-                                                    :class="{
-                                                        'goals-card-status-badge--completed': goal.status === 'completed',
-                                                        'goals-card-status-badge--cancelled': goal.status === 'cancelled',
-                                                        'goals-card-status-badge--in_progress': goal.status === 'in_progress'
-                                                    }"
-                                                >
-                                                    {{ goal.status === 'completed' ? 'Abgeschlossen' : 
-                                                       goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
-                                                </span>
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <span 
+                                                        class="goals-card-status-badge"
+                                                        :class="{
+                                                            'goals-card-status-badge--completed': goal.status === 'completed',
+                                                            'goals-card-status-badge--cancelled': goal.status === 'cancelled',
+                                                            'goals-card-status-badge--in_progress': goal.status === 'in_progress'
+                                                        }"
+                                                    >
+                                                        {{ goal.status === 'completed' ? 'Abgeschlossen' : 
+                                                           goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
+                                                    </span>
+                                                    <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="padding: 0.25rem 0.5rem; min-width: auto;">
+                                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                             <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
                                             <div class="goals-meta-row" v-if="goal.category || goal.target_date">

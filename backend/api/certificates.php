@@ -66,7 +66,7 @@ if ($method === 'POST') {
     if ($action === 'create') {
         require_permission($mysqli, 'create_certificates');
         
-        require_fields($body, ['userId', 'title', 'date', 'level', 'instructor']);
+        require_fields($body, ['userId', 'title', 'date', 'instructor']);
         
         $date = normalize_date($body['date']);
         if (!$date) json_error('Ungültiges Datum', 400);

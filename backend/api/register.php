@@ -44,7 +44,6 @@ $name = trim($body['firstName'].' '.$body['lastName']);
 $school = isset($body['school']) && $body['school'] !== '' ? $body['school'] : null;
 $beltLevelName = isset($body['beltLevel']) && $body['beltLevel'] !== '' ? $body['beltLevel'] : null;
 $phone = isset($body['phone']) && $body['phone'] !== '' ? $body['phone'] : null;
-$verifiedTrainer = isset($body['verifiedTrainer']) ? (int)!!$body['verifiedTrainer'] : 0;
 
 // E-Mail Validierung
 if (!filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
@@ -81,8 +80,8 @@ if ($beltLevelName) {
     }
 }
 
-$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, grade_id, verified_trainer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param('sssssssssis', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $gradeId, $verifiedTrainer);
+$stmt = $mysqli->prepare("INSERT INTO users (username, email, password_hash, role, name, first_name, last_name, phone, school, grade_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param('sssssssssi', $body['username'], $body['email'], $hash, $role, $name, $body['firstName'], $body['lastName'], $phone, $school, $gradeId);
 
 if (!$stmt->execute()) {
     // Error Leakage verhindern: Keine DB-Fehlermeldungen an Client

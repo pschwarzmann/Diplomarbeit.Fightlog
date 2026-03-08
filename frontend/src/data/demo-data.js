@@ -10,7 +10,7 @@ export const demoData = {
         name: "Admin Trainer",
         school: "Kampfsport Akademie Berlin",
         beltLevel: "Schwarzgurt 5. Dan - Meister",
-        permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"]
+        permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates"]
     },
     users: [
         {
@@ -23,7 +23,7 @@ export const demoData = {
             lastName: "Trainer",
             school: "Kampfsport Akademie Berlin",
             beltLevel: "Schwarzgurt 5. Dan - Meister",
-            permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates", "edit_training_history"],
+            permissions: ["manage_users", "manage_certificates", "manage_exams", "view_all_data", "approve_certificates"],
             phone: "+49 30 1234567",
             passkeys: ["YubiKey-Admin", "Phone-Admin"]
         },
@@ -37,7 +37,7 @@ export const demoData = {
             lastName: "Trainer",
             school: "Kampfsport Akademie Berlin",
             beltLevel: "Schwarzgurt 2. Dan",
-            permissions: ["manage_certificates", "manage_exams", "edit_training_history"],
+            permissions: ["manage_certificates", "manage_exams"],
             phone: "+49 30 2345678",
             passkeys: ["Phone-Trainer"]
         },
@@ -122,24 +122,6 @@ export const demoData = {
             instructor: "Sensei Nakamura",
             comments: "Präzise Ausführung, weiter so!",
             status: "passed"
-        }
-    ],
-    trainingHistory: [
-        {
-            id: 1,
-            date: "2024-03-18",
-            duration: "90 Minuten",
-            focus: "Sparring & Technik",
-            intensity: "hoch",
-            notes: "Schwerpunkt auf Reaktionsfähigkeit"
-        },
-        {
-            id: 2,
-            date: "2024-03-21",
-            duration: "75 Minuten",
-            focus: "Kata & Formenlauf",
-            intensity: "mittel",
-            notes: "Detailarbeit an Kata Basai Dai"
         }
     ],
     timeline: [

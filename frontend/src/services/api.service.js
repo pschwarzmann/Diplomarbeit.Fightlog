@@ -296,10 +296,6 @@ export const apiService = {
         return request(`/exams.php${suffix}`);
     },
 
-    getTrainingHistory() {
-        return request('/training.php');
-    },
-
     // ===== ZIELE (NEU) =====
     
     // Ziel-Templates abrufen

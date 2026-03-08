@@ -143,7 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Kurs löschen
     if ($action === 'delete') {
-        require_permission($mysqli, 'delete_courses');
+        // Trainer und Admin dürfen Kurse löschen
+        if (!has_permission($mysqli, 'delete_courses') && $userRole !== 'trainer') {
+            json_error('Keine Berechtigung zum Löschen von Kursen', 403);
+        }
         require_fields($body, ['id']);
         
         // Zuerst Buchungen löschen

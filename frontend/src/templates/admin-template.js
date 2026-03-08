@@ -99,17 +99,6 @@ export const adminTemplate = `
                                                                 <span :class="{ 'empty-value': !user.beltLevel }">{{ user.beltLevel || '—' }}</span>
                                                             </span>
                                                         </div>
-                                                        <div class="info-row">
-                                                            <span class="info-label"><i class="fas fa-certificate" aria-hidden="true"></i> Verifizierter Trainer:</span>
-                                                            <span class="info-value">
-                                                                <span v-if="user.verifiedTrainer" style="color: #10b981; font-weight: 600;">
-                                                                    <i class="fas fa-check-circle" aria-hidden="true"></i> Ja
-                                                                </span>
-                                                                <span v-else style="color: #64748b;">
-                                                                    <i class="fas fa-times-circle" aria-hidden="true"></i> Nein
-                                                                </span>
-                                                            </span>
-                                                        </div>
                                                     </template>
                                                     
                                                     <!-- Edit Mode -->
@@ -200,14 +189,6 @@ export const adminTemplate = `
                                                                 <option value="admin">Admin</option>
                                                             </select>
                                                             <span v-if="user._validationErrors.role" class="error-message">{{ user._validationErrors.role }}</span>
-                                                        </div>
-                                                        
-                                                        <div class="form-group">
-                                                            <label class="form-label"><i class="fas fa-certificate" aria-hidden="true"></i> Verifizierter Trainer</label>
-                                                            <select v-model="user._editForm.verifiedTrainer" class="form-control no-custom-select">
-                                                                <option :value="false">Nein</option>
-                                                                <option :value="true">Ja</option>
-                                                            </select>
                                                         </div>
                                                     </template>
                                                 </div>

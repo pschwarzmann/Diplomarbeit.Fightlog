@@ -373,6 +373,7 @@ export async function createManualCertificate(ctx) {
                 studentName: ''
             };
             ctx.showManualCertificateForm = false;
+            invalidateCache(ctx, 'certificates');
             await loadCertificates(ctx);
         } else {
             window.notify.alert(result.error || 'Fehler beim Erstellen der Urkunde');
@@ -397,6 +398,7 @@ export async function deleteManualCertificate(ctx, id) {
         if (result.success) {
             window.notify.alert('Urkunde gelöscht.');
             ctx.showCertificateDetailModal = false;
+            invalidateCache(ctx, 'certificates');
             await loadCertificates(ctx);
         } else {
             window.notify.alert(result.error || 'Fehler beim Löschen');
@@ -404,18 +406,6 @@ export async function deleteManualCertificate(ctx, id) {
     } catch (error) {
         handleError(error, 'Delete certificate');
         window.notify.alert('Fehler beim Löschen der Urkunde');
-    }
-}
-
-/**
- * Lädt Trainingsverlauf
- * @param {Object} ctx - Vue-Komponenten-Kontext
- */
-export async function loadTrainingHistory(ctx) {
-    try {
-        ctx.trainingHistory = await apiService.getTrainingHistory();
-    } catch (error) {
-        handleError(error, 'Load training history');
     }
 }
 

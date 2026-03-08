@@ -324,7 +324,6 @@ const app = createApp({
             // Daten
             certificates: [],
             exams: [],
-            trainingHistory: [],
             goals: [],
             allUsersGoals: [], // Alle Ziele aller User (für Admin)
             courses: []
@@ -342,7 +341,6 @@ const app = createApp({
                 role: 'schueler',
                 school: '',
                 beltLevel: '',
-                verifiedTrainer: false,
                 _validationErrors: {},
                 _isSaving: false
             },
@@ -366,8 +364,7 @@ const app = createApp({
                 { key: 'view_all_data', label: 'Alle Daten einsehen' },
                 { key: 'manage_certificates', label: 'Urkunden verwalten' },
                 { key: 'approve_certificates', label: 'Urkunden freigeben' },
-                { key: 'manage_exams', label: 'Prüfungen verwalten' },
-                { key: 'edit_training_history', label: 'Trainingsverlauf bearbeiten' }
+                { key: 'manage_exams', label: 'Prüfungen verwalten' }
             ],
             // Suche/Filter
             certificateSearch: '',
@@ -1041,9 +1038,6 @@ const app = createApp({
                         this.loadGoalTemplates(),
                         this.loadGoals()
                     ]);
-                    break;
-                case 'trainingHistory':
-                    await actions.loadTrainingHistory(this);
                     break;
                 case 'courses':
                     // Performance: Parallele API-Calls

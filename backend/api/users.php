@@ -29,12 +29,14 @@ if ($method === 'GET') {
     }
     
     // Alle Benutzer abrufen
-    if (!has_permission($mysqli, 'view_all_users') && !has_permission($mysqli, 'manage_users')) {
+    // Trainer müssen Schüler sehen können für Prüfungen, Ziele, Gruppen etc.
+    $userRole = auth_user_role($mysqli);
+    if (!has_permission($mysqli, 'view_all_users') && !has_permission($mysqli, 'manage_users') && $userRole !== 'trainer') {
         json_error('Keine Berechtigung', 403);
     }
     
     // SQL Injection Schutz: Prepared Statement verwenden (auch wenn kein User-Input)
-    $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.name, u.first_name as firstName, u.last_name as lastName, u.phone, u.school, u.grade_id, g.name as beltLevel, u.verified_trainer as verifiedTrainer FROM users u LEFT JOIN grade g ON u.grade_id = g.id ORDER BY u.id ASC");
+    $stmt = $mysqli->prepare("SELECT u.id, u.username, u.email, u.role, u.name, u.first_name as firstName, u.last_name as lastName, u.phone, u.school, u.grade_id, g.name as beltLevel FROM users u LEFT JOIN grade g ON u.grade_id = g.id ORDER BY u.id ASC");
     if (!$stmt || !$stmt->execute()) {
         json_error('Datenbankfehler', 500);
     }
@@ -52,7 +54,6 @@ if ($method === 'GET') {
     $list = [];
     while ($row = $res->fetch_assoc()) {
         $row['id'] = (int)$row['id'];
-        $row['verifiedTrainer'] = (bool)$row['verifiedTrainer'];
         // Berechtigungen aus dem bereits geladenen Rollen-Mapping zuweisen
         $row['permissions'] = $rolePerms[$row['role']] ?? [];
         $row['passkeys'] = [];
@@ -77,7 +78,6 @@ if ($method === 'POST') {
         $oldUser = $checkStmt->get_result()->fetch_assoc();
         $oldRole = $oldUser ? $oldUser['role'] : null;
         
-        $verified = isset($body['verifiedTrainer']) ? (int)!!$body['verifiedTrainer'] : 0;
         $name = isset($body['name']) ? $body['name'] : '';
         $first = isset($body['firstName']) ? $body['firstName'] : null;
         $last  = isset($body['lastName']) ? $body['lastName'] : null;
@@ -104,8 +104,8 @@ if ($method === 'POST') {
             }
         }
         
-        $stmt = $mysqli->prepare("UPDATE users SET role=?, verified_trainer=?, name=?, first_name=?, last_name=?, email=?, phone=?, school=?, grade_id=? WHERE id=?");
-        $stmt->bind_param('sissssssii', $role, $verified, $name, $first, $last, $email, $phone, $school, $gradeId, $body['id']);
+        $stmt = $mysqli->prepare("UPDATE users SET role=?, name=?, first_name=?, last_name=?, email=?, phone=?, school=?, grade_id=? WHERE id=?");
+        $stmt->bind_param('sssssssii', $role, $name, $first, $last, $email, $phone, $school, $gradeId, $body['id']);
         if (!$stmt->execute()) {
             // Error Leakage verhindern: Keine DB-Fehlermeldungen an Client
             json_out(['success'=>false, 'error'=>'Update fehlgeschlagen'], 500);
@@ -129,7 +129,7 @@ if ($method === 'POST') {
         require_permission($mysqli, 'manage_users');
         require_fields($body, ['id']);
         
-        $stmt = $mysqli->prepare("UPDATE users SET role='trainer', verified_trainer=1 WHERE id=?");
+        $stmt = $mysqli->prepare("UPDATE users SET role='trainer' WHERE id=?");
         $stmt->bind_param('i', $body['id']);
         if (!$stmt->execute()) {
             // Error Leakage verhindern: Keine DB-Fehlermeldungen an Client

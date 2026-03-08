@@ -236,18 +236,6 @@ export const modalsTemplate = `
                                 </select>
                             </div>
                             
-                            <!-- Verifizierter Trainer -->
-                            <div class="form-group">
-                                <label class="form-label"><i class="fas fa-certificate"></i> Verifizierter Trainer</label>
-                                <select 
-                                    v-model="createUserForm.verifiedTrainer" 
-                                    class="form-control no-custom-select"
-                                >
-                                    <option :value="false">Nein</option>
-                                    <option :value="true">Ja</option>
-                                </select>
-                            </div>
-                            
                             <div class="flex gap-md mt-lg">
                                 <button 
                                     type="submit" 

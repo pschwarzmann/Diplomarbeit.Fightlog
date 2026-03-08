@@ -114,7 +114,12 @@ export const examsTemplate = `
                                 </div>
                             </div>
                             <div v-else>
-                                <div class="timeline">
+                                <div v-if="ownExams.length === 0" class="form-container" style="text-align: center; padding: 3rem 2rem;">
+                                    <i class="fas fa-clipboard-list" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                                    <h3 style="color: #64748b; margin-bottom: 0.5rem;">Noch keine Prüfungen</h3>
+                                    <p style="color: #94a3b8;">Du hast noch keine Prüfungen abgeschlossen. Dein Trainer wird deine Prüfungsergebnisse hier eintragen.</p>
+                                </div>
+                                <div v-else class="timeline">
                                     <div v-for="exam in ownExams" :key="exam.id" class="timeline-item">
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>

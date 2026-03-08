@@ -4,7 +4,7 @@ CREATE DATABASE IF NOT EXISTS fightlog CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE fightlog;
 
 -- Grade-Tabelle (Gürtelgrade / Stufen)
-CREATE TABLE grade (
+CREATE TABLE IF NOT EXISTS grade (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     sort_order INT DEFAULT 0,
@@ -12,43 +12,8 @@ CREATE TABLE grade (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Standard-Grade einfügen
-INSERT INTO
-    grade (name, sort_order, color)
-VALUES ('Weißgurt', 1, '#FFFFFF'),
-    ('Gelbgurt', 2, '#FFEB3B'),
-    ('Orangegurt', 3, '#FF9800'),
-    ('Grüngurt', 4, '#4CAF50'),
-    ('Blaugurt', 5, '#2196F3'),
-    ('Braungurt', 6, '#795548'),
-    (
-        'Schwarzgurt 1. Dan',
-        7,
-        '#000000'
-    ),
-    (
-        'Schwarzgurt 2. Dan',
-        8,
-        '#000000'
-    ),
-    (
-        'Schwarzgurt 3. Dan',
-        9,
-        '#000000'
-    ),
-    (
-        'Schwarzgurt 4. Dan',
-        10,
-        '#000000'
-    ),
-    (
-        'Schwarzgurt 5. Dan - Meister',
-        11,
-        '#000000'
-    );
-
 -- Benutzer-Tabelle
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -64,7 +29,6 @@ CREATE TABLE users (
     phone VARCHAR(30) NULL,
     school VARCHAR(100),
     grade_id INT NULL,
-    verified_trainer TINYINT(1) DEFAULT 0,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -72,17 +36,27 @@ CREATE TABLE users (
 );
 
 -- Benutzerrechte-Tabelle
-CREATE TABLE permissions (
+CREATE TABLE IF NOT EXISTS permissions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     `key` VARCHAR(100) UNIQUE NOT NULL,
     label VARCHAR(150) NOT NULL
 );
 
--- HINWEIS: Berechtigungen werden ausschließlich über role_permissions vergeben.
--- Die Tabelle user_permissions ist nicht mehr nötig.
+-- Rollen-Berechtigungen Mapping-Tabelle
+CREATE TABLE IF NOT EXISTS role_permissions (
+    role ENUM(
+        'schueler',
+        'trainer',
+        'admin'
+    ) NOT NULL,
+    permission_id INT NOT NULL,
+    PRIMARY KEY (role, permission_id),
+    FOREIGN KEY (permission_id) REFERENCES permissions (id)
+);
 
--- Prüfungen-Tabelle (muss VOR certificates kommen wegen FK)
-CREATE TABLE exams (
+
+-- Prüfungen-Tabelle
+CREATE TABLE IF NOT EXISTS exams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     date DATE NOT NULL,
@@ -97,8 +71,8 @@ CREATE TABLE exams (
     FOREIGN KEY (grade_id) REFERENCES grade (id)
 );
 
--- Urkunden-Tabelle (werden automatisch bei bestandenen Prüfungen erstellt)
-CREATE TABLE certificates (
+-- Urkunden-Tabelle
+CREATE TABLE IF NOT EXISTS certificates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     exam_id INT NULL,
@@ -116,36 +90,15 @@ CREATE TABLE certificates (
 );
 
 -- System-Einstellungen-Tabelle
-CREATE TABLE app_settings (
+CREATE TABLE IF NOT EXISTS app_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(100) UNIQUE NOT NULL,
     setting_value TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Standard-Einstellungen für Urkunden
-INSERT INTO
-    app_settings (setting_key, setting_value)
-VALUES ('password_min_length', '8'),
-    (
-        'certificate_title',
-        'Urkunde'
-    ),
-    (
-        'certificate_congratulation_text',
-        'Herzlichen Glückwunsch!\n\nMit dieser Urkunde bestätigen wir, dass du die Prüfung erfolgreich bestanden hast.\n\nWir sind stolz auf deine Leistung und deinen Einsatz. Weiter so!'
-    ),
-    (
-        'certificate_school_name',
-        'Kampfsport Akademie'
-    ),
-    (
-        'certificate_footer_text',
-        'Diese Urkunde wurde automatisch erstellt.'
-    );
-
 -- Kurse-Tabelle
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     instructor VARCHAR(100) NOT NULL,
@@ -160,7 +113,7 @@ CREATE TABLE courses (
 );
 
 -- Kursbuchungen-Tabelle
-CREATE TABLE course_bookings (
+CREATE TABLE IF NOT EXISTS course_bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -175,7 +128,7 @@ CREATE TABLE course_bookings (
 );
 
 -- Sessions-Tabelle für Login-Management
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(255) UNIQUE NOT NULL,
@@ -185,7 +138,7 @@ CREATE TABLE sessions (
 );
 
 -- Passkeys/WebAuthn Credentials Tabelle
-CREATE TABLE passkeys (
+CREATE TABLE IF NOT EXISTS passkeys (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     credential_id VARCHAR(255) UNIQUE NOT NULL,
@@ -200,8 +153,8 @@ CREATE TABLE passkeys (
     INDEX idx_passkeys_credential_id (credential_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- Passkey Challenges (temporär für WebAuthn)
-CREATE TABLE passkey_challenges (
+-- Passkey Challenges
+CREATE TABLE IF NOT EXISTS passkey_challenges (
     user_id INT NOT NULL,
     challenge VARCHAR(255) NOT NULL,
     type ENUM('register', 'authenticate') NOT NULL,
@@ -213,7 +166,7 @@ CREATE TABLE passkey_challenges (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- Login-Versuche für Rate-Limiting
-CREATE TABLE login_attempts (
+CREATE TABLE IF NOT EXISTS login_attempts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(45) NOT NULL,
     identifier_hash VARCHAR(64) NOT NULL,
@@ -224,8 +177,8 @@ CREATE TABLE login_attempts (
     INDEX idx_login_attempts_time (attempted_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- Gruppen-Tabelle (für Schülergruppen)
-CREATE TABLE student_groups (
+-- Gruppen-Tabelle
+CREATE TABLE IF NOT EXISTS student_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -236,7 +189,7 @@ CREATE TABLE student_groups (
 );
 
 -- Zuordnung Gruppe <-> Benutzer
-CREATE TABLE group_members (
+CREATE TABLE IF NOT EXISTS group_members (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -246,7 +199,7 @@ CREATE TABLE group_members (
 );
 
 -- Ziele-Tabelle
-CREATE TABLE goal_templates (
+CREATE TABLE IF NOT EXISTS goal_templates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     definition TEXT,
@@ -255,7 +208,7 @@ CREATE TABLE goal_templates (
 );
 
 -- Unterziele der Templates
-CREATE TABLE goal_template_subtasks (
+CREATE TABLE IF NOT EXISTS goal_template_subtasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     template_id INT NOT NULL,
     definition VARCHAR(255) NOT NULL,
@@ -264,7 +217,7 @@ CREATE TABLE goal_template_subtasks (
 );
 
 -- Zugewiesene Ziele pro User
-CREATE TABLE user_goals (
+CREATE TABLE IF NOT EXISTS user_goals (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     template_id INT NOT NULL,
@@ -281,7 +234,7 @@ CREATE TABLE user_goals (
 );
 
 -- Fortschritt bei Unterzielen
-CREATE TABLE user_goal_progress (
+CREATE TABLE IF NOT EXISTS user_goal_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_goal_id INT NOT NULL,
     subtask_id INT NOT NULL,
@@ -291,6 +244,39 @@ CREATE TABLE user_goal_progress (
     FOREIGN KEY (subtask_id) REFERENCES goal_template_subtasks (id),
     UNIQUE KEY unique_progress (user_goal_id, subtask_id)
 );
+
+-- Audit-Log-Tabelle für Sicherheitsprotokollierung
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50) NULL,
+    entity_id INT NULL,
+    details TEXT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_action (action),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- Password Reset Tokens
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_token_hash (token_hash),
+    INDEX idx_user_id (user_id),
+    INDEX idx_expires_at (expires_at),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+
 
 -- Indizes für Gruppen
 CREATE INDEX idx_groups_created_by ON student_groups (created_by);
@@ -337,138 +323,9 @@ CREATE INDEX idx_user_goal_progress_goal ON user_goal_progress (user_goal_id);
 
 CREATE INDEX idx_user_goal_progress_subtask ON user_goal_progress (subtask_id);
 
--- Beispiel-Daten (optional)
--- WICHTIG: Die Passwort-Hashes werden nach dem INSERT mit UPDATE-Statements gesetzt
--- Standard-Passwörter: admin123, trainer123, schueler123, test123 (für alle anderen)
-INSERT INTO
-    users (
-        username,
-        email,
-        password_hash,
-        role,
-        name,
-        first_name,
-        last_name,
-        phone,
-        school,
-        grade_id,
-        verified_trainer
-    )
-VALUES (
-        'admin',
-        'admin@fightlog.com',
-        '$2y$10$dummyhash',
-        'admin',
-        'Admin Trainer',
-        'Admin',
-        'Trainer',
-        '+49 30 12345678',
-        'Kampfsport Akademie Berlin',
-        11,
-        1
-    ),
-    (
-        'trainer',
-        'trainer@fightlog.com',
-        '$2y$10$dummyhash',
-        'trainer',
-        'Tom Trainer',
-        'Tom',
-        'Trainer',
-        '+49 30 87654321',
-        'Kampfsport Akademie Berlin',
-        8,
-        1
-    ),
-    (
-        'schueler',
-        'schueler@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Sam Schüler',
-        'Sam',
-        'Schüler',
-        '+49 151 11111111',
-        'Kampfsport Akademie Berlin',
-        2,
-        0
-    ),
-    (
-        'paul',
-        'paul.schwarzmann@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Paul Schwarzmann',
-        'Paul',
-        'Schwarzmann',
-        '+49 151 22222222',
-        'Kampfsport Akademie Berlin',
-        1,
-        0
-    ),
-    (
-        'paula',
-        'paula.meier@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Paula Meier',
-        'Paula',
-        'Meier',
-        '+49 151 33333333',
-        'Kampfsport Akademie Berlin',
-        2,
-        0
-    ),
-    (
-        'patrick',
-        'patrick.mueller@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Patrick Müller',
-        'Patrick',
-        'Müller',
-        '+49 151 44444444',
-        'Kampfsport Akademie Berlin',
-        3,
-        0
-    ),
-    (
-        'peter',
-        'peter.schmidt@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Peter Schmidt',
-        'Peter',
-        'Schmidt',
-        '+49 151 55555555',
-        'Kampfsport Akademie Berlin',
-        4,
-        0
-    ),
-    (
-        'sophia',
-        'sophia.schneider@fightlog.com',
-        '$2y$10$dummyhash',
-        'schueler',
-        'Sophia Schneider',
-        'Sophia',
-        'Schneider',
-        '+49 151 66666666',
-        'Kampfsport Akademie Berlin',
-        5,
-        0
-    );
 
--- Passwort-Hashes setzen (echte BCRYPT-Hashes)
--- Passwörter: admin123, trainer123, schueler123, test123 (für alle anderen)
--- HINWEIS: Diese Hashes müssen mit password_hash() generiert werden
--- Führe nach dem Import das Skript db/generate-passwords.php aus oder setze die Hashes manuell
--- Beispiel-Update (ersetze die Hashes mit echten Werten):
--- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'admin';
--- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'trainer';
--- UPDATE users SET password_hash = '$2y$10$...' WHERE username = 'schueler';
 
--- Basisrechte (erweitert)
+-- Basisrechte
 INSERT INTO
     permissions (`key`, label)
 VALUES
@@ -602,36 +459,12 @@ VALUES
         'view_course_participants',
         'Kursteilnehmer einsehen'
     ),
-    -- Training-Berechtigungen
-    (
-        'view_own_training',
-        'Eigenen Trainingsverlauf einsehen'
-    ),
-    (
-        'view_all_training',
-        'Alle Trainingsverläufe einsehen'
-    ),
-    (
-        'edit_training_history',
-        'Trainingsverlauf bearbeiten'
-    ),
     -- Gruppen-Berechtigungen
     (
         'manage_groups',
         'Schülergruppen verwalten'
     );
 
--- Rollen-Berechtigungen Mapping-Tabelle (für automatische Zuweisung)
-CREATE TABLE role_permissions (
-    role ENUM(
-        'schueler',
-        'trainer',
-        'admin'
-    ) NOT NULL,
-    permission_id INT NOT NULL,
-    PRIMARY KEY (role, permission_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions (id)
-);
 
 -- Schüler-Berechtigungen
 INSERT INTO
@@ -649,11 +482,10 @@ WHERE
         'edit_own_goals',
         'delete_goals',
         'view_courses',
-        'book_courses',
-        'view_own_training'
+        'book_courses'
     );
 
--- Trainer-Berechtigungen (alles von Schüler + mehr)
+-- Trainer-Berechtigungen
 INSERT INTO
     role_permissions (role, permission_id)
 SELECT 'trainer', id
@@ -679,639 +511,35 @@ WHERE
         'view_courses',
         'create_courses',
         'edit_courses',
+        'delete_courses',
         'book_courses',
         'view_course_participants',
-        'view_own_training',
-        'view_all_training',
-        'edit_training_history',
         'manage_groups'
     );
 
--- Admin-Berechtigungen (alle)
+-- Admin-Berechtigungen
 INSERT INTO
     role_permissions (role, permission_id)
 SELECT 'admin', id
 FROM permissions;
 
+-- Standard-Einstellungen für Urkunden
 INSERT INTO
-    courses (
-        title,
-        instructor,
-        date,
-        duration,
-        max_participants,
-        price,
-        description
-    )
-VALUES (
-        'Selbstverteidigung für Frauen',
-        'Anna Weber',
-        '2026-04-15',
-        '4 Stunden',
-        12,
-        '45€',
-        'Spezieller Kurs für effektive Selbstverteidigung'
+    app_settings (setting_key, setting_value)
+VALUES ('password_min_length', '8'),
+    (
+        'certificate_title',
+        'Urkunde'
     ),
     (
-        'Kampfrichter Ausbildung',
-        'Hans Schmidt',
-        '2026-05-10',
-        '8 Stunden',
-        8,
-        '120€',
-        'Offizielle Ausbildung zum Kampfrichter'
+        'certificate_congratulation_text',
+        'Herzlichen Glückwunsch!\n\nMit dieser Urkunde bestätigen wir, dass du die Prüfung erfolgreich bestanden hast.\n\nWir sind stolz auf deine Leistung und deinen Einsatz. Weiter so!'
     ),
     (
-        'Kinder Kampfsport (6-12 Jahre)',
-        'Lisa Meyer',
-        '2026-04-20',
-        '2 Stunden',
-        15,
-        '25€',
-        'Spielerisches Kampfsporttraining für Kinder'
+        'certificate_school_name',
+        'Kampfsport Akademie'
+    ),
+    (
+        'certificate_footer_text',
+        'Diese Urkunde wurde automatisch erstellt.'
     );
-
-INSERT INTO
-    course_bookings (course_id, user_id, status)
-VALUES (1, 3, 'confirmed'),
-    (1, 4, 'confirmed'),
-    (2, 3, 'confirmed'),
-    (3, 5, 'pending'),
-    (3, 6, 'confirmed');
-
-INSERT INTO
-    exams (
-        user_id,
-        date,
-        grade_id,
-        category,
-        instructor,
-        comments,
-        status
-    )
-VALUES (
-        3,
-        '2026-03-15',
-        2,
-        'Technik',
-        'Tom Trainer',
-        'Gute Leistung gezeigt',
-        'passed'
-    ),
-    (
-        3,
-        '2026-04-19',
-        4,
-        'Kampf',
-        'Tom Trainer',
-        'is aight',
-        'passed'
-    ),
-    (
-        3,
-        '2026-05-01',
-        7,
-        'Theorie',
-        'Tom Trainer',
-        'joa',
-        'passed'
-    ),
-    (
-        4,
-        '2026-03-20',
-        1,
-        'Kata',
-        'Tom Trainer',
-        'Noch etwas unsicher',
-        'passed'
-    );
-
-INSERT INTO
-    student_groups (
-        name,
-        description,
-        created_by,
-        created_at
-    )
-VALUES (
-        'Anfängergruppe',
-        'Gruppe für neue Schüler',
-        2,
-        NOW()
-    ),
-    (
-        'Fortgeschrittene',
-        'Gruppe für fortgeschrittene Schüler',
-        2,
-        NOW()
-    );
-
-INSERT INTO
-    group_members (group_id, user_id, added_at)
-VALUES (1, 3, NOW()),
-    (1, 4, NOW()),
-    (2, 5, NOW()),
-    (2, 6, NOW());
-
--- P1+2 Schlagkraft (Pratzen)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P1+2 Schlagkraft',
-        'Pratzentraining für Schlagkraft',
-        'Pratzen'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'Get Ready', 1);
-
--- P3 Arme (Greifen)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P3 Arme',
-        'Greiftechnik für Arme',
-        'Greifen'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'nach oben', 1),
-    (
-        @template_id,
-        'zur Schulter',
-        2
-    );
-
--- P3 Hals (Greifen)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P3 Hals',
-        'Greiftechnik für Hals',
-        'Greifen'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'eine Hand', 1),
-    (@template_id, 'beide Arme', 2);
-
--- P3 Shirt (Greifen)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P3 Shirt',
-        'Greiftechnik am Shirt',
-        'Greifen'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'Brust', 1),
-    (@template_id, 'Arme', 2);
-
--- P4 Pos Außen (Combat)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P4 Pos Außen',
-        'Combat Position Außen',
-        'Combat'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (
-        @template_id,
-        'Keil Handfläche',
-        1
-    );
-
--- P4 Pos Innen (Combat)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P4 Pos Innen',
-        'Combat Position Innen',
-        'Combat'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'Faak Gam', 1);
-
--- P4 Pos Front (Combat)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P4 Pos Front',
-        'Combat Position Front',
-        'Combat'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (@template_id, 'Djat Sao', 1);
-
--- P4 Mix (Combat)
-INSERT INTO
-    goal_templates (title, definition, category)
-VALUES (
-        'P4 Mix',
-        'Combat Mix-Techniken',
-        'Combat'
-    );
-
-SET @template_id = LAST_INSERT_ID();
-
-INSERT INTO
-    goal_template_subtasks (
-        template_id,
-        definition,
-        sort_order
-    )
-VALUES (
-        @template_id,
-        'Faak - Fook',
-        1
-    );
-
--- Username: admin, Passwort: admin123
-UPDATE users
-SET
-    password_hash = '$2y$10$YBTbGKJSYKbuLfBEC3IKu.saaDmKxuq1OykfQjThndpBy/F7YIhm6'
-WHERE
-    username = 'admin';
-
--- Username: trainer, Passwort: trainer123
-UPDATE users
-SET
-    password_hash = '$2y$10$GPsvhV8dEUjVp6C1XUgulekpqUpBNAiL/aViWA6m/Ueus617Va3ie'
-WHERE
-    username = 'trainer';
-
--- Username: schueler, Passwort: schueler123
-UPDATE users
-SET
-    password_hash = '$2y$10$N5Ne90COspYhrS42Ixr3c./lwss4NVr1g1lrPq7CDiq6OBf4kJy7.'
-WHERE
-    username = 'schueler';
-
--- Username: paul, Passwort: test123
-UPDATE users
-SET
-    password_hash = '$2y$10$6mWgFhT7Sq3AWsa5i/QyBOOXp6tjAz4mykacXeyOWTbW3KFp9hUsK'
-WHERE
-    username = 'paul';
-
--- Username: paula, Passwort: test123
-UPDATE users
-SET
-    password_hash = '$2y$10$IKT2ffVeS28b9Kfe7kyh..vbIt4qWQk.6Z3.FA1jWNGYqQZeSd7xq'
-WHERE
-    username = 'paula';
-
--- Username: patrick, Passwort: test123
-UPDATE users
-SET
-    password_hash = '$2y$10$GJD4jZOlvjCb2SMOtZCx.urNSs/xHjR9DVc1RVJgebVcgz8U23jza'
-WHERE
-    username = 'patrick';
-
--- Username: peter, Passwort: test123
-UPDATE users
-SET
-    password_hash = '$2y$10$3gvtWmPTM1n1qCFT91xg3OZL8LxR1/bVxi8o8wgbB/xcw5BYxHj8i'
-WHERE
-    username = 'peter';
-
--- Username: sophia, Passwort: test123
-UPDATE users
-SET
-    password_hash = '$2y$10$0g3b0D4rdU/grYlz7TEAxe6KlivZ7G7xyVuHQFlHoZSwJ9kOtK04O'
-WHERE
-    username = 'sophia';
-
--- Urkunden (certificates) - automatisch erstellte + manuelle
--- Automatische Urkunden für bestandene Prüfungen
-INSERT INTO
-    certificates (
-        user_id,
-        exam_id,
-        title,
-        date,
-        grade_id,
-        instructor,
-        category,
-        is_manual
-    )
-VALUES (
-        3,
-        1,
-        'Gürtelprüfung Gelbgurt',
-        '2026-03-15',
-        2,
-        'Tom Trainer',
-        'Technik',
-        0
-    ),
-    (
-        3,
-        2,
-        'Gürtelprüfung Grüngurt',
-        '2026-04-19',
-        4,
-        'Tom Trainer',
-        'Kampf',
-        0
-    ),
-    (
-        3,
-        3,
-        'Gürtelprüfung Schwarzgurt 1. Dan',
-        '2026-05-01',
-        7,
-        'Tom Trainer',
-        'Theorie',
-        0
-    ),
-    (
-        4,
-        4,
-        'Gürtelprüfung Weißgurt',
-        '2026-03-20',
-        1,
-        'Tom Trainer',
-        'Kata',
-        0
-    );
-
--- Manuelle Urkunden
-INSERT INTO
-    certificates (
-        user_id,
-        exam_id,
-        title,
-        date,
-        grade_id,
-        instructor,
-        category,
-        is_manual
-    )
-VALUES (
-        3,
-        NULL,
-        'Beste Leistung des Monats',
-        '2026-02-01',
-        NULL,
-        'Admin Trainer',
-        NULL,
-        1
-    ),
-    (
-        5,
-        NULL,
-        'Turnierteilnahme Stadtmeisterschaft',
-        '2026-01-28',
-        NULL,
-        'Tom Trainer',
-        NULL,
-        1
-    ),
-    (
-        7,
-        NULL,
-        'Trainer-Assistenz Zertifikat',
-        '2026-01-20',
-        NULL,
-        'Admin Trainer',
-        NULL,
-        1
-    );
-
--- Zugewiesene Ziele (user_goals)
-INSERT INTO
-    user_goals (
-        user_id,
-        template_id,
-        target_date,
-        status,
-        created_at,
-        completed_at
-    )
-VALUES (
-        3,
-        1,
-        '2026-03-01',
-        'completed',
-        '2026-01-01 10:00:00',
-        '2026-02-15 14:30:00'
-    ),
-    (
-        3,
-        2,
-        '2026-04-01',
-        'in_progress',
-        '2026-01-15 09:00:00',
-        NULL
-    ),
-    (
-        3,
-        5,
-        '2026-05-01',
-        'in_progress',
-        '2026-01-20 11:00:00',
-        NULL
-    ),
-    (
-        4,
-        1,
-        '2026-04-01',
-        'in_progress',
-        '2026-01-10 10:00:00',
-        NULL
-    ),
-    (
-        4,
-        3,
-        '2026-05-01',
-        'in_progress',
-        '2026-01-15 10:00:00',
-        NULL
-    ),
-    (
-        5,
-        4,
-        '2026-03-15',
-        'completed',
-        '2026-01-05 09:00:00',
-        '2026-03-10 16:00:00'
-    ),
-    (
-        5,
-        6,
-        '2026-04-15',
-        'in_progress',
-        '2026-01-20 10:00:00',
-        NULL
-    ),
-    (
-        6,
-        1,
-        '2026-04-01',
-        'in_progress',
-        '2026-01-12 10:00:00',
-        NULL
-    ),
-    (
-        6,
-        2,
-        '2026-05-01',
-        'cancelled',
-        '2026-01-12 10:00:00',
-        NULL
-    ),
-    (
-        7,
-        7,
-        '2026-03-01',
-        'completed',
-        '2026-01-01 09:00:00',
-        '2026-02-28 15:00:00'
-    ),
-    (
-        7,
-        8,
-        '2026-04-01',
-        'in_progress',
-        '2026-02-01 10:00:00',
-        NULL
-    ),
-    (
-        8,
-        1,
-        '2026-05-01',
-        'in_progress',
-        '2026-01-25 10:00:00',
-        NULL
-    );
-
-INSERT INTO
-    user_goal_progress (
-        user_goal_id,
-        subtask_id,
-        completed,
-        completed_at
-    )
-VALUES (
-        1,
-        1,
-        1,
-        '2026-02-15 14:30:00'
-    ),
-    (
-        2,
-        2,
-        1,
-        '2026-01-25 15:00:00'
-    ),
-    (2, 3, 0, NULL),
-    (3, 8, 0, NULL),
-    (4, 1, 0, NULL),
-    (
-        5,
-        4,
-        1,
-        '2026-01-28 14:00:00'
-    ),
-    (5, 5, 0, NULL),
-    (
-        6,
-        9,
-        1,
-        '2026-03-10 16:00:00'
-    ),
-    (7, 11, 0, NULL),
-    (8, 1, 0, NULL),
-    (
-        10,
-        10,
-        1,
-        '2026-02-28 15:00:00'
-    ),
-    (12, 1, 0, NULL);
-
--- Audit-Log-Tabelle für Sicherheitsprotokollierung
-CREATE TABLE IF NOT EXISTS audit_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NULL,
-    action VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(50) NULL,
-    entity_id INT NULL,
-    details TEXT NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_action (action),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
-);
-
--- Password Reset Tokens
-CREATE TABLE IF NOT EXISTS password_reset_tokens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    token_hash VARCHAR(64) NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    used TINYINT(1) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_token_hash (token_hash),
-    INDEX idx_user_id (user_id),
-    INDEX idx_expires_at (expires_at),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);

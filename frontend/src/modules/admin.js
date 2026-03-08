@@ -47,7 +47,6 @@ export function startEditUser(ctx, user) {
         school: user.school || '',
         beltLevel: user.beltLevel || '',
         role: user.role || 'schueler',
-        verifiedTrainer: user.verifiedTrainer || false,
         newPassword: ''
     };
     user._isEditing = true;
@@ -89,8 +88,7 @@ export async function saveUser(ctx, user) {
             phone: form.phone.trim() || null,
             school: form.school.trim() || null,
             beltLevel: form.beltLevel.trim() || null,
-            role: form.role,
-            verifiedTrainer: form.verifiedTrainer
+            role: form.role
         };
         
         // Name zusammensetzen
@@ -121,7 +119,6 @@ export async function saveUser(ctx, user) {
             school: updateData.school,
             beltLevel: updateData.beltLevel,
             role: updateData.role,
-            verifiedTrainer: updateData.verifiedTrainer,
             name: updateData.name
         });
         
@@ -158,7 +155,6 @@ export function closeCreateUserModal(ctx) {
         role: 'schueler',
         school: '',
         beltLevel: '',
-        verifiedTrainer: false,
         _validationErrors: {},
         _isSaving: false
     };
@@ -193,8 +189,7 @@ export async function createUser(ctx) {
             phone: form.phone.trim() || null,
             role: form.role,
             school: form.school.trim() || null,
-            beltLevel: form.beltLevel.trim() || null,
-            verifiedTrainer: form.verifiedTrainer || false
+            beltLevel: form.beltLevel.trim() || null
         };
         
         // API-Call

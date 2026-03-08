@@ -130,6 +130,26 @@ if ($method === 'POST') {
             $certStmt->bind_param('iississ', $b['userId'], $examId, $certTitle, $date, $gradeId, $b['instructor'], $b['category']);
             $certStmt->execute(); // Fehler ignorieren, Prüfung wurde trotzdem erstellt
         }
+        
+        // Benutzer-Grad aktualisieren wenn Prüfungsgrad höher ist
+        if ($gradeId) {
+            $gradeCheckStmt = $mysqli->prepare("
+                SELECT u.grade_id, COALESCE(ug.sort_order, 0) as user_sort, eg.sort_order as exam_sort
+                FROM users u
+                LEFT JOIN grade ug ON u.grade_id = ug.id
+                JOIN grade eg ON eg.id = ?
+                WHERE u.id = ?
+            ");
+            $gradeCheckStmt->bind_param('ii', $gradeId, $b['userId']);
+            $gradeCheckStmt->execute();
+            $gradeInfo = $gradeCheckStmt->get_result()->fetch_assoc();
+            
+            if ($gradeInfo && $gradeInfo['exam_sort'] > $gradeInfo['user_sort']) {
+                $updateGradeStmt = $mysqli->prepare("UPDATE users SET grade_id = ? WHERE id = ?");
+                $updateGradeStmt->bind_param('ii', $gradeId, $b['userId']);
+                $updateGradeStmt->execute();
+            }
+        }
     }
     
     json_ok(['success'=>true,'id'=>$examId]);
@@ -197,6 +217,26 @@ if ($method === 'PUT') {
             if ($certStmt) {
                 $certStmt->bind_param('iississ', $b['userId'], $b['id'], $certTitle, $date, $gradeId, $b['instructor'], $b['category']);
                 $certStmt->execute();
+            }
+        }
+        
+        // Benutzer-Grad aktualisieren wenn Prüfungsgrad höher ist
+        if ($gradeId) {
+            $gradeCheckStmt = $mysqli->prepare("
+                SELECT u.grade_id, COALESCE(ug.sort_order, 0) as user_sort, eg.sort_order as exam_sort
+                FROM users u
+                LEFT JOIN grade ug ON u.grade_id = ug.id
+                JOIN grade eg ON eg.id = ?
+                WHERE u.id = ?
+            ");
+            $gradeCheckStmt->bind_param('ii', $gradeId, $b['userId']);
+            $gradeCheckStmt->execute();
+            $gradeInfo = $gradeCheckStmt->get_result()->fetch_assoc();
+            
+            if ($gradeInfo && $gradeInfo['exam_sort'] > $gradeInfo['user_sort']) {
+                $updateGradeStmt = $mysqli->prepare("UPDATE users SET grade_id = ? WHERE id = ?");
+                $updateGradeStmt->bind_param('ii', $gradeId, $b['userId']);
+                $updateGradeStmt->execute();
             }
         }
     }

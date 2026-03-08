@@ -149,6 +149,8 @@ export async function deleteGoal(ctx, goal) {
         const res = await apiService.deleteGoal(goal.id);
         if (res.success) {
             ctx.goals = ctx.goals.filter(g => g.id !== goal.id);
+            // Auch Admin-Liste aktualisieren
+            ctx.allUsersGoals = ctx.allUsersGoals.filter(g => g.id !== goal.id);
             window.notify.alert('Ziel gelöscht');
         } else {
             window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));

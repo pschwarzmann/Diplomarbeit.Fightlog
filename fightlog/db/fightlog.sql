@@ -67,7 +67,6 @@ CREATE TABLE users (
     phone VARCHAR(30) NULL,
     school VARCHAR(100),
     grade_id INT NULL,
-    verified_trainer TINYINT(1) DEFAULT 0,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -314,10 +313,6 @@ CREATE INDEX idx_exams_grade ON exams (grade_id);
 
 CREATE INDEX idx_users_grade ON users (grade_id);
 
-CREATE INDEX idx_training_user_id ON training_history (user_id);
-
-CREATE INDEX idx_training_date ON training_history (date);
-
 CREATE INDEX idx_sessions_token ON sessions (token);
 
 CREATE INDEX idx_sessions_expires ON sessions (expires_at);
@@ -357,8 +352,7 @@ INSERT INTO
         last_name,
         phone,
         school,
-        grade_id,
-        verified_trainer
+        grade_id
     )
 VALUES (
         'admin',
@@ -370,8 +364,7 @@ VALUES (
         'Trainer',
         '+49 30 12345678',
         'Kampfsport Akademie Berlin',
-        11,
-        1
+        11
     ),
     (
         'trainer',
@@ -383,8 +376,7 @@ VALUES (
         'Trainer',
         '+49 30 87654321',
         'Kampfsport Akademie Berlin',
-        8,
-        1
+        8
     ),
     (
         'schueler',
@@ -396,8 +388,7 @@ VALUES (
         'Schüler',
         '+49 151 11111111',
         'Kampfsport Akademie Berlin',
-        2,
-        0
+        2
     ),
     (
         'paul',
@@ -409,8 +400,7 @@ VALUES (
         'Schwarzmann',
         '+49 151 22222222',
         'Kampfsport Akademie Berlin',
-        1,
-        0
+        1
     ),
     (
         'paula',
@@ -422,8 +412,7 @@ VALUES (
         'Meier',
         '+49 151 33333333',
         'Kampfsport Akademie Berlin',
-        2,
-        0
+        2
     ),
     (
         'patrick',
@@ -435,8 +424,7 @@ VALUES (
         'Müller',
         '+49 151 44444444',
         'Kampfsport Akademie Berlin',
-        3,
-        0
+        3
     ),
     (
         'peter',
@@ -448,8 +436,7 @@ VALUES (
         'Schmidt',
         '+49 151 55555555',
         'Kampfsport Akademie Berlin',
-        4,
-        0
+        4
     ),
     (
         'sophia',
@@ -461,8 +448,7 @@ VALUES (
         'Schneider',
         '+49 151 66666666',
         'Kampfsport Akademie Berlin',
-        5,
-        0
+        5
     );
 
 -- Passwort-Hashes setzen (echte BCRYPT-Hashes)
@@ -608,19 +594,6 @@ VALUES
         'view_course_participants',
         'Kursteilnehmer einsehen'
     ),
-    -- Training-Berechtigungen
-    (
-        'view_own_training',
-        'Eigenen Trainingsverlauf einsehen'
-    ),
-    (
-        'view_all_training',
-        'Alle Trainingsverläufe einsehen'
-    ),
-    (
-        'edit_training_history',
-        'Trainingsverlauf bearbeiten'
-    ),
     -- Gruppen-Berechtigungen
     (
         'manage_groups',
@@ -655,8 +628,7 @@ WHERE
         'edit_own_goals',
         'delete_goals',
         'view_courses',
-        'book_courses',
-        'view_own_training'
+        'book_courses'
     );
 
 -- Trainer-Berechtigungen (alles von Schüler + mehr)
@@ -685,11 +657,9 @@ WHERE
         'view_courses',
         'create_courses',
         'edit_courses',
+        'delete_courses',
         'book_courses',
         'view_course_participants',
-        'view_own_training',
-        'view_all_training',
-        'edit_training_history',
         'manage_groups'
     );
 

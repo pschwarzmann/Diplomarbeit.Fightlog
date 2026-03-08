@@ -58,7 +58,15 @@ export const profileTemplate = `
                                     </div>
                                     <div class="form-group" v-else>
                                         <label for="profile-belt-level-readonly">Gürtelgrad</label>
-                                        <input id="profile-belt-level-readonly" type="text" :value="profileForm.beltLevel || 'Nicht zugewiesen'" class="form-control" disabled style="background:#1e293b; cursor:not-allowed;" aria-label="Gürtelgrad (nur Trainer kann ändern)">
+                                        <input id="profile-belt-level-readonly" type="text" :value="profileForm.beltLevel || 'Nicht zugewiesen'" class="form-control" disabled 
+                                            :style="{ 
+                                                backgroundColor: grades.find(g => g.name === profileForm.beltLevel)?.color || '#1e293b',
+                                                color: ['#FFFFFF', '#FFEB3B', '#FFC107', '#FF9800'].includes(grades.find(g => g.name === profileForm.beltLevel)?.color) ? '#1e293b' : '#fff',
+                                                border: grades.find(g => g.name === profileForm.beltLevel)?.color === '#FFFFFF' ? '2px solid #94a3b8' : 'none',
+                                                cursor: 'not-allowed',
+                                                fontWeight: '600'
+                                            }" 
+                                            aria-label="Gürtelgrad (nur Trainer kann ändern)">
                                         <small class="text-muted">Der Gürtelgrad kann nur von einem Trainer geändert werden.</small>
                                     </div>
                                     

@@ -4,13 +4,12 @@ Eine moderne Webanwendung zur digitalen Erfassung und Verwaltung von Kampfsporte
 
 ## 🎯 Projektübersicht
 
-FightLog ist eine responsive Webanwendung, die es Kampfsportlern und Trainern ermöglicht, ihre Erfolge, Urkunden, Prüfungen und Trainingsverläufe digital zu erfassen und zu verwalten.
+FightLog ist eine responsive Webanwendung, die es Kampfsportlern und Trainern ermöglicht, ihre Erfolge, Urkunden und Prüfungen digital zu erfassen und zu verwalten.
 
 ### Hauptfunktionen:
 - 🔐 Login/Registrierung mit Rollenwahl (Schüler/Trainer)
 - 📄 Urkunden-Upload und -Verwaltung
 - 🏆 Prüfungsergebnisse und Bewertungen
-- 📊 Trainingsverlauf mit Timeline
 - 🎯 Zielsetzung und Fortschrittsverfolgung
 - 📚 Sonderkurse und Workshops
 - 🌐 Mehrsprachigkeit (Deutsch/Englisch)
@@ -188,10 +187,6 @@ GET /fightlog/backend/api/exams.php
 POST /fightlog/backend/api/exams.php
 PUT /fightlog/backend/api/exams.php
 
-// Trainingsverlauf
-GET /fightlog/backend/api/training.php
-POST /fightlog/backend/api/training.php
-
 // Sonderkurse
 GET /fightlog/backend/api/courses.php
 POST /fightlog/backend/api/courses/book.php
@@ -296,7 +291,6 @@ Die Anwendung enthält umfangreiche Demo-Daten:
 - **Demo-Login:** Beliebige Anmeldedaten funktionieren
 - **Beispiel-Urkunden:** 3 verschiedene Urkunden
 - **Prüfungsverlauf:** 2 Beispiel-Prüfungen
-- **Trainingsverlauf:** 2 Trainingseinheiten
 - **Sonderkurse:** 2 verfügbare Kurse
 - **Ziele:** 2 Beispiel-Ziele mit Fortschritt
 
