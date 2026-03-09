@@ -52,7 +52,7 @@ export const certificatesTemplate = `
                                         <label for="manual-cert-student">Schüler auswählen *</label>
                                         <div class="position-relative">
                                             <input id="manual-cert-student" type="text" v-model="manualCertificateForm.studentQuery" class="form-control" placeholder="Schüler suchen..." autocomplete="off" aria-autocomplete="list" :aria-expanded="(manualCertificateForm.studentQuery && studentMatches(manualCertificateForm.studentQuery).length > 0).toString()">
-                                            <div v-if="manualCertificateForm.studentQuery && studentMatches(manualCertificateForm.studentQuery).length" class="form-container position-absolute z-1000" style="left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; max-height:180px; overflow:auto;" role="listbox" aria-label="Schüler-Ergebnisse">
+                                            <div v-if="manualCertificateForm.studentQuery && studentMatches(manualCertificateForm.studentQuery).length" class="form-container autocomplete-dropdown" role="listbox" aria-label="Schüler-Ergebnisse">
                                                 <div v-for="u in studentMatches(manualCertificateForm.studentQuery)" :key="u.id" class="p-sm" style="padding:.4rem 1rem; cursor:pointer;" role="option" @click="selectStudentForManualCertificate(u)" @keydown.enter="selectStudentForManualCertificate(u)" tabindex="0">
                                                     {{ u.name }} <span class="text-muted">(@{{ u.username }})</span>
                                                 </div>

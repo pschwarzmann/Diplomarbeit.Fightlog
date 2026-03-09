@@ -6,7 +6,7 @@
 export const modalsTemplate = `
                 <!-- Kurs bearbeiten Modal -->
                 <div v-if="showCourseEditModal" class="modal-overlay modal-overlay-standard" @click.self="showCourseEditModal = false" role="dialog" aria-labelledby="course-edit-title" aria-modal="true">
-                    <div class="modal-content form-container" style="max-width:500px;">
+                    <div class="modal-content form-container modal-sm">
                         <h2 id="course-edit-title">Kurs bearbeiten</h2>
                         <form @submit.prevent="saveCourseEdit">
                             <div class="form-group">
@@ -51,51 +51,51 @@ export const modalsTemplate = `
 
                 <!-- Teilnehmer Modal (erweitert für Admin/Trainer) -->
                 <div v-if="showParticipantsModal" class="modal-overlay modal-overlay-standard" @click.self="closeParticipantsModal" role="dialog" aria-labelledby="participants-modal-title" aria-modal="true">
-                    <div class="modal-content form-container" style="max-width:550px;">
+                    <div class="modal-content form-container modal-md">
                         <div class="modal-header flex-between">
                             <h2 id="participants-modal-title"><i class="fas fa-users" aria-hidden="true"></i> Teilnehmer</h2>
-                            <button @click="closeParticipantsModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;" aria-label="Modal schließen">
+                            <button @click="closeParticipantsModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
                                 <i class="fas fa-times" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <p v-if="participantsModalCourse" style="color:#64748b; margin-bottom:1rem;">
+                        <p v-if="participantsModalCourse" class="text-muted mb-md">
                             {{ participantsModalCourse.title }} — {{ participantsList.length }} / {{ participantsModalCourse.max_participants }} Teilnehmer
                         </p>
                         
                         <!-- Teilnehmer hinzufügen (Admin/Trainer) -->
-                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" style="margin-bottom: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <label style="font-weight: 600;">Teilnehmer hinzufügen:</label>
+                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="mb-md">
+                            <div class="flex-between mb-sm">
+                                <label class="fw-600">Teilnehmer hinzufügen:</label>
                                 <button type="button" class="btn btn-success btn-sm" @click="participantsAddMode = !participantsAddMode">
                                     <i class="fas fa-plus"></i> Hinzufügen
                                 </button>
                             </div>
-                            <div v-if="participantsAddMode" style="padding: 0.75rem; background: #f1f5f9; border-radius: 8px;">
+                            <div v-if="participantsAddMode" class="participants-add-box">
                                 <input type="text" v-model="participantsSearchQuery" class="form-control" placeholder="Gruppe oder Schüler suchen..." @keydown.enter.prevent>
-                                <div v-if="participantsSearchQuery && (filteredGroupsForCourse.length || filteredStudentsForCourse.length)" style="margin-top: 0.5rem; max-height: 200px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                <div v-if="participantsSearchQuery && (filteredGroupsForCourse.length || filteredStudentsForCourse.length)" class="mt-sm participants-search-results">
                                     <!-- Gruppen -->
-                                    <div v-for="g in filteredGroupsForCourse" :key="'g_'+g.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 600; background: #f8fafc;" @click="addGroupToCourse(g)">
-                                        <i class="fas fa-users"></i> {{ g.name }} <span style="color: #64748b; font-weight: 400;">(Gruppe - {{ g.memberIds ? g.memberIds.length : 0 }} Mitglieder)</span>
+                                    <div v-for="g in filteredGroupsForCourse" :key="'g_'+g.id" class="participants-option participants-option-group" @click="addGroupToCourse(g)">
+                                        <i class="fas fa-users"></i> {{ g.name }} <span class="text-muted fw-400">(Gruppe - {{ g.memberIds ? g.memberIds.length : 0 }} Mitglieder)</span>
                                     </div>
                                     <!-- Einzelne Schüler -->
-                                    <div v-for="u in filteredStudentsForCourse" :key="u.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9;" @click="addParticipantToCourse(u)">
-                                        {{ u.name }} <span style="color: #64748b;">(@{{ u.username }})</span>
+                                    <div v-for="u in filteredStudentsForCourse" :key="u.id" class="participants-option" @click="addParticipantToCourse(u)">
+                                        {{ u.name }} <span class="text-muted">(@{{ u.username }})</span>
                                     </div>
                                 </div>
-                                <div v-if="participantsSearchQuery && !filteredGroupsForCourse.length && !filteredStudentsForCourse.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Gruppen oder Schüler gefunden</div>
+                                <div v-if="participantsSearchQuery && !filteredGroupsForCourse.length && !filteredStudentsForCourse.length" class="mt-sm text-muted" style="font-size: 0.9rem;">Keine Gruppen oder Schüler gefunden</div>
                             </div>
                         </div>
                         
                         <!-- Teilnehmerliste -->
-                        <div v-if="participantsList.length === 0" style="color:#64748b; text-align: center; padding: 1.5rem;">
+                        <div v-if="participantsList.length === 0" class="text-muted text-center p-lg">
                             Keine Teilnehmer angemeldet.
                         </div>
-                        <div v-else style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-                            <div v-for="p in participantsList" :key="p.id" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;">
+                        <div v-else class="participants-list">
+                            <div v-for="p in participantsList" :key="p.id" class="participants-list-item">
                                 <div>
-                                    <span style="font-weight: 500;">{{ p.name }}</span>
-                                    <span style="color: #64748b; margin-left: 0.5rem;">(@{{ p.username }})</span>
-                                    <div style="font-size: 0.8rem; color: #94a3b8;">{{ formatDateTime(p.booking_date) }}</div>
+                                    <span class="fw-500">{{ p.name }}</span>
+                                    <span class="text-muted ml-sm">(@{{ p.username }})</span>
+                                    <div class="text-tertiary" style="font-size: 0.8rem;">{{ formatDateTime(p.booking_date) }}</div>
                                 </div>
                                 <button v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" 
                                         @click="removeParticipantFromCourse(p.user_id)" 
@@ -113,10 +113,10 @@ export const modalsTemplate = `
 
                 <!-- Modal: Benutzer erstellen (nur Admin) -->
                 <div v-if="showCreateUserModal" class="modal-overlay modal-overlay-standard" @click.self="closeCreateUserModal" role="dialog" aria-labelledby="create-user-title" aria-modal="true">
-                    <div class="modal-content form-container" style="max-width: 500px; max-height: 90vh; overflow-y: auto;" @click.stop>
+                    <div class="modal-content form-container modal-sm modal-scroll" @click.stop>
                         <div class="modal-header flex-between mb-lg">
                             <h2 id="create-user-title"><i class="fas fa-user-plus" aria-hidden="true"></i> Benutzer anlegen</h2>
-                            <button @click="closeCreateUserModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;" aria-label="Modal schließen">
+                            <button @click="closeCreateUserModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
                                 <i class="fas fa-times" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -265,10 +265,10 @@ export const modalsTemplate = `
 export const modalsOutsideMainTemplate = `
             <!-- Gruppen-Bearbeitungs-Modal -->
             <div v-if="showGroupEditModal" class="modal-overlay modal-overlay-standard" @click="closeGroupEditModal" role="dialog" aria-labelledby="group-edit-title" aria-modal="true">
-                <div class="modal-content" @click.stop style="max-width: 550px;">
+                <div class="modal-content modal-md" @click.stop>
                     <div class="modal-header">
                         <h2 id="group-edit-title"><i class="fas fa-users-cog" aria-hidden="true"></i> Gruppe bearbeiten</h2>
-                        <button @click="closeGroupEditModal" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;" aria-label="Modal schließen">
+                        <button @click="closeGroupEditModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -289,7 +289,7 @@ export const modalsOutsideMainTemplate = `
                             
                             <!-- Mitglieder -->
                             <div class="form-group">
-                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                <label class="flex-between">
                                     <span>Mitglieder</span>
                                     <button type="button" class="btn btn-success btn-sm" @click="groupEditForm.showAddMember = !groupEditForm.showAddMember">
                                         <i class="fas fa-plus"></i> Hinzufügen
@@ -297,22 +297,22 @@ export const modalsOutsideMainTemplate = `
                                 </label>
                                 
                                 <!-- Mitglied hinzufügen -->
-                                <div v-if="groupEditForm.showAddMember" style="margin-top: 0.5rem; padding: 0.75rem; background: #f1f5f9; border-radius: 8px;">
+                                <div v-if="groupEditForm.showAddMember" class="mt-sm participants-add-box">
                                     <input type="text" v-model="groupEditForm.memberQuery" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
-                                    <div v-if="groupEditForm.memberQuery && filteredStudentsForGroupEdit.length" style="margin-top: 0.5rem; max-height: 150px; overflow: auto; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
-                                        <div v-for="u in filteredStudentsForGroupEdit" :key="u.id" style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f5f9;" @click="addMemberToGroupEdit(u)">
-                                            {{ u.name }} <span style="color: #64748b;">(@{{ u.username }})</span>
+                                    <div v-if="groupEditForm.memberQuery && filteredStudentsForGroupEdit.length" class="mt-sm participants-search-results" style="max-height: 150px;">
+                                        <div v-for="u in filteredStudentsForGroupEdit" :key="u.id" class="participants-option" @click="addMemberToGroupEdit(u)">
+                                            {{ u.name }} <span class="text-muted">(@{{ u.username }})</span>
                                         </div>
                                     </div>
-                                    <div v-if="groupEditForm.memberQuery && !filteredStudentsForGroupEdit.length" style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">Keine Schüler gefunden</div>
+                                    <div v-if="groupEditForm.memberQuery && !filteredStudentsForGroupEdit.length" class="mt-sm text-muted" style="font-size: 0.9rem;">Keine Schüler gefunden</div>
                                 </div>
                                 
                                 <!-- Mitglieder-Liste -->
-                                <div style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-                                    <div v-if="groupEditForm.members.length === 0" style="color: #64748b; text-align: center; padding: 1.5rem;">
+                                <div class="mt-sm participants-list" style="max-height: 200px;">
+                                    <div v-if="groupEditForm.members.length === 0" class="text-muted text-center p-lg">
                                         Keine Mitglieder
                                     </div>
-                                    <div v-for="member in groupEditForm.members" :key="member.id" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;">
+                                    <div v-for="member in groupEditForm.members" :key="member.id" class="participants-list-item">
                                         <span>{{ member.name }}</span>
                                         <button type="button" @click="removeMemberFromGroupEdit(member.id)" class="btn btn-danger btn-sm">
                                             <i class="fas fa-times"></i>
@@ -335,13 +335,13 @@ export const modalsOutsideMainTemplate = `
                 <div class="modal-content" @click.stop>
                     <div class="modal-header">
                         <h2 id="passkey-modal-title"><i class="fas fa-key" aria-hidden="true"></i> Passkey-Verwaltung</h2>
-                        <button @click="closePasskeyModal" class="close-btn" aria-label="Modal schließen">
+                        <button @click="closePasskeyModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
                     
                     <div class="modal-body">
-                        <p v-if="passkeysError" class="text-danger" style="margin-bottom: 1rem;">
+                        <p v-if="passkeysError" class="text-danger mb-md">
                             {{ passkeysError }}
                         </p>
 

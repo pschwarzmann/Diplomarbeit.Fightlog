@@ -6,7 +6,7 @@
 export const examsTemplate = `
                                  <!-- Prüfungen -->
                  <div v-else-if="currentPage === 'exams'">
-                     <div style="padding: 2rem 0;">
+                     <div class="page-content">
                          <div class="container">
                              <div class="page-header">
                                  <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
@@ -55,17 +55,17 @@ export const examsTemplate = `
                                         <label for="exam-student-query">Schüler zuordnen</label>
                                         <div class="position-relative">
                                             <input id="exam-student-query" type="text" v-model="examForm.studentQuery" class="form-control" placeholder="Gruppe oder Schüler suchen" @keydown.enter.prevent autocomplete="off" aria-autocomplete="list" :aria-expanded="(examForm.studentQuery && (groupMatches(examForm.studentQuery).length > 0 || studentMatches(examForm.studentQuery).length > 0)).toString()">
-                                            <div v-if="examForm.studentQuery" class="form-container position-absolute z-1000" style="margin-top:.5rem; padding:.35rem .75rem; max-height:260px; overflow:auto;" role="listbox" aria-label="Schüler- und Gruppen-Ergebnisse">
-                                                <div v-for="g in groupMatches(examForm.studentQuery)" :key="'g_'+g.id" class="p-sm" style="padding:.4rem 0; cursor:pointer; font-weight:600;" role="option" @click="applyGroupObjectTo('exam', g)" @keydown.enter="applyGroupObjectTo('exam', g)" tabindex="0">
-                                                    {{ g.name }} <span class="text-muted" style="font-weight:500;">(Gruppe)</span>
+                                            <div v-if="examForm.studentQuery" class="form-container position-absolute autocomplete-dropdown autocomplete-dropdown-lg" role="listbox" aria-label="Schüler- und Gruppen-Ergebnisse">
+                                                <div v-for="g in groupMatches(examForm.studentQuery)" :key="'g_'+g.id" class="p-sm autocomplete-option-sm fw-600" role="option" @click="applyGroupObjectTo('exam', g)" @keydown.enter="applyGroupObjectTo('exam', g)" tabindex="0">
+                                                    {{ g.name }} <span class="text-muted fw-500">(Gruppe)</span>
                                                 </div>
-                                                <div v-for="u in studentMatches(examForm.studentQuery)" :key="u.id" class="p-sm" style="padding:.3rem 0; cursor:pointer;" role="option" @click="tapSelectStudent('exam', u)" @keydown.enter="tapSelectStudent('exam', u)" tabindex="0">
+                                                <div v-for="u in studentMatches(examForm.studentQuery)" :key="u.id" class="p-sm autocomplete-option-sm" role="option" @click="tapSelectStudent('exam', u)" @keydown.enter="tapSelectStudent('exam', u)" tabindex="0">
                                                     {{ u.name }} <span class="text-muted">(@{{ u.username }})</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div v-if="examForm.userIds.length" class="mt-sm flex flex-wrap gap-sm">
-                                            <span v-for="sid in examForm.userIds" :key="sid" class="btn btn-secondary btn-sm" style="cursor:default;" role="status">
+                                            <span v-for="sid in examForm.userIds" :key="sid" class="btn btn-secondary btn-sm cursor-default" role="status">
                                                 {{ displayUserName(sid) }}
                                                 <button type="button" class="btn btn-danger btn-sm mr-sm" @click="removeSelected('exam', sid)" :aria-label="displayUserName(sid) + ' entfernen'"><i class="fas fa-times" aria-hidden="true"></i></button>
                                             </span>
@@ -92,7 +92,7 @@ export const examsTemplate = `
                                         <label for="exam-search">{{ t('search') }}</label>
                                         <input id="exam-search" type="text" v-model="examSearch" class="form-control" placeholder="Level/Prüfer/Kategorie/Schüler" aria-label="Prüfungen durchsuchen">
                                     </div>
-                                    <div class="form-group" style="align-self:end;">
+                                    <div class="form-group form-group-end">
                                         <button class="btn btn-secondary" @click="clearExamSearch" aria-label="Filter zurücksetzen">{{ t('clearFilter') }}</button>
                                     </div>
                                 </div>
@@ -100,7 +100,7 @@ export const examsTemplate = `
                                     <div v-for="exam in filteredExams" :key="exam.id" class="timeline-item">
                                         <div class="timeline-content">
                                             <h4>{{ exam.level }} - {{ exam.category }}</h4>
-                                            <p><strong>Schüler:</strong> {{ exam.studentName || 'Unbekannt' }} <span v-if="exam.studentUsername" style="color:#64748b;">(@{{ exam.studentUsername }})</span></p>
+                                            <p><strong>Schüler:</strong> {{ exam.studentName || 'Unbekannt' }} <span v-if="exam.studentUsername" class="text-muted">(@{{ exam.studentUsername }})</span></p>
                                             <p><strong>Datum:</strong> {{ formatDate(exam.date) }}</p>
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
@@ -114,10 +114,10 @@ export const examsTemplate = `
                                 </div>
                             </div>
                             <div v-else>
-                                <div v-if="ownExams.length === 0" class="form-container" style="text-align: center; padding: 3rem 2rem;">
-                                    <i class="fas fa-clipboard-list" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
-                                    <h3 style="color: #64748b; margin-bottom: 0.5rem;">Noch keine Prüfungen</h3>
-                                    <p style="color: #94a3b8;">Du hast noch keine Prüfungen abgeschlossen. Dein Trainer wird deine Prüfungsergebnisse hier eintragen.</p>
+                                <div v-if="ownExams.length === 0" class="form-container empty-state empty-state-compact">
+                                    <i class="fas fa-clipboard-list empty-state-icon" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                    <h3 class="empty-state-title">Noch keine Prüfungen</h3>
+                                    <p class="empty-state-text">Du hast noch keine Prüfungen abgeschlossen. Dein Trainer wird deine Prüfungsergebnisse hier eintragen.</p>
                                 </div>
                                 <div v-else class="timeline">
                                     <div v-for="exam in ownExams" :key="exam.id" class="timeline-item">
@@ -134,7 +134,7 @@ export const examsTemplate = `
 
                             <!-- Bearbeiten-Modal für Prüfungen -->
                             <div v-if="showExamEditModal" class="modal-overlay modal-overlay-standard" @click="closeExamEditModal" role="dialog" aria-labelledby="exam-edit-title" aria-modal="true">
-                                <div class="modal-content" @click.stop style="max-width: 600px;">
+                                <div class="modal-content modal-lg" @click.stop>
                                     <div class="modal-header">
                                         <h2 id="exam-edit-title"><i class="fas fa-edit" aria-hidden="true"></i> Prüfung bearbeiten</h2>
                                         <button @click="closeExamEditModal" class="close-btn" aria-label="Modal schließen">
@@ -176,15 +176,15 @@ export const examsTemplate = `
                                             </div>
                                             <div class="form-group">
                                                 <label>Schüler</label>
-                                                <div style="position:relative;">
+                                                <div class="position-relative">
                                                     <input type="text" v-model="examEditForm.studentQuery" class="form-control" placeholder="Schüler suchen...">
-                                                    <div v-if="examEditForm.studentQuery && studentMatches(examEditForm.studentQuery).length" class="form-container" style="position:absolute; left:0; right:0; top:100%; margin-top:.25rem; padding:.5rem 0; z-index:1000; max-height:180px; overflow:auto;">
-                                                        <div v-for="u in studentMatches(examEditForm.studentQuery)" :key="u.id" style="padding:.4rem 1rem; cursor:pointer;" @click="selectStudentForExamEdit(u)">
-                                                            {{ u.name }} <span style="color:#64748b;">(@{{ u.username }})</span>
+                                                    <div v-if="examEditForm.studentQuery && studentMatches(examEditForm.studentQuery).length" class="form-container autocomplete-dropdown">
+                                                        <div v-for="u in studentMatches(examEditForm.studentQuery)" :key="u.id" class="autocomplete-option" @click="selectStudentForExamEdit(u)">
+                                                            {{ u.name }} <span class="text-muted">(@{{ u.username }})</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div v-if="examEditForm.studentName" style="margin-top:.25rem; color:#64748b; font-size:.9rem;">Ausgewählt: {{ examEditForm.studentName }}</div>
+                                                <div v-if="examEditForm.studentName" class="mt-sm text-muted" style="font-size:.9rem;">Ausgewählt: {{ examEditForm.studentName }}</div>
                                             </div>
                                             <div class="form-group">
                                                 <label>Prüfer</label>

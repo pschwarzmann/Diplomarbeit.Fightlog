@@ -27,7 +27,7 @@ export const layoutTemplate = `
             <!-- Session-Timeout-Warnung Modal -->
             <div v-if="sessionTimeoutWarning && !sessionExpired" class="modal-overlay modal-overlay-standard" role="dialog" aria-labelledby="session-warning-title" aria-modal="true">
                 <div class="modal-content modal-content-standard">
-                    <h3 id="session-warning-title" class="mb-md" style="margin: 0;">Session läuft bald ab</h3>
+                    <h3 id="session-warning-title" class="mb-md m-0">Session läuft bald ab</h3>
                     <p class="text-muted mb-lg">
                         Ihre Session läuft in {{ Math.max(0, sessionRemainingSeconds) }} Sekunden ab. Möchten Sie die Session verlängern?
                     </p>

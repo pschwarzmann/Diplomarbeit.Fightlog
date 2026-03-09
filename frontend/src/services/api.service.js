@@ -206,7 +206,7 @@ export const apiService = {
     
     exportData(type, format = 'csv') {
         const token = localStorage.getItem('auth_token');
-        const url = `${API_BASE}/export.php?type=${encodeURIComponent(type)}&format=${encodeURIComponent(format)}`;
+        const url = `${BASE_URL}/export.php?type=${encodeURIComponent(type)}&format=${encodeURIComponent(format)}`;
         window.location.href = url + (token ? `&token=${encodeURIComponent(token)}` : '');
     },
 

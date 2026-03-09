@@ -71,6 +71,88 @@
     font-size: 0.9rem;
 }
 
+.input-disabled {
+    background: #f1f5f9;
+}
+
+/* Autocomplete-Dropdown unter Suchfeldern */
+.autocomplete-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 0.25rem;
+    padding: 0.5rem 0;
+    max-height: 180px;
+    overflow: auto;
+    z-index: 1000;
+}
+
+.autocomplete-dropdown-lg {
+    max-height: 260px;
+    padding: 0.35rem 0.75rem;
+}
+
+.autocomplete-option {
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+}
+
+.autocomplete-option-sm {
+    padding: 0.3rem 0;
+    cursor: pointer;
+}
+
+.form-group-end {
+    align-self: flex-end;
+}
+
+.participants-add-box {
+    padding: 0.75rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.participants-search-results {
+    margin-top: 0.5rem;
+    max-height: 200px;
+    overflow: auto;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.participants-option {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.participants-option-group {
+    font-weight: 600;
+    background: #f8fafc;
+}
+
+.participants-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.participants-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-scroll {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 /* Button-Choices (statt Select) */
 .choice-group {
     display: grid;

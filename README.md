@@ -22,7 +22,7 @@ fightlog/
 ├── frontend/                       # Frontend (Vue 3, Vanilla JS, CSS)
 │   ├── index.html / simple.html   # Entry Points (Login & App)
 │   ├── demo.html                  # Funktionsübersicht
-│   ├── main.js                    # Hauptanwendung (~4347 Zeilen, modularisiert)
+│   ├── main.js                    # Hauptanwendung (Vue-Root, modularisiert)
 │   ├── styles/                    # Globale Styles
 │   └── src/                       # Modularisierte App-Logik
 │       ├── modules/               # Modulare Funktionen
@@ -178,7 +178,7 @@ POST /fightlog/backend/api/logout.php
 
 // Urkunden
 GET /fightlog/backend/api/certificates.php
-POST /fightlog/backend/api/upload.php
+POST /fightlog/backend/api/certificates.php (action=create)
 PUT /fightlog/backend/api/certificates.php
 DELETE /fightlog/backend/api/certificates.php
 
@@ -189,7 +189,7 @@ PUT /fightlog/backend/api/exams.php
 
 // Sonderkurse
 GET /fightlog/backend/api/courses.php
-POST /fightlog/backend/api/courses/book.php
+POST /fightlog/backend/api/courses.php (action=book)
 
 // Ziele
 GET /fightlog/backend/api/goals.php
@@ -215,17 +215,13 @@ export const apiService = {
 
 **`frontend/main.js` (Bootstrap):**
 - Lädt Übersetzungen (`src/constants/translations.js`)
-- Bindet Demo-Daten (`src/data/demo-data.js`)
 - Registriert globale Komponenten (`src/components/registerGlobalComponents.js`)
 - Startet anschließend das Vue-Root-Layout
 
-**`backend/api/login.php` (Zeile 25-35):**
-```php
-// TODO: Backend-Entwickler - Hier echte Authentifizierung implementieren
-// - Datenbankverbindung herstellen
-// - Passwort-Hashing überprüfen
-// - Session-Token erstellen
-```
+**`backend/api/login.php`:**
+- Authentifizierung über Datenbank (AuthService)
+- Passwort-Hashing (password_verify)
+- Session-Token (Bearer) für API-Aufrufe
 
 #### 3. **Datenstrukturen:**
 

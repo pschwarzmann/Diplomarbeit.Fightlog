@@ -5,15 +5,15 @@
 
 export const adminTemplate = `
                 <div v-else-if="currentPage === 'admin' && currentUser && currentUser.role === 'admin'">
-                    <div style="padding: 2rem 0;">
+                    <div class="page-content">
                         <div class="container">
-                            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="page-header flex-between flex-wrap gap-md">
+                                <div class="flex ai-center gap-md">
                                     <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
                                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                         Zurück
                                     </button>
-                                    <h1 style="margin: 0;">{{ t('adminPanel') }}</h1>
+                                    <h1 class="m-0">{{ t('adminPanel') }}</h1>
                                 </div>
                                 <button @click="showCreateUserModal = true" class="btn btn-primary btn-auto" aria-label="Neuen Benutzer anlegen">
                                     <i class="fas fa-user-plus" aria-hidden="true"></i> Benutzer anlegen
@@ -49,14 +49,14 @@ export const adminTemplate = `
                                                             <span class="info-label"><i class="fas fa-user" aria-hidden="true"></i> Benutzername:</span>
                                                             <span class="info-value">
                                                                 {{ user.username }}
-                                                                <i class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
+                                                                <i class="fas fa-key ml-sm text-tertiary" style="font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
                                                         <div class="info-row">
                                                             <span class="info-label"><i class="fas fa-envelope" aria-hidden="true"></i> E-Mail:</span>
                                                             <span class="info-value">
                                                                 {{ user.email }}
-                                                                <i class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
+                                                                <i class="fas fa-key ml-sm text-tertiary" style="font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
                                                         <div class="info-row">
@@ -67,14 +67,14 @@ export const adminTemplate = `
                                                             <span class="info-label"><i class="fas fa-signature" aria-hidden="true"></i> Vorname:</span>
                                                             <span class="info-value">
                                                                 <span :class="{ 'empty-value': !user.firstName }">{{ user.firstName || '—' }}</span>
-                                                                <i v-if="user.firstName" class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
+                                                                <i v-if="user.firstName" class="fas fa-key ml-sm text-tertiary" style="font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
                                                         <div class="info-row">
                                                             <span class="info-label"><i class="fas fa-signature" aria-hidden="true"></i> Nachname:</span>
                                                             <span class="info-value">
                                                                 <span :class="{ 'empty-value': !user.lastName }">{{ user.lastName || '—' }}</span>
-                                                                <i v-if="user.lastName" class="fas fa-key" style="margin-left: 0.5rem; color: #94a3b8; font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
+                                                                <i v-if="user.lastName" class="fas fa-key ml-sm text-tertiary" style="font-size: 0.75rem;" title="Eindeutiger Identifikator" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
                                                         <div class="info-row" v-if="user.name">

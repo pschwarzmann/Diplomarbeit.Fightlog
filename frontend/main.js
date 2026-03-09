@@ -1,14 +1,8 @@
-// ===== FIGHTLOG - HAUPTANWENDUNG =====
-// Diese Datei enthält die komplette Vue.js Anwendung
-// 
-// Struktur:
-// - Template: Vue.js Template mit allen UI-Komponenten
-// - Data: Reaktive Daten für die Anwendung
-// - Computed: Berechnete Properties (Filter, Suche, etc.)
-// - Methods: Methoden für Interaktionen und API-Calls
-//   - Einfache Funktionen sind in Modulen ausgelagert (src/modules/)
-//   - Komplexe API-Calls bleiben hier für bessere Übersicht
-// - Mounted: Initialisierung beim Laden der Anwendung
+/**
+ * FightLog - Hauptanwendung
+ * Vue 3 SPA: Templates, Data, Computed, Methods.
+ * API-Logik in src/modules/ (actions, exams, courses, etc.)
+ */
 
 // ===== INLINE NOTIFY SYSTEM (garantiert frisch geladen) =====
 (function() {
@@ -131,15 +125,9 @@
 // ===== END INLINE NOTIFY SYSTEM =====
 
 import { translations } from './src/constants/translations.js';
-import { apiService } from './src/services/api.service.js';
 import { registerGlobalComponents } from './src/components/registerGlobalComponents.js';
 import {
-    cacheUsername,
-    getCachedUsername,
-    clearUsernameCache,
-    clearAuthState,
     readAuthSnapshot,
-    persistAuthState,
     persistLanguage,
     readLanguage
 } from './src/store/session-store.js';
@@ -174,10 +162,6 @@ import { layoutTemplate } from './src/templates/layout-template.js';
 import { modalsTemplate, modalsOutsideMainTemplate } from './src/templates/modals-template.js';
 
 const { createApp } = window.Vue || Vue;
-
-// Übersetzungen & Demo-Daten werden nun über src/constants und src/data eingebunden.
-
-// API-Service wird über src/services/api.service.js gekapselt.
 
 // Hauptanwendung
 const app = createApp({

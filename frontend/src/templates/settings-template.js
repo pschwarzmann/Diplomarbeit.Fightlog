@@ -5,7 +5,7 @@
 
 export const settingsTemplate = `
                 <div v-else-if="currentPage === 'settings' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')">
-                    <div style="padding: 2rem 0;">
+                    <div class="page-content">
                         <div class="container">
                             <div class="page-header">
                                 <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
@@ -67,7 +67,7 @@ export const settingsTemplate = `
                             <!-- Tab: Allgemein (nur Admin) -->
                             <div v-show="currentSettingsTab === 'general' && currentUser && currentUser.role === 'admin'" id="tab-general" class="form-container" role="tabpanel">
                                 <h2>Allgemeine Einstellungen</h2>
-                                <p style="color: #64748b; margin-bottom: 1rem;">Systemweite Einstellungen verwalten.</p>
+                                <p class="text-muted mb-md">Systemweite Einstellungen verwalten.</p>
                                 
                                 <form @submit.prevent="saveGeneralSettings">
                                     <div class="form-group">
@@ -84,7 +84,7 @@ export const settingsTemplate = `
                                             aria-required="true"
                                             aria-describedby="password-min-length-help"
                                         >
-                                        <small id="password-min-length-help" class="text-muted mt-sm" style="display: block;">Mindestlänge: 4, Maximallänge: 128</small>
+                                        <small id="password-min-length-help" class="text-muted mt-sm d-block">Mindestlänge: 4, Maximallänge: 128</small>
                                     </div>
                                     
                                     <button type="submit" class="btn btn-primary" :disabled="savingGeneralSettings" aria-label="Allgemeine Einstellungen speichern">
@@ -93,7 +93,7 @@ export const settingsTemplate = `
                                         <span v-else>Einstellungen speichern</span>
                                     </button>
                                     
-                                    <div v-if="generalSettingsError" class="mt-md p-md" style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 6px; color: #991b1b;" role="alert" aria-live="assertive">
+                                    <div v-if="generalSettingsError" class="mt-md p-md alert-error" role="alert" aria-live="assertive">
                                         <i class="fas fa-exclamation-circle" aria-hidden="true"></i> {{ generalSettingsError }}
                                     </div>
                                 </form>

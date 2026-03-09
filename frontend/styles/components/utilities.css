@@ -54,6 +54,8 @@
 }
 
 /* Spacing Utilities */
+.m-0 { margin: 0; }
+.py-xl { padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); }
 .mt-sm { margin-top: var(--spacing-sm); }
 .mt-md { margin-top: var(--spacing-md); }
 .mt-lg { margin-top: var(--spacing-lg); }
@@ -62,6 +64,8 @@
 .mb-lg { margin-bottom: var(--spacing-lg); }
 .mr-sm { margin-right: var(--spacing-sm); }
 .mr-md { margin-right: var(--spacing-md); }
+.ml-sm { margin-left: var(--spacing-sm); }
+.ai-center { align-items: center; }
 
 .p-sm { padding: var(--spacing-sm); }
 .p-md { padding: var(--spacing-md); }
@@ -84,6 +88,13 @@
 .text-tertiary {
     color: var(--text-tertiary);
 }
+
+.fw-400 { font-weight: 400; }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.cursor-default { cursor: default; }
+.d-block { display: block; }
 
 /* Cursor Utility */
 .cursor-pointer {
@@ -131,10 +142,34 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Page Content Wrapper */
+.page-content {
+    padding: var(--spacing-xl) 0;
+}
+
+/* Modal Width Variants */
+.modal-sm { max-width: 500px; }
+.modal-md { max-width: 550px; }
+.modal-lg { max-width: 600px; }
+
+/* Modal Close Button */
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
     padding: var(--spacing-2xl);
+}
+
+.empty-state-compact {
+    text-align: center;
+    padding: 3rem 2rem;
 }
 
 .empty-state-icon {
@@ -189,9 +224,17 @@
     }
 }
 
-/* Text Danger fÃ¼r Fehlermeldungen */
+/* Text Danger für Fehlermeldungen */
 .text-danger {
     color: #ef4444;
+}
+
+/* Alert/Error Box */
+.alert-error {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #991b1b;
 }
 
 /* Verbesserte Modal-Responsive */

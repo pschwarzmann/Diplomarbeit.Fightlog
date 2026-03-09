@@ -5,7 +5,7 @@
 
 export const profileTemplate = `
                 <div v-else-if="currentPage === 'profile' && currentUser">
-                    <div style="padding: 2rem 0;">
+                    <div class="page-content">
                         <div class="container">
                             <div class="page-header">
                                 <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
@@ -15,7 +15,7 @@ export const profileTemplate = `
                                 <h1><i class="fas fa-user" aria-hidden="true"></i> Mein Profil</h1>
                             </div>
 
-                            <div class="form-container" style="max-width: 600px;">
+                            <div class="form-container modal-lg">
                                 <form @submit.prevent="saveProfile">
                                     <div class="form-row">
                                         <div class="form-group">
@@ -30,7 +30,7 @@ export const profileTemplate = `
                                     
                                     <div class="form-group">
                                         <label for="profile-username">Benutzername</label>
-                                        <input id="profile-username" type="text" :value="currentUser.username" class="form-control" disabled style="background: #f1f5f9;" aria-label="Benutzername (nicht änderbar)">
+                                        <input id="profile-username" type="text" :value="currentUser.username" class="form-control input-disabled" disabled aria-label="Benutzername (nicht änderbar)">
                                         <small class="text-muted">Benutzername kann nicht geändert werden</small>
                                     </div>
                                     
