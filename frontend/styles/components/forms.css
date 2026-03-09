@@ -16,6 +16,55 @@
     font-weight: 600;
 }
 
+/* Profil-Seite: Zwei-Spalten-Layout Desktop, einspaltig Mobile */
+.profile-form-container {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-form-container .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.profile-form-container .form-row .form-group {
+    margin-bottom: 0;
+}
+
+.profile-form-container .form-row-single {
+    grid-template-columns: 1fr;
+}
+
+.profile-form-container .profile-password-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .profile-form-container .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .profile-form-container .form-row .form-group {
+        margin-bottom: 0;
+    }
+    
+    .profile-form-container .form-row + .form-row {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-form-container {
+        padding: 1.25rem;
+    }
+}
+
 /* Preset Tabs */
 .preset-tabs {
     display: flex;
