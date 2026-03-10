@@ -379,14 +379,14 @@ export const modalsOutsideMainTemplate = `
                                     <div class="passkey-actions">
                                         <button
                                             @click="renamePasskey(p)"
-                                            class="btn btn-secondary btn-sm"
+                                            class="passkey-action-btn passkey-action-edit"
                                             :aria-label="'Passkey ' + (p.friendlyName || p.id) + ' umbenennen'"
                                         >
                                             <i class="fas fa-pen" aria-hidden="true"></i>
                                         </button>
                                         <button
                                             @click="removeOwnPasskey(p.id)"
-                                            class="btn btn-danger btn-sm"
+                                            class="passkey-action-btn passkey-action-delete"
                                             :aria-label="'Passkey ' + (p.friendlyName || p.id) + ' entfernen'"
                                         >
                                             <i class="fas fa-trash" aria-hidden="true"></i>

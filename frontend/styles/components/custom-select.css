@@ -1,26 +1,30 @@
-﻿/* ===== Custom Select (animated, rounded) ===== */
+/* ===== Custom Select (animated, rounded) ===== */
 .cs-select {
     position: relative;
     display: block;
-    z-index: 1; /* Basis z-index fÃ¼r Dropdown-Kontext */
+    z-index: 1; /* Basis z-index für Dropdown-Kontext */
 }
 
 .cs-select.open {
-    z-index: 9999; /* HÃ¶herer z-index wenn offen, damit es Ã¼ber anderen Elementen liegt */
+    z-index: 10050; /* Über Kacheln (z.B. Urkunden-Grid), Modals bleiben bei 10000 */
 }
 
 .cs-trigger {
     width: 100%;
     text-align: left;
     padding: 16px 44px 16px 20px;
-    background: rgba(255,255,255,0.92);
-    border: none;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #e2e8f0;
     border-radius: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    box-shadow: none;
     font: inherit;
     color: #1e293b;
     cursor: pointer;
     position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.cs-trigger:hover {
+    border-color: #d1d5db;
 }
 
 .cs-trigger::after {
@@ -34,7 +38,8 @@
 }
 
 .cs-select.open .cs-trigger {
-    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.15);
 }
 
 .cs-menu {
@@ -48,7 +53,7 @@
     opacity: 0;
     transform: translateY(-4px);
     transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
-    z-index: 10000; /* Sehr hoher z-index, damit es Ã¼ber anderen Elementen liegt */
+    z-index: 10051; /* Über Kacheln und Form-Container */
 }
 
 .cs-select.open .cs-menu {

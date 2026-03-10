@@ -885,6 +885,31 @@ const app = createApp({
             return utils.formatDateTime(dateStr);
         },
         
+        /** Prüft ob Gürtelfarbe hell ist (z.B. Weißgurt) – für sichtbare Kontraste */
+        isLightGradeColor(color) {
+            if (!color) return false;
+            const c = String(color).toUpperCase().replace(/\s/g, '');
+            return c === '#FFFFFF' || c === '#FFF' || c === 'WHITE';
+        },
+        
+        /** Stile für Urkunden-Kacheln bei hellen Gürtelfarben (Weißgurt etc.) */
+        getCertGradeStyles(cert) {
+            const c = cert?.gradeColor;
+            const light = this.isLightGradeColor(c);
+            if (light) {
+                return {
+                    strip: { backgroundColor: '#f1f5f9', borderBottom: '2px solid #94a3b8' },
+                    icon: { backgroundColor: '#f1f5f9', color: '#64748b', border: '2px solid #cbd5e1' },
+                    badge: { backgroundColor: '#f1f5f9', color: '#1e293b', border: '2px solid #94a3b8' }
+                };
+            }
+            return {
+                strip: { backgroundColor: c || '#e2e8f0' },
+                icon: { backgroundColor: (c || '#e2e8f0') + '20', color: c || '#64748b' },
+                badge: { backgroundColor: (c || '#64748b') + '20', color: c || '#64748b' }
+            };
+        },
+        
         canCancelBooking(course) {
             return utils.canCancelBooking(course);
         },

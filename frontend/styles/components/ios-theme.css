@@ -23,12 +23,14 @@
     font-weight: 600;
 }
 
-.btn-primary {
+.btn-primary,
+.btn-success {
     background: var(--ios-blue);
     box-shadow: 0 10px 20px rgba(10,132,255,0.25);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-success:hover {
     background: #007aff;
     box-shadow: 0 14px 28px rgba(10,132,255,0.28);
 }

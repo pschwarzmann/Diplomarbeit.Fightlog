@@ -611,6 +611,10 @@ textarea.form-control.error {
 .collapsible-body .cs-menu {
     border-radius: 10px;
     box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+    z-index: 10051;
+}
+.collapsible-body .cs-select.open {
+    z-index: 10050;
 }
 .collapsible-body .cs-option {
     padding: 8px 14px;

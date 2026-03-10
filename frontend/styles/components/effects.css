@@ -77,20 +77,23 @@
     transition: transform 0s ease, opacity 0.1s ease;
 }
 
-/* PrimÃ¤r: iOS-Blau mit subtiler Tiefe und Outline-Glow beim Hover */
-.btn-primary {
+/* Primär & Erfolg: iOS-Blau, einheitliche Effekte */
+.btn-primary,
+.btn-success {
     border: 1px solid rgba(255,255,255,0.2);
     backdrop-filter: saturate(180%) blur(8px);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-success:hover {
     transform: translateY(-1px) scale(1.01);
     box-shadow: 0 16px 28px rgba(10,132,255,0.32),
                 inset 0 -1px 0 rgba(255,255,255,0.35),
                 0 0 0 3px rgba(10,132,255,0.15);
 }
 
-.btn-primary:active {
+.btn-primary:active,
+.btn-success:active {
     transform: translateY(0) scale(0.99);
     box-shadow: 0 8px 16px rgba(10,132,255,0.24),
                 inset 0 -1px 0 rgba(255,255,255,0.25),
@@ -332,5 +335,53 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Passkey Bearbeiten/Löschen: einheitliche Icon-Buttons */
+.passkey-action-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+.passkey-action-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+}
+.passkey-action-btn:active {
+    transform: scale(0.96);
+}
+.passkey-action-btn:focus-visible {
+    outline: 2px solid rgba(10,132,255,0.35);
+    outline-offset: 2px;
+}
+.passkey-action-btn i {
+    font-size: 0.9rem;
+}
+/* Bearbeiten: dezenter Blauton beim Hover */
+.passkey-action-edit:hover {
+    border-color: rgba(10,132,255,0.3);
+    color: #0a84ff;
+}
+/* Löschen: roter Akzent beim Hover */
+.passkey-action-delete:hover {
+    border-color: rgba(239,68,68,0.4);
+    background: #fef2f2;
+    color: #ef4444;
+}
+.passkey-action-delete:active {
+    background: #fee2e2;
 }
 

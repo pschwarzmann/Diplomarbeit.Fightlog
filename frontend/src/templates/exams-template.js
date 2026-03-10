@@ -47,8 +47,9 @@ export const examsTemplate = `
                                                 <option value="Kata">Kata</option>
                                             </select>
                                         </div>
-                                        
                                         <div class="form-group">
+                                            <label for="exam-instructor">{{ t('examInstructor') }}</label>
+                                            <input id="exam-instructor" type="text" v-model="examForm.instructor" class="form-control" required aria-required="true">
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -70,11 +71,6 @@ export const examsTemplate = `
                                                 <button type="button" class="btn btn-danger btn-sm mr-sm" @click="removeSelected('exam', sid)" :aria-label="displayUserName(sid) + ' entfernen'"><i class="fas fa-times" aria-hidden="true"></i></button>
                                             </span>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="exam-instructor">{{ t('examInstructor') }}</label>
-                                        <input id="exam-instructor" type="text" v-model="examForm.instructor" class="form-control" required aria-required="true">
                                     </div>
                                     
                                     <div class="form-group">
@@ -105,9 +101,9 @@ export const examsTemplate = `
                                             <p><strong>Prüfer:</strong> {{ exam.instructor }}</p>
                                             <p><strong>Status:</strong> <span :class="'status-' + exam.status">{{ exam.status }}</span></p>
                                             <p v-if="exam.comments"><strong>Kommentare:</strong> {{ exam.comments }}</p>
-                                            <div class="mt-sm flex gap-md">
-                                                <button class="btn btn-secondary btn-auto" @click="editExam(exam)" :aria-label="'Prüfung ' + exam.level + ' - ' + exam.category + ' bearbeiten'"><i class="fas fa-pen" aria-hidden="true"></i></button>
-                                                <button class="btn btn-secondary btn-auto" @click="deleteExam(exam)" :aria-label="'Prüfung ' + exam.level + ' - ' + exam.category + ' löschen'"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                                            <div class="exam-actions">
+                                                <button class="exam-action-btn exam-action-edit" @click="editExam(exam)" :aria-label="'Prüfung ' + exam.level + ' - ' + exam.category + ' bearbeiten'"><i class="fas fa-pen" aria-hidden="true"></i></button>
+                                                <button class="exam-action-btn exam-action-delete" @click="deleteExam(exam)" :aria-label="'Prüfung ' + exam.level + ' - ' + exam.category + ' löschen'"><i class="fas fa-trash" aria-hidden="true"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -166,13 +162,17 @@ export const examsTemplate = `
                                                     </select>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label>Status</label>
-                                                    <select v-model="examEditForm.status" class="form-control" required>
-                                                        <option value="passed">Bestanden</option>
-                                                        <option value="failed">Nicht bestanden</option>
-                                                        <option value="pending">Ausstehend</option>
-                                                    </select>
+                                                    <label>Prüfer</label>
+                                                    <input type="text" v-model="examEditForm.instructor" class="form-control" required>
                                                 </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <select v-model="examEditForm.status" class="form-control" required>
+                                                    <option value="passed">Bestanden</option>
+                                                    <option value="failed">Nicht bestanden</option>
+                                                    <option value="pending">Ausstehend</option>
+                                                </select>
                                             </div>
                                             <div class="form-group">
                                                 <label>Schüler</label>
@@ -185,10 +185,6 @@ export const examsTemplate = `
                                                     </div>
                                                 </div>
                                                 <div v-if="examEditForm.studentName" class="mt-sm text-muted" style="font-size:.9rem;">Ausgewählt: {{ examEditForm.studentName }}</div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Prüfer</label>
-                                                <input type="text" v-model="examEditForm.instructor" class="form-control" required>
                                             </div>
                                             <div class="form-group">
                                                 <label>Kommentar</label>

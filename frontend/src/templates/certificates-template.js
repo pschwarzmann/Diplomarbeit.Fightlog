@@ -16,11 +16,13 @@ export const certificatesTemplate = `
                                 <h1><i class="fas fa-certificate" aria-hidden="true"></i> Meine Urkunden</h1>
                             </div>
                             
-                            <!-- Trainer/Admin: Manuelle Urkunde hinzufügen -->
-                            <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="form-container mb-lg">
+                            <!-- Trainer/Admin: Manuelle Urkunde hinzufügen (z-index damit Dropdown über Kacheln) -->
+                            <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer')" class="form-container mb-lg certificate-form-above-grid">
                                 <div class="flex-between">
                                     <h3 style="margin: 0;"><i class="fas fa-plus-circle" aria-hidden="true"></i> Manuelle Urkunde erstellen</h3>
-                                    <button class="btn btn-primary btn-sm" @click="showManualCertificateForm = !showManualCertificateForm" :aria-expanded="showManualCertificateForm.toString()" aria-label="Formular zum Erstellen einer manuellen Urkunde {{ showManualCertificateForm ? 'ausblenden' : 'anzeigen' }}">
+                                    <button :class="['btn', 'btn-sm', showManualCertificateForm ? 'btn-secondary' : 'btn-primary']" @click="showManualCertificateForm = !showManualCertificateForm" :aria-expanded="showManualCertificateForm.toString()" aria-label="Formular zum Erstellen einer manuellen Urkunde {{ showManualCertificateForm ? 'ausblenden' : 'anzeigen' }}">
+                                        <i v-if="!showManualCertificateForm" class="fas fa-plus" aria-hidden="true"></i>
+                                        <i v-else class="fas fa-chevron-up" aria-hidden="true"></i>
                                         {{ showManualCertificateForm ? 'Ausblenden' : 'Hinzufügen' }}
                                     </button>
                                 </div>
@@ -62,7 +64,7 @@ export const certificatesTemplate = `
                                             <i class="fas fa-check" aria-hidden="true"></i> Ausgewählt: {{ manualCertificateForm.studentName }}
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-success" aria-label="Manuelle Urkunde speichern">
+                                    <button type="submit" class="btn btn-primary" aria-label="Manuelle Urkunde speichern">
                                         <i class="fas fa-save" aria-hidden="true"></i> Urkunde erstellen
                                     </button>
                                 </form>
@@ -80,15 +82,16 @@ export const certificatesTemplate = `
                                 <div 
                                     v-for="cert in displayedCertificates" 
                                     :key="cert.id" 
-                                    class="certificate-card form-container position-relative"
+                                    class="certificate-card certificate-tile position-relative"
+                                    :class="{ 'certificate-card-light-grade': isLightGradeColor(cert.gradeColor) }"
                                     @click="openCertificateDetail(cert)"
                                     @keydown.enter="openCertificateDetail(cert)"
                                     role="button"
                                     tabindex="0"
                                     :aria-label="'Urkunde anzeigen: ' + cert.title"
                                 >
-                                    <!-- Gürtelgrad-Farbband -->
-                                    <div v-if="cert.gradeColor" class="position-absolute" style="top: 0; left: 0; right: 0; height: 6px; border-radius: 14px 14px 0 0;" :style="{ backgroundColor: cert.gradeColor }" aria-hidden="true"></div>
+                                    <!-- Gürtelgrad-Farbband (bei Weißgurt: sichtbarer grauer Streifen) -->
+                                    <div v-if="cert.gradeColor || cert.gradeName" class="position-absolute certificate-strip" style="top: 0; left: 0; right: 0; height: 12px; border-radius: 16px 16px 0 0;" :style="getCertGradeStyles(cert).strip" aria-hidden="true"></div>
                                     
                                     <!-- Manuell-Badge -->
                                     <div v-if="cert.isManual" class="position-absolute" style="top: 12px; right: 12px;">
@@ -96,30 +99,25 @@ export const certificatesTemplate = `
                                     </div>
                                     
                                     <div class="certificate-card-body text-center">
-                                        <!-- Urkunden-Icon mit Grad-Farbe -->
-                                        <div class="flex-center mb-md" style="width: 70px; height: 70px; margin: 0 auto 1rem; border-radius: 50%; font-size: 2rem;" :style="{ backgroundColor: (cert.gradeColor || '#e2e8f0') + '20', color: cert.gradeColor || '#64748b' }" aria-hidden="true">
-                                            <i class="fas fa-award"></i>
+                                        <!-- Oberer Bereich: Icon, Titel, Gürtelgrad, Details -->
+                                        <div class="certificate-card-main">
+                                            <div class="flex-center mb-md certificate-icon" style="width: 70px; height: 70px; margin: 0 auto 1rem; border-radius: 50%; font-size: 2rem; box-sizing: border-box;" :style="getCertGradeStyles(cert).icon" aria-hidden="true">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <h4 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: #1e293b;">{{ cert.title }}</h4>
+                                            <div v-if="cert.gradeName" class="mb-md" style="margin-bottom: 0.75rem;">
+                                                <span class="badge certificate-grade-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; box-sizing: border-box;" :style="getCertGradeStyles(cert).badge">
+                                                    {{ cert.gradeName }}
+                                                </span>
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.9rem;">
+                                                <p style="margin: 0.25rem 0;"><i class="fas fa-calendar-alt" style="width: 20px;" aria-hidden="true"></i> {{ formatDate(cert.date) }}</p>
+                                                <p style="margin: 0.25rem 0;"><i class="fas fa-user-tie" style="width: 20px;" aria-hidden="true"></i> {{ cert.instructor }}</p>
+                                                <p v-if="cert.category" style="margin: 0.25rem 0;"><i class="fas fa-tag" style="width: 20px;" aria-hidden="true"></i> {{ cert.category }}</p>
+                                            </div>
                                         </div>
-                                        
-                                        <!-- Titel -->
-                                        <h4 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: #1e293b;">{{ cert.title }}</h4>
-                                        
-                                        <!-- Gürtelgrad -->
-                                        <div v-if="cert.gradeName" class="mb-md" style="margin-bottom: 0.75rem;">
-                                            <span class="badge" style="padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;" :style="{ backgroundColor: (cert.gradeColor || '#64748b') + '20', color: cert.gradeColor || '#64748b' }">
-                                                {{ cert.gradeName }}
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- Details -->
-                                        <div class="text-muted" style="font-size: 0.9rem;">
-                                            <p style="margin: 0.25rem 0;"><i class="fas fa-calendar-alt" style="width: 20px;" aria-hidden="true"></i> {{ formatDate(cert.date) }}</p>
-                                            <p style="margin: 0.25rem 0;"><i class="fas fa-user-tie" style="width: 20px;" aria-hidden="true"></i> {{ cert.instructor }}</p>
-                                            <p v-if="cert.category" style="margin: 0.25rem 0;"><i class="fas fa-tag" style="width: 20px;" aria-hidden="true"></i> {{ cert.category }}</p>
-                                        </div>
-                                        
-                                        <!-- Admin: Schülername -->
-                                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer') && cert.ownerName" class="mt-md text-muted" style="padding-top: 0.75rem; border-top: 1px solid #e2e8f0; font-size: 0.85rem;">
+                                        <!-- Schülername fixiert am unteren Rand (einheitlich bei fehlenden Daten) -->
+                                        <div v-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'trainer') && cert.ownerName" class="certificate-card-owner text-muted">
                                             <i class="fas fa-user-graduate" aria-hidden="true"></i> {{ cert.ownerName }}
                                         </div>
                                     </div>
@@ -136,12 +134,12 @@ export const certificatesTemplate = `
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                         
-                        <!-- Farbband oben -->
-                        <div v-if="selectedCertificate && selectedCertificate.gradeColor" class="position-absolute" style="top: 0; left: 0; right: 0; height: 8px; border-radius: 14px 14px 0 0;" :style="{ backgroundColor: selectedCertificate.gradeColor }" aria-hidden="true"></div>
+                        <!-- Farbband oben (bei Weißgurt: sichtbarer grauer Streifen) -->
+                        <div v-if="selectedCertificate && (selectedCertificate.gradeColor || selectedCertificate.gradeName)" class="position-absolute certificate-strip" style="top: 0; left: 0; right: 0; height: 14px; border-radius: 14px 14px 0 0; box-sizing: border-box;" :style="getCertGradeStyles(selectedCertificate).strip" aria-hidden="true"></div>
                         
                         <div v-if="selectedCertificate" class="p-xl" style="padding: 2rem 1rem;">
-                            <!-- Großes Urkunden-Icon -->
-                            <div class="flex-center mb-lg" style="width: 100px; height: 100px; margin: 0 auto 1.5rem; border-radius: 50%; font-size: 3rem;" :style="{ backgroundColor: (selectedCertificate.gradeColor || '#e2e8f0') + '20', color: selectedCertificate.gradeColor || '#64748b' }" aria-hidden="true">
+                            <!-- Großes Urkunden-Icon (bei Weißgurt: sichtbarer Rahmen) -->
+                            <div class="flex-center mb-lg" style="width: 100px; height: 100px; margin: 0 auto 1.5rem; border-radius: 50%; font-size: 3rem; box-sizing: border-box;" :style="getCertGradeStyles(selectedCertificate).icon" aria-hidden="true">
                                 <i class="fas fa-award"></i>
                             </div>
                             
@@ -155,9 +153,9 @@ export const certificatesTemplate = `
                             <p class="text-muted mb-sm" style="font-size: 1.1rem; margin-bottom: 0.5rem;">verliehen an</p>
                             <h3 class="mb-lg" style="margin: 0 0 1.5rem; font-size: 1.5rem; color: #1e293b;">{{ selectedCertificate.ownerName || 'Unbekannt' }}</h3>
                             
-                            <!-- Gürtelgrad -->
+                            <!-- Gürtelgrad (bei Weißgurt: sichtbarer Rahmen + dunkle Schrift) -->
                             <div v-if="selectedCertificate.gradeName" class="mb-lg">
-                                <span class="badge" style="padding: 8px 24px; border-radius: 25px; font-size: 1.1rem; font-weight: 600;" :style="{ backgroundColor: (selectedCertificate.gradeColor || '#64748b') + '20', color: selectedCertificate.gradeColor || '#64748b' }">
+                                <span class="badge" style="padding: 8px 24px; border-radius: 25px; font-size: 1.1rem; font-weight: 600; box-sizing: border-box;" :style="getCertGradeStyles(selectedCertificate).badge">
                                     {{ selectedCertificate.gradeName }}
                                 </span>
                             </div>

@@ -395,27 +395,33 @@ textarea:invalid {
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
 }
 
-/* Selects & Date-Picker: runder, schema-passender Look */
-/* no-custom-select: nur Custom-Pfeil, kein Browser-Doppelpfeil */
+/* Selects & Date-Picker: gleiche Umrandung wie Eingabefelder */
 select.form-control,
 select.form-control.no-custom-select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-color: rgba(255,255,255,0.92);
-    border: none; /* nur Shadow, kein sichtbarer Rand */
+    background-color: rgba(255,255,255,0.9);
+    border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding-right: 44px; /* Platz fÃ¼r Pfeil */
+    padding-right: 44px;
     background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
     background-size: 16px 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    box-shadow: none;
 }
 
-select.form-control:focus {
+select.form-control:hover,
+select.form-control.no-custom-select:hover {
+    border-color: #d1d5db;
+}
+
+select.form-control:focus,
+select.form-control.no-custom-select:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.15);
 }
 
 /* Entfernt altes IE-Dropdownpfeilchen */
@@ -427,23 +433,22 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator {
     filter: grayscale(20%);
 }
 
-/* Date/Select Hover: softer edge, kein dunkler Rand */
-select.form-control:hover,
-input[type="date"].form-control:hover {
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+/* Date-Input: gleiche Umrandung wie Eingabefelder */
+input[type="date"].form-control {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background-color: rgba(255,255,255,0.9);
+    box-shadow: none;
 }
 
-/* Date ohne sichtbaren Rand, nur Shadow wie Select */
-input[type="date"].form-control {
-    border: none;
-    border-radius: 14px;
-    background-color: rgba(255,255,255,0.92);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+input[type="date"].form-control:hover {
+    border-color: #d1d5db;
 }
 
 input[type="date"].form-control:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(10,132,255,0.14), 0 4px 10px rgba(0,0,0,0.08);
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(10,132,255,0.15);
 }
 
 /* Enhanced date input wrapper + indicator */
