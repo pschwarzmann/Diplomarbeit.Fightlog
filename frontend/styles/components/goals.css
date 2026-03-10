@@ -56,38 +56,58 @@
     border-left: 4px solid #3b82f6;
 }
 
-/* Header: alles in Zeile 1 – Titel und Status/Löschen perfekt auf einer Linie */
+/* Header: Zeile 1 = Name + Löschen, Zeile 2 = Status direkt darunter */
 .goals-card-header {
     display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: flex-end;
+    flex-direction: column;
     gap: 0.5rem;
 }
 
-.goals-card-header > div:first-child,
-.goals-card-header > h3 {
-    min-width: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
+/* Zeile 1: Name links | Löschen rechts – perfekt aligned */
+.goals-card-header-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.goals-card-header-actions,
-.goals-card-actions {
+.goals-card-user-badge {
+    background: #8b5cf6;
+    color: white;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
     flex-shrink: 0;
-    justify-content: flex-end;
 }
 
-/* Titel: feste Höhe für 2 Zeilen – symmetrisch bei 1- oder 2-zeiligem Text */
-.goals-card-header h3 {
+/* Status-Badge unter der Fortschritt-Anzeige */
+.goals-status-below-progress {
+    margin-top: 0.5rem;
+}
+
+
+/* Titel: unter Zeile 2 (Admin) */
+.goals-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-clamp: 2;
-    min-height: 2.5em;
+}
+
+.goals-card-title--inline {
+    flex: 1;
+    min-width: 0;
+}
+
+.goals-card-title--cancelled {
+    text-decoration: line-through;
 }
 
 /* Status-Badge: einheitliche Höhe für perfekte Ausrichtung mit Buttons */
@@ -95,6 +115,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.35rem;
     padding: 0.35rem 0.6rem;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -306,16 +327,11 @@
     color: #94a3b8;
 }
 
-/* Mobile: ebenfalls alles in Zeile 1 */
+/* Mobile: gleiche Struktur */
 @media (max-width: 768px) {
-    .goals-card-header {
-        flex-wrap: nowrap;
-    }
-
-    .goals-card-header h3 {
-        -webkit-line-clamp: 1;
-        line-clamp: 1;
-        min-height: 1.4em;
+    .goals-card-title {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
     }
 }
 
@@ -396,26 +412,19 @@
     transform: translateY(1px) !important;
 }
 
-/* Pokal-Icon: .nav-card i setzt display:block + margin-bottom:1rem – muss überschrieben werden */
-.goals-completed-meta .goals-trophy-icon {
-    font-size: 0.9rem !important;
+/* Pokal-Icon im Badge: .nav-card i setzt display:block + margin-bottom:1rem – muss überschrieben werden */
+.goals-card-status-badge--completed .goals-trophy-icon {
+    flex-shrink: 0;
+    opacity: 0.9;
+    font-size: 0.85rem !important;
     line-height: 1;
     vertical-align: middle;
     display: inline !important;
     margin: 0 !important;
     transform: none !important;
 }
-.nav-card:hover .goals-completed-meta .goals-trophy-icon {
+.nav-card:hover .goals-card-status-badge--completed .goals-trophy-icon {
     transform: none !important;
-}
-
-.goals-completed-meta {
-    margin-top: 0.75rem;
-    font-size: 0.8rem;
-    color: #10b981;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
 }
 
 @media (max-width: 430px) {

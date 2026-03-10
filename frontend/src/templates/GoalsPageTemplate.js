@@ -54,28 +54,13 @@ export const GoalsPageTemplate = `
                                             }"
                                         >
                                             <div class="goals-card-header">
-                                                <div>
-                                                    <span style="background: #8b5cf6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.5rem; display: inline-block;">
-                                                        {{ goal.user_name }}
-                                                    </span>
-                                                    <h3 style="margin: 0.25rem 0 0.5rem 0;">{{ goal.title }}</h3>
-                                                </div>
-                                                <div class="goals-card-header-actions">
-                                                    <span 
-                                                        class="goals-card-status-badge"
-                                                        :class="{
-                                                            'goals-card-status-badge--completed': goal.status === 'completed',
-                                                            'goals-card-status-badge--cancelled': goal.status === 'cancelled',
-                                                            'goals-card-status-badge--in_progress': goal.status === 'in_progress'
-                                                        }"
-                                                    >
-                                                        {{ goal.status === 'completed' ? 'Abgeschlossen' : 
-                                                           goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
-                                                    </span>
+                                                <div class="goals-card-header-row1">
+                                                    <span class="goals-card-user-badge">{{ goal.user_name }}</span>
                                                     <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
                                                         <i class="fas fa-trash" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
+                                                <h3 class="goals-card-title">{{ goal.title }}</h3>
                                             </div>
                                             <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
                                             <div class="goals-meta-row" v-if="goal.category || goal.target_date">
@@ -108,12 +93,25 @@ export const GoalsPageTemplate = `
                                                         }"
                                                     ></div>
                                                 </div>
+                                                <div class="goals-status-below-progress">
+                                                    <span 
+                                                        class="goals-card-status-badge"
+                                                        :class="{
+                                                            'goals-card-status-badge--completed': goal.status === 'completed',
+                                                            'goals-card-status-badge--cancelled': goal.status === 'cancelled',
+                                                            'goals-card-status-badge--in_progress': goal.status === 'in_progress'
+                                                        }"
+                                                    >
+                                                        <template v-if="goal.status === 'completed' && goal.completed_at">
+                                                            <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
+                                                            Abgeschlossen · {{ formatDate(goal.completed_at) }}
+                                                        </template>
+                                                        <template v-else>
+                                                            {{ goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
+                                                        </template>
+                                                    </span>
+                                                </div>
                                             </div>
-                                            
-                                            <p v-if="goal.completed_at" class="goals-completed-meta">
-                                                <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
-                                                <span>Abgeschlossen am {{ formatDate(goal.completed_at) }}</span>
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -187,15 +185,16 @@ export const GoalsPageTemplate = `
                                         @click="openGoalDetails(goal)"
                                     >
                                         <div class="goals-card-header">
-                                            <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
-                                            <div class="goals-card-actions">
-                                                <span class="goals-card-status-badge goals-card-status-badge--in_progress">In Bearbeitung</span>
-                                                <button class="btn btn-sm goals-btn-cancel goals-header-btn" @click.stop="cancelGoal(goal)" title="Ziel abbrechen">
-                                                    <i class="fas fa-ban" aria-hidden="true"></i>
-                                                </button>
-                                                <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
-                                                    <i class="fas fa-trash" aria-hidden="true"></i>
-                                                </button>
+                                            <div class="goals-card-header-row1">
+                                                <span class="goals-card-title goals-card-title--inline">{{ goal.title }}</span>
+                                                <div class="goals-card-actions">
+                                                    <button class="btn btn-sm goals-btn-cancel goals-header-btn" @click.stop="cancelGoal(goal)" title="Ziel abbrechen">
+                                                        <i class="fas fa-ban" aria-hidden="true"></i>
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
+                                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <p style="color: #64748b; font-size: 0.9rem; margin: 0.25rem 0;">{{ goal.definition }}</p>
@@ -226,6 +225,9 @@ export const GoalsPageTemplate = `
                                                     }"
                                                 ></div>
                                             </div>
+                                            <div class="goals-status-below-progress">
+                                                <span class="goals-card-status-badge goals-card-status-badge--in_progress">In Bearbeitung</span>
+                                            </div>
                                         </div>
                                         <p class="goals-click-hint" style="margin-top: 0.75rem;">
                                             <i class="fas fa-hand-pointer" aria-hidden="true"></i>
@@ -248,9 +250,8 @@ export const GoalsPageTemplate = `
                                         class="nav-card goals-card goals-card--completed"
                                     >
                                         <div class="goals-card-header">
-                                            <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
-                                            <div class="goals-card-actions">
-                                                <span class="goals-card-status-badge goals-card-status-badge--completed">Abgeschlossen</span>
+                                            <div class="goals-card-header-row1">
+                                                <span class="goals-card-title goals-card-title--inline">{{ goal.title }}</span>
                                                 <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
                                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
@@ -284,14 +285,14 @@ export const GoalsPageTemplate = `
                                                     }"
                                                 ></div>
                                             </div>
+                                            <div class="goals-status-below-progress">
+                                                <span class="goals-card-status-badge goals-card-status-badge--completed">
+                                                    <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
+                                                    Abgeschlossen · {{ formatDate(goal.completed_at) }}
+                                                    <span v-if="goal.total_subtasks"> · Alle {{ goal.total_subtasks }} Unterziele erledigt</span>
+                                                </span>
+                                            </div>
                                         </div>
-                                        <p class="goals-completed-meta">
-                                            <i class="fas fa-trophy goals-trophy-icon" aria-hidden="true"></i>
-                                            <span>
-                                                Abgeschlossen am {{ formatDate(goal.completed_at) }}
-                                                <span v-if="goal.total_subtasks"> · Alle {{ goal.total_subtasks }} Unterziele erledigt</span>
-                                            </span>
-                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -313,15 +314,16 @@ export const GoalsPageTemplate = `
                                         class="nav-card goals-card goals-card--cancelled"
                                     >
                                         <div class="goals-card-header">
-                                            <h3 style="margin: 0 0 0.5rem 0; text-decoration: line-through;">{{ goal.title }}</h3>
-                                            <div class="goals-card-actions">
-                                                <span class="goals-card-status-badge goals-card-status-badge--cancelled">Abgebrochen</span>
-                                                <button class="btn btn-success btn-sm goals-header-btn" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen">
-                                                    <i class="fas fa-redo" aria-hidden="true"></i>
-                                                </button>
-                                                <button class="btn btn-danger btn-sm goals-header-btn" @click="deleteGoal(goal)" title="Ziel löschen">
-                                                    <i class="fas fa-trash" aria-hidden="true"></i>
-                                                </button>
+                                            <div class="goals-card-header-row1">
+                                                <span class="goals-card-title goals-card-title--inline goals-card-title--cancelled">{{ goal.title }}</span>
+                                                <div class="goals-card-actions">
+                                                    <button class="btn btn-success btn-sm goals-header-btn" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen">
+                                                        <i class="fas fa-redo" aria-hidden="true"></i>
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm goals-header-btn" @click="deleteGoal(goal)" title="Ziel löschen">
+                                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="goals-meta-row" v-if="goal.category">
