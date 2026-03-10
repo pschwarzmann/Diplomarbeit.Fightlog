@@ -12,7 +12,7 @@ export const settingsTemplate = `
                                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                     Zurück
                                 </button>
-                                <h1>Settings</h1>
+                                <h1><i class="fas fa-sliders" aria-hidden="true"></i> Settings</h1>
                             </div>
 
                             <!-- Tab-Switcher -->

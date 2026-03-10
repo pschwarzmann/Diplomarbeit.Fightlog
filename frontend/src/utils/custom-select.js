@@ -151,6 +151,7 @@
         }
 
         function open(){
+            if (native.disabled) return;
             // Schließe alle anderen offenen Dropdowns zuerst
             openDropdowns.forEach(closeFn => {
                 if (typeof closeFn === 'function' && closeFn !== close) closeFn();
@@ -182,6 +183,7 @@
         trigger.addEventListener('click', (e)=>{
             e.stopPropagation(); // Verhindere, dass der globale Handler sofort schließt
             e.preventDefault(); // Verhindere Standard-Verhalten
+            if (native.disabled) return;
             if (wrapper.classList.contains('open')) {
                 close();
             } else {
@@ -209,6 +211,15 @@
 
         // Initial build
         rebuildOptions();
+
+        // Disabled-State synchronisieren (Vue kann disabled dynamisch setzen)
+        function syncDisabled() {
+            wrapper.classList.toggle('disabled', native.disabled);
+            trigger.disabled = native.disabled;
+        }
+        syncDisabled();
+        const attrObs = new MutationObserver(syncDisabled);
+        attrObs.observe(native, { attributes: true, attributeFilter: ['disabled'] });
     }
 
     function enhanceAll(root){

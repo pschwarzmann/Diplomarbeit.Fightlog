@@ -13,7 +13,7 @@ export const adminTemplate = `
                                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                         Zurück
                                     </button>
-                                    <h1 class="m-0">{{ t('adminPanel') }}</h1>
+                                    <h1 class="m-0"><i class="fas fa-user-shield" aria-hidden="true"></i> {{ t('adminPanel') }}</h1>
                                 </div>
                                 <button @click="showCreateUserModal = true" class="btn btn-primary btn-auto" aria-label="Neuen Benutzer anlegen">
                                     <i class="fas fa-user-plus" aria-hidden="true"></i> Benutzer anlegen

@@ -13,7 +13,7 @@ export const coursesTemplate = `
                                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                     Zurück
                                 </button>
-                                <h1>{{ t('courses') }}</h1>
+                                <h1><i class="fas fa-list-check" aria-hidden="true"></i> {{ t('courses') }}</h1>
                             </div>
 
                             <!-- Admin/Trainer Ansicht -->

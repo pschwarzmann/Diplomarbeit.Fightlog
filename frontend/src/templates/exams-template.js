@@ -13,7 +13,7 @@ export const examsTemplate = `
                                      <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                      Zurück
                                  </button>
-                                 <h1>{{ t('exams') }}</h1>
+                                 <h1><i class="fas fa-clipboard-check" aria-hidden="true"></i> {{ t('exams') }}</h1>
                              </div>
                             
                             <!-- Admin/Trainer: Prüfung eintragen + filtern/bearbeiten; Schüler: nur eigene sehen -->

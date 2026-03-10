@@ -117,6 +117,10 @@
         font-size: 1.75rem;
     }
     
+    .page-header h1 i[class*="fa-"] {
+        font-size: 1.35rem;
+    }
+    
     .timeline {
         padding-left: 1.5rem;
     }
@@ -149,6 +153,24 @@
     
     .certificates-grid .certificate-card-body {
         overflow: visible;
+    }
+    
+    /* Ziele-Grid: Flex statt Grid auf Mobile (wie Urkunden) – verhindert Kachel-Bugs */
+    .nav-grid:has(.goals-card) {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        grid-template-columns: unset;
+    }
+    
+    .nav-grid:has(.goals-card) .goals-card {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: auto;
+    }
+    
+    .nav-grid:has(.goals-card) .nav-card.goals-card {
+        padding: 1.25rem;
     }
     
     .choice-group {
@@ -292,6 +314,10 @@
     
     .page-header h1 {
         font-size: 1.5rem;
+    }
+    
+    .page-header h1 i[class*="fa-"] {
+        font-size: 1.2rem;
     }
     
     .back-btn {
@@ -448,6 +474,10 @@
         padding: 0 0 0.5rem;
     }
     
+    .nav-grid:has(.goals-card) .nav-card.goals-card {
+        padding: 1rem;
+    }
+    
     .btn {
         padding: 12px 16px;
         font-size: 15px;
@@ -529,6 +559,12 @@
     
     .nav-grid {
         grid-template-columns: 1fr !important;
+    }
+    
+    /* Ziele-Grid: Flex-Layout auch auf sehr kleinen Screens beibehalten */
+    .nav-grid:has(.goals-card) {
+        display: flex !important;
+        flex-direction: column !important;
     }
 }
 

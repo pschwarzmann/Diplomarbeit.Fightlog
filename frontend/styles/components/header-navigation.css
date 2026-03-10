@@ -1,4 +1,4 @@
-﻿/* Header & Navigation */
+/* Header & Navigation */
 .header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -153,5 +153,15 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Seitentitel-Icons – größer, symmetrisch zum Text, einheitlich mit Gradient */
+.page-header h1 i[class*="fa-"] {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    line-height: 1;
 }
 

@@ -12,7 +12,7 @@ export const GoalsPageTemplate = `
                                      <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                      Zurück
                                  </button>
-                                 <h1>{{ t('goals') }}</h1>
+                                 <h1><i class="fas fa-bullseye" aria-hidden="true"></i> {{ t('goals') }}</h1>
                              </div>
                             
                             <!-- ADMIN-ANSICHT: Alle Ziele aller User -->
@@ -25,7 +25,7 @@ export const GoalsPageTemplate = `
                                     <div class="form-row" style="margin-bottom: 1rem;">
                                         <div class="form-group">
                                             <label>Status filtern</label>
-                                            <select v-model="adminGoalStatusFilter" class="form-control no-custom-select">
+                                            <select v-model="adminGoalStatusFilter" class="form-control">
                                                 <option value="">Alle</option>
                                                 <option value="in_progress">In Bearbeitung</option>
                                                 <option value="completed">Abgeschlossen</option>
@@ -60,7 +60,7 @@ export const GoalsPageTemplate = `
                                                     </span>
                                                     <h3 style="margin: 0.25rem 0 0.5rem 0;">{{ goal.title }}</h3>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <div class="goals-card-header-actions">
                                                     <span 
                                                         class="goals-card-status-badge"
                                                         :class="{
@@ -72,7 +72,7 @@ export const GoalsPageTemplate = `
                                                         {{ goal.status === 'completed' ? 'Abgeschlossen' : 
                                                            goal.status === 'cancelled' ? 'Abgebrochen' : 'In Bearbeitung' }}
                                                     </span>
-                                                    <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen" style="padding: 0.25rem 0.5rem; min-width: auto;">
+                                                    <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
                                                         <i class="fas fa-trash" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
@@ -130,7 +130,7 @@ export const GoalsPageTemplate = `
                                     <!-- Kategorie Dropdown -->
                                     <div class="form-group">
                                         <label>Kategorie</label>
-                                        <select v-model="selectedGoalCategory" class="form-control no-custom-select">
+                                        <select v-model="selectedGoalCategory" class="form-control">
                                             <option value="">Alle Kategorien</option>
                                             <option v-for="cat in goalCategories" :key="cat" :value="cat">{{ cat }}</option>
                                         </select>
@@ -139,7 +139,7 @@ export const GoalsPageTemplate = `
                                     <!-- Ziel Dropdown -->
                                     <div class="form-group">
                                         <label>Ziel auswählen</label>
-                                        <select v-model="selectedTemplateId" class="form-control no-custom-select" :disabled="filteredGoalTemplates.length === 0">
+                                        <select v-model="selectedTemplateId" class="form-control" :disabled="filteredGoalTemplates.length === 0">
                                             <option :value="null">-- Ziel wählen --</option>
                                             <option v-for="template in filteredGoalTemplates" :key="template.id" :value="template.id">
                                                 {{ template.title }} ({{ template.subtask_count }} Unterziele)
@@ -189,10 +189,11 @@ export const GoalsPageTemplate = `
                                         <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
                                             <div class="goals-card-actions">
-                                                <button class="btn btn-sm goals-btn-cancel" @click.stop="cancelGoal(goal)" title="Ziel abbrechen">
+                                                <span class="goals-card-status-badge goals-card-status-badge--in_progress">In Bearbeitung</span>
+                                                <button class="btn btn-sm goals-btn-cancel goals-header-btn" @click.stop="cancelGoal(goal)" title="Ziel abbrechen">
                                                     <i class="fas fa-ban" aria-hidden="true"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen">
+                                                <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
                                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>
@@ -249,7 +250,8 @@ export const GoalsPageTemplate = `
                                         <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0;">{{ goal.title }}</h3>
                                             <div class="goals-card-actions">
-                                                <button class="btn btn-danger btn-sm" @click.stop="deleteGoal(goal)" title="Ziel löschen">
+                                                <span class="goals-card-status-badge goals-card-status-badge--completed">Abgeschlossen</span>
+                                                <button class="btn btn-danger btn-sm goals-header-btn" @click.stop="deleteGoal(goal)" title="Ziel löschen">
                                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>
@@ -313,10 +315,11 @@ export const GoalsPageTemplate = `
                                         <div class="goals-card-header">
                                             <h3 style="margin: 0 0 0.5rem 0; text-decoration: line-through;">{{ goal.title }}</h3>
                                             <div class="goals-card-actions">
-                                                <button class="btn btn-success btn-sm" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen">
+                                                <span class="goals-card-status-badge goals-card-status-badge--cancelled">Abgebrochen</span>
+                                                <button class="btn btn-success btn-sm goals-header-btn" @click="resumeGoal(goal)" title="Ziel wiederaufnehmen">
                                                     <i class="fas fa-redo" aria-hidden="true"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)" title="Ziel löschen">
+                                                <button class="btn btn-danger btn-sm goals-header-btn" @click="deleteGoal(goal)" title="Ziel löschen">
                                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>

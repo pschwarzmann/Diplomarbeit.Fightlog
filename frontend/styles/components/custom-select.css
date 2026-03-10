@@ -27,6 +27,12 @@
     border-color: #d1d5db;
 }
 
+.cs-select.disabled .cs-trigger {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .cs-trigger::after {
     content: '';
     position: absolute;
@@ -102,5 +108,30 @@
 
 .cs-menu::-webkit-scrollbar-thumb:hover {
     background-color: rgba(100,116,139,0.5);
+}
+
+/* Responsive: Touch-freundlich, volle Breite auf Mobile */
+@media (max-width: 768px) {
+    .cs-trigger {
+        padding: 14px 44px 14px 16px;
+        min-height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cs-trigger {
+        padding: 12px 40px 12px 14px;
+        min-height: 44px;
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+    }
+    
+    .cs-option {
+        padding: 14px 16px;
+        min-height: 44px;
+    }
+    
+    .cs-select.open .cs-menu {
+        max-height: 220px;
+    }
 }
 
