@@ -158,7 +158,7 @@ export const GoalsPageTemplate = `
                                     <!-- Info zum ausgewählten Ziel -->
                                     <div class="form-group" v-if="selectedGoalTemplate">
                                         <label>Beschreibung</label>
-                                        <div style="padding: 0.5rem; background: #f8fafc; border-radius: 6px; color: #64748b; font-size: 0.9rem;">
+                                        <div class="goal-description-field">
                                             {{ selectedGoalTemplate.definition || 'Keine Beschreibung' }}
                                         </div>
                                     </div>
@@ -211,7 +211,7 @@ export const GoalsPageTemplate = `
                                             </span>
                                         </div>
                                         
-                                        <div class="goals-progress" style="margin-top: 1rem;">
+                                        <div class="goals-progress">
                                             <div class="goals-progress-header">
                                                 <span class="goals-progress-label">Fortschritt</span>
                                                 <span class="goals-progress-value" style="color: #3b82f6;">
@@ -231,7 +231,7 @@ export const GoalsPageTemplate = `
                                                 <span class="goals-card-status-badge goals-card-status-badge--in_progress">In Bearbeitung</span>
                                             </div>
                                         </div>
-                                        <p class="goals-click-hint" style="margin-top: 0.75rem;">
+                                        <p class="goals-click-hint">
                                             <i class="fas fa-hand-pointer" aria-hidden="true"></i>
                                             <span>Klicken, um Unterziele zu bearbeiten</span>
                                         </p>
@@ -271,7 +271,7 @@ export const GoalsPageTemplate = `
                                             </span>
                                         </div>
 
-                                        <div class="goals-progress" style="margin-top: 1rem;">
+                                        <div class="goals-progress">
                                             <div class="goals-progress-header">
                                                 <span class="goals-progress-label">Fortschritt</span>
                                                 <span class="goals-progress-value" style="color: #10b981;">

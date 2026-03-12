@@ -180,7 +180,7 @@
     }
     
     .nav-grid:has(.goals-card) .nav-card.goals-card {
-        padding: 1.25rem;
+        padding: 1rem !important;
     }
     
     .choice-group {
@@ -506,7 +506,7 @@
     }
     
     .nav-grid:has(.goals-card) .nav-card.goals-card {
-        padding: 1rem;
+        padding: 0.875rem !important;
     }
     
     .btn {

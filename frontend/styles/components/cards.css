@@ -412,6 +412,24 @@
     padding-top: 0.75rem;
 }
 
+/* Schüler-Kurs-Buttons: Icon und Text perfekt vertikal ausgerichtet */
+.course-card-actions--student .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.course-card-actions--student .btn i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0;
+    /* Font Awesome Icons optisch mit Text ausrichten (leicht nach oben) */
+    transform: translateY(-0.08em);
+}
+
 .course-card-status {
     font-size: 0.85rem;
 }
