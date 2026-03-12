@@ -374,13 +374,22 @@ const app = createApp({
             phoneError: false,
 
             // Settings (ehemals Presets)
-            currentSettingsTab: 'certificates',
+            currentSettingsTab: 'general',
             certificatePresets: [],
             certificatePresetForm: { title: '', type: '', level: '', instructor: '' },
             // Gruppen (aus Datenbank)
             studentGroups: [],
             groupForm: { name: '', description: '', userIds: [], query: '' },
-            // Ziel-Vorlagen Formular
+            // Ziel-Vorlagen Bearbeitungs-Modal
+            showGoalTemplateEditModal: false,
+            goalTemplateEditForm: {
+                id: null,
+                title: '',
+                definition: '',
+                category: '',
+                subtasks: []
+            },
+            // Ziel-Vorlagen Formular (nur für Neuerstellen)
             goalTemplateForm: {
                 id: null,
                 title: '',
@@ -390,12 +399,22 @@ const app = createApp({
             },
             // Grade (Gürtelgrade)
             grades: [],
+            showGradeEditModal: false,
+            gradeEditForm: {
+                id: null,
+                name: '',
+                sort_order: 0,
+                color: '#FFEB3B'
+            },
             gradeForm: {
                 id: null,
                 name: '',
                 sort_order: 0,
                 color: '#FFEB3B'
             },
+            // Gruppen-Mitglieder-Modal (nur Anzeige)
+            showGroupMembersModal: false,
+            groupMembersModalGroup: null,
             // Gruppen-Bearbeitungs-Modal
             showGroupEditModal: false,
             groupEditForm: {
@@ -885,11 +904,19 @@ const app = createApp({
             return utils.formatDateTime(dateStr);
         },
         
-        /** Prüft ob Gürtelfarbe hell ist (z.B. Weißgurt) – für sichtbare Kontraste */
+        /** Prüft ob Gürtelfarbe hell/weiß ist (z.B. Weißgurt) – für sichtbare Kontraste */
         isLightGradeColor(color) {
             if (!color) return false;
             const c = String(color).toUpperCase().replace(/\s/g, '');
-            return c === '#FFFFFF' || c === '#FFF' || c === 'WHITE';
+            if (c === '#FFFFFF' || c === '#FFF' || c === 'WHITE') return true;
+            let hex = c.replace('#', '');
+            if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            if (hex.length !== 6) return false;
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.92;
         },
         
         /** Stile für Urkunden-Kacheln bei hellen Gürtelfarben (Weißgurt etc.) */
@@ -1065,6 +1092,7 @@ const app = createApp({
                     ]);
                     break;
                 case 'settings':
+                    this.currentSettingsTab = (this.currentUser && this.currentUser.role === 'admin') ? 'general' : 'certificates';
                     this.loadPresets();
                     // Performance: Parallele API-Calls
                     await Promise.all([
@@ -1110,6 +1138,9 @@ const app = createApp({
         },
         showGroupMembers(grp) {
             return admin.showGroupMembers(this, grp);
+        },
+        closeGroupMembersModal() {
+            return admin.closeGroupMembersModal(this);
         },
         getGroupMemberNames(grp) {
             return admin.getGroupMemberNames(this, grp);
@@ -1163,9 +1194,17 @@ const app = createApp({
         editGrade(grade) {
             return admin.editGrade(this, grade);
         },
-        
+
+        closeGradeEditModal() {
+            return admin.closeGradeEditModal(this);
+        },
+
         async saveGrade() {
             return admin.saveGrade(this);
+        },
+
+        async saveGradeEdit() {
+            return admin.saveGradeEdit(this);
         },
         
         async deleteGrade(grade) {
@@ -1182,6 +1221,14 @@ const app = createApp({
             return admin.removeGoalSubtask(this, index);
         },
         
+        addGoalSubtaskEdit() {
+            return admin.addGoalSubtaskEdit(this);
+        },
+        
+        removeGoalSubtaskEdit(index) {
+            return admin.removeGoalSubtaskEdit(this, index);
+        },
+        
         resetGoalTemplateForm() {
             return admin.resetGoalTemplateForm(this);
         },
@@ -1190,8 +1237,15 @@ const app = createApp({
             return admin.saveGoalTemplate(this);
         },
         
+        async saveGoalTemplateEdit() {
+            return admin.saveGoalTemplateEdit(this);
+        },
+        
         async editGoalTemplate(template) {
             return admin.editGoalTemplate(this, template);
+        },
+        closeGoalTemplateEditModal() {
+            return admin.closeGoalTemplateEditModal(this);
         },
         
         async deleteGoalTemplate(template) {

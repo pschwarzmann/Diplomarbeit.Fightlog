@@ -9,11 +9,13 @@ export const examsTemplate = `
                      <div class="page-content">
                          <div class="container">
                              <div class="page-header">
-                                 <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
-                                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                     Zurück
-                                 </button>
-                                 <h1><i class="fas fa-clipboard-check" aria-hidden="true"></i> {{ t('exams') }}</h1>
+                                 <div class="page-header-main">
+                                     <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
+                                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                         Zurück
+                                     </button>
+                                     <h1 class="m-0"><i class="fas fa-clipboard-check" aria-hidden="true"></i> {{ t('exams') }}</h1>
+                                 </div>
                              </div>
                             
                             <!-- Admin/Trainer: Prüfung eintragen + filtern/bearbeiten; Schüler: nur eigene sehen -->

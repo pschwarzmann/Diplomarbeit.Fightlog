@@ -14,6 +14,27 @@ import { useDarkMode } from '../composables/useDarkMode.js';
 export function navigateTo(ctx, page) {
     ctx.currentPage = page;
     ctx.loadPageData();
+    scrollToTop(ctx);
+}
+
+/**
+ * Scrollt zum Seitenanfang (wichtig für Mobile beim Modul-Wechsel)
+ */
+function scrollToTop(ctx) {
+    const doScroll = () => {
+        try {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            const main = document.getElementById('main-content');
+            if (main) main.scrollTop = 0;
+        } catch (e) {}
+    };
+    if (ctx && typeof ctx.$nextTick === 'function') {
+        ctx.$nextTick(() => { doScroll(); ctx.$nextTick(doScroll); });
+    } else {
+        requestAnimationFrame(doScroll);
+    }
 }
 
 /**
@@ -22,6 +43,7 @@ export function navigateTo(ctx, page) {
  */
 export function goToDashboard(ctx) {
     ctx.currentPage = 'dashboard';
+    scrollToTop(ctx);
 }
 
 /**

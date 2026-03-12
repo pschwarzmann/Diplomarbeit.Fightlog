@@ -434,11 +434,19 @@ export function removeGroupStudent(ctx, userId) {
 }
 
 /**
- * Gruppenmitglieder anzeigen
+ * Gruppenmitglieder anzeigen (Modal öffnen)
  */
 export function showGroupMembers(ctx, grp) {
-    // Toggle die Mitglieder-Anzeige
-    grp._showMembers = !grp._showMembers;
+    ctx.groupMembersModalGroup = grp;
+    ctx.showGroupMembersModal = true;
+}
+
+/**
+ * Gruppenmitglieder-Modal schließen
+ */
+export function closeGroupMembersModal(ctx) {
+    ctx.showGroupMembersModal = false;
+    ctx.groupMembersModalGroup = null;
 }
 
 /**
@@ -576,42 +584,74 @@ export function resetGradeForm(ctx) {
 }
 
 /**
- * Grad bearbeiten
+ * Grad bearbeiten (Modal öffnen)
  */
 export function editGrade(ctx, grade) {
-    ctx.gradeForm = {
+    ctx.gradeEditForm = {
         id: grade.id,
         name: grade.name,
         sort_order: grade.sort_order,
         color: grade.color || '#FFEB3B'
     };
+    ctx.showGradeEditModal = true;
 }
 
 /**
- * Grad speichern
+ * Grade-Bearbeitungs-Modal schließen
+ */
+export function closeGradeEditModal(ctx) {
+    ctx.showGradeEditModal = false;
+    ctx.gradeEditForm = {
+        id: null,
+        name: '',
+        sort_order: 0,
+        color: '#FFEB3B'
+    };
+}
+
+/**
+ * Grad speichern (Create-Formular)
  */
 export async function saveGrade(ctx) {
-    const { id, name, sort_order, color } = ctx.gradeForm;
+    const { name, sort_order, color } = ctx.gradeForm;
     
     try {
-        let res;
-        if (id) {
-            res = await apiService.updateGrade(id, name, sort_order, color);
-        } else {
-            res = await apiService.createGrade(name, sort_order, color);
-        }
-        
+        const res = await apiService.createGrade(name, sort_order, color);
         if (res.success) {
             resetGradeForm(ctx);
             invalidateCache(ctx, 'grades');
             await actions.loadGrades(ctx);
-            window.notify.alert(id ? 'Grad aktualisiert' : 'Grad erstellt');
+            window.notify.alert('Grad erstellt');
         } else {
             window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
         }
     } catch (error) {
         if (window.FightLogLogger) {
             window.FightLogLogger.error('Save grade error:', error);
+        }
+        window.notify.alert('Fehler beim Speichern des Grads');
+    }
+}
+
+/**
+ * Grad speichern (Edit-Modal)
+ */
+export async function saveGradeEdit(ctx) {
+    const { id, name, sort_order, color } = ctx.gradeEditForm;
+    
+    try {
+        const res = await apiService.updateGrade(id, name, sort_order, color);
+        if (res.success) {
+            closeGradeEditModal(ctx);
+            invalidateCache(ctx, 'grades');
+            await actions.loadGrades(ctx);
+            window.notify.alert('Grad aktualisiert');
+        } else {
+            window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+        }
+    } catch (error) {
+        if (window.FightLogLogger) {
+            window.FightLogLogger.error('Save grade edit error:', error);
         }
         window.notify.alert('Fehler beim Speichern des Grads');
     }
@@ -657,42 +697,47 @@ export function resetGoalTemplateForm(ctx) {
 }
 
 /**
- * Goal Subtask hinzufügen
+ * Goal Subtask hinzufügen (Create-Formular)
  */
 export function addGoalSubtask(ctx) {
     ctx.goalTemplateForm.subtasks.push('');
 }
 
 /**
- * Goal Subtask entfernen
+ * Goal Subtask entfernen (Create-Formular)
  */
 export function removeGoalSubtask(ctx, index) {
     ctx.goalTemplateForm.subtasks.splice(index, 1);
 }
 
 /**
- * Goal Template speichern
+ * Goal Subtask hinzufügen (Edit-Modal)
+ */
+export function addGoalSubtaskEdit(ctx) {
+    ctx.goalTemplateEditForm.subtasks.push('');
+}
+
+/**
+ * Goal Subtask entfernen (Edit-Modal)
+ */
+export function removeGoalSubtaskEdit(ctx, index) {
+    ctx.goalTemplateEditForm.subtasks.splice(index, 1);
+}
+
+/**
+ * Goal Template speichern (Create-Formular)
  */
 export async function saveGoalTemplate(ctx) {
     const { id, title, definition, category, subtasks } = ctx.goalTemplateForm;
     
-    // Leere Unterziele herausfiltern
     const validSubtasks = subtasks.filter(s => s && s.trim());
     
     try {
-        let res;
-        if (id) {
-            // Aktualisieren
-            res = await apiService.updateGoalTemplate(id, title, definition, category, validSubtasks);
-        } else {
-            // Neu erstellen
-            res = await apiService.createGoalTemplate(title, definition, category, validSubtasks);
-        }
-        
+        const res = await apiService.createGoalTemplate(title, definition, category, validSubtasks);
         if (res.success) {
             resetGoalTemplateForm(ctx);
             await actions.loadGoalTemplates(ctx);
-            window.notify.alert(id ? 'Ziel-Vorlage aktualisiert!' : 'Ziel-Vorlage erstellt!');
+            window.notify.alert('Ziel-Vorlage erstellt!');
         } else {
             window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
         }
@@ -705,22 +750,45 @@ export async function saveGoalTemplate(ctx) {
 }
 
 /**
- * Goal Template bearbeiten
+ * Goal Template speichern (Edit-Modal)
+ */
+export async function saveGoalTemplateEdit(ctx) {
+    const { id, title, definition, category, subtasks } = ctx.goalTemplateEditForm;
+    
+    const validSubtasks = subtasks.filter(s => s && s.trim());
+    
+    try {
+        const res = await apiService.updateGoalTemplate(id, title, definition, category, validSubtasks);
+        if (res.success) {
+            closeGoalTemplateEditModal(ctx);
+            await actions.loadGoalTemplates(ctx);
+            window.notify.alert('Ziel-Vorlage aktualisiert!');
+        } else {
+            window.notify.alert('Fehler: ' + (res.error || 'Unbekannt'));
+        }
+    } catch (error) {
+        if (window.FightLogLogger) {
+            window.FightLogLogger.error('Save goal template edit error:', error);
+        }
+        window.notify.alert('Fehler beim Speichern');
+    }
+}
+
+/**
+ * Goal Template bearbeiten (Modal öffnen)
  */
 export async function editGoalTemplate(ctx, template) {
     try {
-        // Details mit Unterzielen laden
         const res = await apiService.getTemplateDetails(template.id);
         if (res.success && res.template) {
-            ctx.goalTemplateForm = {
+            ctx.goalTemplateEditForm = {
                 id: res.template.id,
                 title: res.template.title,
                 definition: res.template.definition || '',
                 category: res.template.category || '',
                 subtasks: (res.template.subtasks || []).map(s => s.definition)
             };
-            // Scroll zum Formular
-            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+            ctx.showGoalTemplateEditModal = true;
         } else {
             window.notify.alert('Fehler beim Laden der Vorlage');
         }
@@ -730,6 +798,20 @@ export async function editGoalTemplate(ctx, template) {
         }
         window.notify.alert('Fehler beim Laden');
     }
+}
+
+/**
+ * Goal Template Bearbeitungs-Modal schließen
+ */
+export function closeGoalTemplateEditModal(ctx) {
+    ctx.showGoalTemplateEditModal = false;
+    ctx.goalTemplateEditForm = {
+        id: null,
+        title: '',
+        definition: '',
+        category: '',
+        subtasks: []
+    };
 }
 
 /**

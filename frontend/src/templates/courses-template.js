@@ -6,14 +6,16 @@
 export const coursesTemplate = `
                 <!-- Kurse -->
                 <div v-else-if="currentPage === 'courses'">
-                    <div style="padding: 2rem 0;">
+                    <div class="page-content">
                         <div class="container">
                             <div class="page-header">
-                                <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                    Zurück
-                                </button>
-                                <h1><i class="fas fa-list-check" aria-hidden="true"></i> {{ t('courses') }}</h1>
+                                <div class="page-header-main">
+                                    <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
+                                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                        Zurück
+                                    </button>
+                                    <h1 class="m-0"><i class="fas fa-list-check" aria-hidden="true"></i> {{ t('courses') }}</h1>
+                                </div>
                             </div>
 
                             <!-- Admin/Trainer Ansicht -->
@@ -90,23 +92,26 @@ export const coursesTemplate = `
                                             <button class="btn btn-secondary" @click="clearCourseSearch">{{ t('clearFilter') }}</button>
                                         </div>
                                     </div>
-                                    <div class="certificates-grid">
-                                        <div v-for="c in filteredCourses" :key="c.id" class="certificate-card" style="text-align:left;">
-                                            <h4>{{ c.title }}</h4>
-                                            <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
-                                            <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
-                                            <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
-                                            <p><strong>Teilnehmer:</strong> {{ c.current_participants || 0 }} / {{ c.max_participants }} <span style="color:#64748b;">({{ c.free_spots || c.max_participants }} frei)</span></p>
-                                            <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
-                                            <p v-if="c.description" style="color:#64748b; font-size:0.9rem;">{{ c.description }}</p>
-                                            <div style="margin-top:.75rem; display:flex; gap:.5rem; flex-wrap:wrap;">
-                                                <button class="btn btn-secondary btn-sm" @click="showParticipants(c)" title="Teilnehmer anzeigen">
-                                                    <i class="fas fa-users" aria-hidden="true"></i> Teilnehmer
+                                    <div class="certificates-grid certificates-grid--courses">
+                                        <div v-for="c in filteredCourses" :key="c.id" class="certificate-card course-card">
+                                            <div class="course-card-content">
+                                                <h4>{{ c.title }}</h4>
+                                                <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
+                                                <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
+                                                <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
+                                                <p><strong>Teilnehmer:</strong> {{ c.current_participants || 0 }} / {{ c.max_participants }} <span style="color:#64748b;">({{ c.free_spots || c.max_participants }} frei)</span></p>
+                                                <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
+                                                <p v-if="c.description" class="course-card-description">{{ c.description }}</p>
+                                            </div>
+                                            <div class="course-card-actions">
+                                                <button class="course-action-btn course-action-btn--primary" @click="showParticipants(c)" title="Teilnehmer anzeigen">
+                                                    <i class="fas fa-users" aria-hidden="true"></i>
+                                                    <span>Teilnehmer</span>
                                                 </button>
-                                                <button class="btn btn-secondary btn-sm" @click="editCourse(c)" title="Bearbeiten">
+                                                <button class="course-action-btn course-action-btn--edit" @click="editCourse(c)" title="Bearbeiten">
                                                     <i class="fas fa-pen" aria-hidden="true"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" @click="removeCourse(c)" title="Löschen">
+                                                <button class="course-action-btn course-action-btn--delete" @click="removeCourse(c)" title="Löschen">
                                                     <i class="fas fa-trash" aria-hidden="true"></i>
                                                 </button>
                                             </div>
@@ -118,30 +123,32 @@ export const coursesTemplate = `
                             <!-- Schüler Ansicht -->
                             <div v-else>
                                 <h2 style="margin-bottom:1rem;">Anstehende Kurse</h2>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
-                                    <div v-for="c in upcomingCourses" :key="c.id" class="certificate-card" 
-                                         :style="{ textAlign: 'left', borderLeft: c.booking_status === 'confirmed' ? '4px solid #22c55e' : '' }">
-                                        <div v-if="c.booking_status === 'confirmed'" style="background:#22c55e; color:white; padding:.25rem .5rem; border-radius:4px; font-size:0.8rem; display:inline-block; margin-bottom:.5rem;">
-                                            <i class="fas fa-check" aria-hidden="true"></i> Angemeldet
+                                <div class="certificates-grid certificates-grid--courses">
+                                    <div v-for="c in upcomingCourses" :key="c.id" class="certificate-card course-card course-card--student" 
+                                         :style="{ borderLeft: c.booking_status === 'confirmed' ? '4px solid #22c55e' : '' }">
+                                        <div class="course-card-content">
+                                            <div v-if="c.booking_status === 'confirmed'" class="course-card-badge course-card-badge--confirmed">
+                                                <i class="fas fa-check" aria-hidden="true"></i> Angemeldet
+                                            </div>
+                                            <h4>{{ c.title }}</h4>
+                                            <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
+                                            <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
+                                            <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
+                                            <p><strong>Freie Plätze:</strong> {{ c.free_spots }} / {{ c.max_participants }}</p>
+                                            <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
+                                            <p v-if="c.description" class="course-card-description">{{ c.description }}</p>
                                         </div>
-                                        <h4>{{ c.title }}</h4>
-                                        <p><strong>{{ t('courseDate') }}:</strong> {{ formatDate(c.date) }}</p>
-                                        <p><strong>{{ t('courseInstructor') }}:</strong> {{ c.instructor }}</p>
-                                        <p><strong>Dauer:</strong> {{ c.duration || '—' }}</p>
-                                        <p><strong>Freie Plätze:</strong> {{ c.free_spots }} / {{ c.max_participants }}</p>
-                                        <p><strong>Preis:</strong> {{ c.price || 'Gratis' }}</p>
-                                        <p v-if="c.description" style="color:#64748b; font-size:0.9rem;">{{ c.description }}</p>
-                                        <div style="margin-top:.75rem;">
+                                        <div class="course-card-actions course-card-actions--student">
                                             <button v-if="!c.booking_status" class="btn btn-primary" @click="bookCourse(c)" :disabled="c.free_spots <= 0">
                                                 <i class="fas fa-plus" aria-hidden="true"></i> Anmelden
                                             </button>
                                             <button v-else-if="(c.booking_status === 'confirmed' || c.booking_status === 'pending') && canCancelBooking(c)" class="btn btn-danger" @click="cancelBooking(c)">
                                                 <i class="fas fa-times" aria-hidden="true"></i> Abmelden
                                             </button>
-                                            <span v-else-if="c.booking_status === 'pending'" style="color:#f59e0b; font-size:0.85rem;">
+                                            <span v-else-if="c.booking_status === 'pending'" class="course-card-status course-card-status--pending">
                                                 <i class="fas fa-clock" aria-hidden="true"></i> Anmeldung ausstehend
                                             </span>
-                                            <span v-else-if="c.booking_status === 'confirmed'" style="color:#64748b; font-size:0.85rem;">
+                                            <span v-else-if="c.booking_status === 'confirmed'" class="course-card-status course-card-status--info">
                                                 <i class="fas fa-info-circle" aria-hidden="true"></i> Abmeldung nicht mehr möglich
                                             </span>
                                         </div>

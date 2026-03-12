@@ -113,6 +113,16 @@
         padding: 0.75rem 0;
     }
     
+    .page-header-with-action {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .page-header-with-action .page-header-action {
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+    
     .page-header h1 {
         font-size: 1.75rem;
     }
@@ -178,9 +188,6 @@
         gap: 0.5rem;
     }
     
-    .preset-tabs {
-        flex-wrap: wrap;
-    }
     
     .upload-area {
         padding: 1.5rem 1rem;
@@ -310,6 +317,13 @@
         align-items: flex-start;
         gap: 0.75rem;
         margin-bottom: 1.25rem;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    
+    .page-header-main {
+        flex-wrap: nowrap;
+        width: 100%;
     }
     
     .page-header h1 {
@@ -321,9 +335,26 @@
     }
     
     .back-btn {
-        align-self: flex-start;
+        flex-shrink: 0;
         padding: 0.65rem 0.9rem;
         font-size: 0.85rem;
+    }
+    
+    /* Einheitlicher Abstand oben für alle Module (Handy) */
+    .page-content {
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Admin: Benutzer anlegen-Button unter dem Header, volle Breite */
+    .page-header-with-action {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .page-header-with-action .page-header-action {
+        width: 100%;
+        margin-top: 0.25rem;
     }
     
     .btn {

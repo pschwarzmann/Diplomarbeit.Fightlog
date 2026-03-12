@@ -6,14 +6,16 @@
 export const certificatesTemplate = `
                 <!-- Urkunden -->
                 <div v-else-if="currentPage === 'certificates'">
-                    <div class="p-xl">
+                    <div class="page-content">
                         <div class="container">
                             <div class="page-header">
-                                <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                    Zurück
-                                </button>
-                                <h1><i class="fas fa-certificate" aria-hidden="true"></i> Meine Urkunden</h1>
+                                <div class="page-header-main">
+                                    <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
+                                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                        Zurück
+                                    </button>
+                                    <h1 class="m-0"><i class="fas fa-certificate" aria-hidden="true"></i> Meine Urkunden</h1>
+                                </div>
                             </div>
                             
                             <!-- Trainer/Admin: Manuelle Urkunde hinzufügen (z-index damit Dropdown über Kacheln) -->

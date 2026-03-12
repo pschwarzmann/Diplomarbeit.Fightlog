@@ -5,14 +5,16 @@
 
 export const GoalsPageTemplate = `
                  <div v-else-if="currentPage === 'goals'">
-                     <div class="p-xl">
+                     <div class="page-content">
                          <div class="container">
                              <div class="page-header">
-                                 <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
-                                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                     Zurück
-                                 </button>
-                                 <h1><i class="fas fa-bullseye" aria-hidden="true"></i> {{ t('goals') }}</h1>
+                                 <div class="page-header-main">
+                                     <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
+                                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                         Zurück
+                                     </button>
+                                     <h1 class="m-0"><i class="fas fa-bullseye" aria-hidden="true"></i> {{ t('goals') }}</h1>
+                                 </div>
                              </div>
                             
                             <!-- ADMIN-ANSICHT: Alle Ziele aller User -->

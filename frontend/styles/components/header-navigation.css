@@ -70,13 +70,27 @@
     color: #64748b;
 }
 
-/* Page Header mit ZurÃ¼ck-Button */
+/* Page Header mit Zurück-Button – einheitliche Position auf allen Geräten */
 .page-header {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 2rem;
     padding: 1rem 0;
+}
+
+/* Back + Title immer zusammen, einheitlich links */
+.page-header-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+/* Einheitliche Position: page-header auf allen Modulen */
+.page-header {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .back-btn {
@@ -163,5 +177,18 @@
     font-size: 1.5rem;
     flex-shrink: 0;
     line-height: 1;
+}
+
+/* Page Header mit Aktions-Button (z.B. Admin) */
+.page-header-with-action {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.page-header-with-action .page-header-action {
+    flex-shrink: 0;
 }
 

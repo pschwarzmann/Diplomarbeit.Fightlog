@@ -121,6 +121,18 @@ export const modalsTemplate = `
                             </button>
                         </div>
                         <form @submit.prevent="createUser">
+                            <!-- Gürtelgrad (oben: Dropdown hat Platz zum Ausklappen) -->
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
+                                <select 
+                                    v-model="createUserForm.beltLevel" 
+                                    class="form-control"
+                                >
+                                    <option value="">Bitte wählen</option>
+                                    <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
+                                </select>
+                            </div>
+                            
                             <!-- Benutzername -->
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-user"></i> Benutzername *</label>
@@ -224,18 +236,6 @@ export const modalsTemplate = `
                                 >
                             </div>
                             
-                            <!-- Gürtelgrad -->
-                            <div class="form-group">
-                                <label class="form-label"><i class="fas fa-medal"></i> Gürtelgrad</label>
-                                <select 
-                                    v-model="createUserForm.beltLevel" 
-                                    class="form-control"
-                                >
-                                    <option value="">Bitte wählen</option>
-                                    <option v-for="grade in grades" :key="grade.id" :value="grade.name">{{ grade.name }}</option>
-                                </select>
-                            </div>
-                            
                             <div class="flex gap-md mt-lg">
                                 <button 
                                     type="submit" 
@@ -263,6 +263,34 @@ export const modalsTemplate = `
 `;
 
 export const modalsOutsideMainTemplate = `
+            <!-- Gruppen-Mitglieder-Modal (nur Anzeige, wie Teilnehmer-Modal) -->
+            <div v-if="showGroupMembersModal && groupMembersModalGroup" class="modal-overlay modal-overlay-standard" @click.self="closeGroupMembersModal" role="dialog" aria-labelledby="group-members-modal-title" aria-modal="true">
+                <div class="modal-content form-container modal-md" @click.stop>
+                    <div class="modal-header flex-between">
+                        <h2 id="group-members-modal-title"><i class="fas fa-users" aria-hidden="true"></i> Mitglieder</h2>
+                        <button @click="closeGroupMembersModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-md">
+                            {{ groupMembersModalGroup.name }} — {{ getGroupMemberNames(groupMembersModalGroup).length }} Mitglieder
+                        </p>
+                        <div v-if="getGroupMemberNames(groupMembersModalGroup).length === 0" class="text-muted text-center p-lg">
+                            Keine Mitglieder in dieser Gruppe.
+                        </div>
+                        <div v-else class="participants-list">
+                            <div v-for="name in getGroupMemberNames(groupMembersModalGroup)" :key="name" class="participants-list-item">
+                                <span class="fw-500">{{ name }}</span>
+                            </div>
+                        </div>
+                        <div class="mt-md flex flex-end">
+                            <button type="button" class="btn btn-secondary" @click="closeGroupMembersModal" aria-label="Schließen">Schließen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Gruppen-Bearbeitungs-Modal -->
             <div v-if="showGroupEditModal" class="modal-overlay modal-overlay-standard" @click="closeGroupEditModal" role="dialog" aria-labelledby="group-edit-title" aria-modal="true">
                 <div class="modal-content modal-md" @click.stop>
@@ -287,17 +315,15 @@ export const modalsOutsideMainTemplate = `
                                 <input type="text" v-model="groupEditForm.description" class="form-control" placeholder="Optionale Beschreibung">
                             </div>
                             
-                            <!-- Mitglieder -->
-                            <div class="form-group">
-                                <label class="flex-between">
-                                    <span>Mitglieder</span>
+                            <!-- Mitglieder hinzufügen -->
+                            <div class="form-group mb-md">
+                                <div class="flex-between mb-sm">
+                                    <label class="fw-600 m-0">Mitglieder hinzufügen</label>
                                     <button type="button" class="btn btn-success btn-sm" @click="groupEditForm.showAddMember = !groupEditForm.showAddMember">
                                         <i class="fas fa-plus"></i> Hinzufügen
                                     </button>
-                                </label>
-                                
-                                <!-- Mitglied hinzufügen -->
-                                <div v-if="groupEditForm.showAddMember" class="mt-sm participants-add-box">
+                                </div>
+                                <div v-if="groupEditForm.showAddMember" class="participants-add-box">
                                     <input type="text" v-model="groupEditForm.memberQuery" class="form-control" placeholder="Schüler suchen..." @keydown.enter.prevent>
                                     <div v-if="groupEditForm.memberQuery && filteredStudentsForGroupEdit.length" class="mt-sm participants-search-results" style="max-height: 150px;">
                                         <div v-for="u in filteredStudentsForGroupEdit" :key="u.id" class="participants-option" @click="addMemberToGroupEdit(u)">
@@ -306,15 +332,21 @@ export const modalsOutsideMainTemplate = `
                                     </div>
                                     <div v-if="groupEditForm.memberQuery && !filteredStudentsForGroupEdit.length" class="mt-sm text-muted" style="font-size: 0.9rem;">Keine Schüler gefunden</div>
                                 </div>
-                                
-                                <!-- Mitglieder-Liste -->
-                                <div class="mt-sm participants-list" style="max-height: 200px;">
+                            </div>
+                            
+                            <!-- Mitglieder-Liste -->
+                            <div class="form-group">
+                                <label class="fw-600">Mitglieder der Gruppe</label>
+                                <div class="participants-list mt-sm" style="max-height: 200px;">
                                     <div v-if="groupEditForm.members.length === 0" class="text-muted text-center p-lg">
                                         Keine Mitglieder
                                     </div>
                                     <div v-for="member in groupEditForm.members" :key="member.id" class="participants-list-item">
-                                        <span>{{ member.name }}</span>
-                                        <button type="button" @click="removeMemberFromGroupEdit(member.id)" class="btn btn-danger btn-sm">
+                                        <div>
+                                            <span class="fw-500">{{ member.name }}</span>
+                                            <span class="text-muted ml-sm">(@{{ member.username }})</span>
+                                        </div>
+                                        <button type="button" @click="removeMemberFromGroupEdit(member.id)" class="btn btn-danger btn-sm" title="Entfernen">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
@@ -324,6 +356,97 @@ export const modalsOutsideMainTemplate = `
                             <div class="flex flex-end gap-md mt-md">
                                 <button type="button" class="btn btn-secondary" @click="closeGroupEditModal" aria-label="Abbrechen">Abbrechen</button>
                                 <button type="submit" class="btn btn-primary" aria-label="Gruppe speichern">Speichern</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ziel-Vorlage bearbeiten Modal -->
+            <div v-if="showGoalTemplateEditModal" class="modal-overlay modal-overlay-standard" @click="closeGoalTemplateEditModal" role="dialog" aria-labelledby="goal-template-edit-title" aria-modal="true">
+                <div class="modal-content modal-md" @click.stop>
+                    <div class="modal-header">
+                        <h2 id="goal-template-edit-title"><i class="fas fa-bullseye" aria-hidden="true"></i> Ziel-Vorlage bearbeiten</h2>
+                        <button @click="closeGoalTemplateEditModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="saveGoalTemplateEdit">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Titel *</label>
+                                    <input type="text" v-model="goalTemplateEditForm.title" class="form-control" placeholder="z.B. Gelber Gürtel" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Kategorie</label>
+                                    <input type="text" v-model="goalTemplateEditForm.category" class="form-control" placeholder="z.B. Gürtelprüfung" list="goal-categories-modal">
+                                    <datalist id="goal-categories-modal">
+                                        <option v-for="cat in goalCategories" :key="cat" :value="cat"></option>
+                                    </datalist>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Beschreibung</label>
+                                <textarea v-model="goalTemplateEditForm.definition" class="form-control form-control--no-resize" rows="3" placeholder="Optionale Beschreibung des Ziels"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Unterziele</label>
+                                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                    <div v-for="(subtask, index) in goalTemplateEditForm.subtasks" :key="index" style="display:flex; gap:0.5rem; align-items:center;">
+                                        <span style="color:#64748b; min-width:24px;">{{ index + 1 }}.</span>
+                                        <input type="text" v-model="goalTemplateEditForm.subtasks[index]" class="form-control" placeholder="Unterziel eingeben...">
+                                        <button type="button" class="btn btn-danger btn-sm" @click="removeGoalSubtaskEdit(index)" title="Entfernen">
+                                            <i class="fas fa-times" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" @click="addGoalSubtaskEdit" style="align-self:flex-start;">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Unterziel hinzufügen
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-end gap-md mt-md">
+                                <button type="button" class="btn btn-secondary" @click="closeGoalTemplateEditModal" aria-label="Abbrechen">Abbrechen</button>
+                                <button type="submit" class="btn btn-primary" aria-label="Speichern">
+                                    <i class="fas fa-save" aria-hidden="true"></i> Aktualisieren
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grad bearbeiten Modal -->
+            <div v-if="showGradeEditModal" class="modal-overlay modal-overlay-standard" @click="closeGradeEditModal" role="dialog" aria-labelledby="grade-edit-title" aria-modal="true">
+                <div class="modal-content modal-md" @click.stop>
+                    <div class="modal-header">
+                        <h2 id="grade-edit-title"><i class="fas fa-award" aria-hidden="true"></i> Grad bearbeiten</h2>
+                        <button @click="closeGradeEditModal" class="close-btn modal-close-btn" aria-label="Modal schließen">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="saveGradeEdit">
+                            <div class="form-group">
+                                <label>Name *</label>
+                                <input type="text" v-model="gradeEditForm.name" class="form-control" placeholder="z.B. Gelbgurt" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Sortierung</label>
+                                <input type="number" v-model.number="gradeEditForm.sort_order" class="form-control" placeholder="1, 2, 3...">
+                            </div>
+                            <div class="form-group">
+                                <label>Farbe (optional)</label>
+                                <div class="grade-color-picker">
+                                    <input type="color" v-model="gradeEditForm.color" class="grade-color-input" title="Farbe wählen">
+                                    <span class="grade-color-preview" :style="{ backgroundColor: gradeEditForm.color || '#FFEB3B' }"></span>
+                                </div>
+                            </div>
+                            <div class="flex flex-end gap-md mt-md">
+                                <button type="button" class="btn btn-secondary" @click="closeGradeEditModal" aria-label="Abbrechen">Abbrechen</button>
+                                <button type="submit" class="btn btn-primary" aria-label="Speichern">
+                                    <i class="fas fa-save" aria-hidden="true"></i> Aktualisieren
+                                </button>
                             </div>
                         </form>
                     </div>

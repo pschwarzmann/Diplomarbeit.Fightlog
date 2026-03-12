@@ -250,12 +250,8 @@ export async function loadGroups(ctx) {
     try {
         const response = await apiService.getGroups();
         if (response.success) {
-            const mappedGroups = response.groups.map(g => ({
-                ...g,
-                _showMembers: false
-            }));
-            ctx.studentGroups = mappedGroups;
-            setCached(ctx, cacheKey, mappedGroups);
+            ctx.studentGroups = response.groups;
+            setCached(ctx, cacheKey, response.groups);
         }
     } catch (error) {
         handleError(error, 'Load groups');

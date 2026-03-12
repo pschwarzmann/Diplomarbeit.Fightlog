@@ -7,7 +7,7 @@ import { getApiBaseUrl, logger } from '../config/env.js';
 // Environment-basierte Base URL (keine hardcoded URLs)
 const BASE_URL = getApiBaseUrl();
 
-const jsonHeaders = { 'Content-Type': 'application/json' };
+const jsonHeaders = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
 
 // Request-Deduplizierung: Verhindert doppelte gleichzeitige Requests
 const pendingRequests = new Map();

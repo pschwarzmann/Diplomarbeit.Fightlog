@@ -1145,18 +1145,27 @@
             },
           );
 
+          const contentType = beginResponse.headers.get("content-type") || "";
+          const beginText = await beginResponse.text();
+
           if (!beginResponse.ok) {
-            throw new Error("Server-Fehler bei Passkey-Authentifizierung");
+            let errMsg = "Server-Fehler bei Passkey-Authentifizierung";
+            try {
+              const parsed = JSON.parse(beginText);
+              if (parsed && parsed.error) errMsg = parsed.error;
+            } catch (_) {}
+            if (!contentType.includes("application/json")) {
+              console.error("Non-JSON response:", beginText.substring(0, 500));
+            }
+            throw new Error(errMsg);
           }
 
-          const contentType = beginResponse.headers.get("content-type") || "";
           if (!contentType.includes("application/json")) {
-            const text = await beginResponse.text();
-            console.error("Non-JSON response:", text.substring(0, 500));
+            console.error("Non-JSON response:", beginText.substring(0, 500));
             throw new Error("Server returned non-JSON response");
           }
 
-          const beginData = await beginResponse.json();
+          const beginData = JSON.parse(beginText);
 
           if (!beginData.success || !beginData.options) {
             throw new Error(beginData.error || "Keine Passkeys registriert");
@@ -1208,19 +1217,28 @@
             },
           );
 
-          if (!verifyResponse.ok) {
-            throw new Error("Server-Fehler bei Passkey-Verifizierung");
-          }
-
           const verifyContentType =
             verifyResponse.headers.get("content-type") || "";
+          const verifyText = await verifyResponse.text();
+
+          if (!verifyResponse.ok) {
+            let errMsg = "Server-Fehler bei Passkey-Verifizierung";
+            try {
+              const parsed = JSON.parse(verifyText);
+              if (parsed && parsed.error) errMsg = parsed.error;
+            } catch (_) {}
+            if (!verifyContentType.includes("application/json")) {
+              console.error("Non-JSON response:", verifyText.substring(0, 500));
+            }
+            throw new Error(errMsg);
+          }
+
           if (!verifyContentType.includes("application/json")) {
-            const text = await verifyResponse.text();
-            console.error("Non-JSON response:", text.substring(0, 500));
+            console.error("Non-JSON response:", verifyText.substring(0, 500));
             throw new Error("Server returned non-JSON response");
           }
 
-          const verifyData = await verifyResponse.json();
+          const verifyData = JSON.parse(verifyText);
 
           if (verifyData.success && verifyData.user) {
             // Session-Token speichern (falls vorhanden)
@@ -1368,19 +1386,28 @@
             }),
           });
 
-          if (!verifyResponse.ok) {
-            throw new Error("Server-Fehler bei Passkey-Verifizierung");
-          }
-
           const verifyContentType =
             verifyResponse.headers.get("content-type") || "";
+          const verifyText = await verifyResponse.text();
+
+          if (!verifyResponse.ok) {
+            let errMsg = "Server-Fehler bei Passkey-Verifizierung";
+            try {
+              const parsed = JSON.parse(verifyText);
+              if (parsed && parsed.error) errMsg = parsed.error;
+            } catch (_) {}
+            if (!verifyContentType.includes("application/json")) {
+              console.error("Non-JSON response:", verifyText.substring(0, 500));
+            }
+            throw new Error(errMsg);
+          }
+
           if (!verifyContentType.includes("application/json")) {
-            const text = await verifyResponse.text();
-            console.error("Non-JSON response:", text.substring(0, 500));
+            console.error("Non-JSON response:", verifyText.substring(0, 500));
             throw new Error("Server returned non-JSON response");
           }
 
-          const verifyData = await verifyResponse.json();
+          const verifyData = JSON.parse(verifyText);
 
           if (verifyData.success) {
             // Markiere, dass mindestens ein Passkey vorhanden ist

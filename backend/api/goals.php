@@ -260,9 +260,29 @@ if ($method === 'POST') {
             json_out(['success' => false, 'error' => 'Fehler: ' . $stmt->error], 500);
         }
         
-        // Alte Unterziele löschen und neue erstellen
-        $mysqli->query("DELETE FROM goal_template_subtasks WHERE template_id = $templateId");
+        // Fortschritt-Einträge löschen (Referenz auf alte Unterziele), da Unterziele ersetzt werden
+        $subtaskIds = [];
+        $selStmt = $mysqli->prepare("SELECT id FROM goal_template_subtasks WHERE template_id = ?");
+        $selStmt->bind_param('i', $templateId);
+        $selStmt->execute();
+        $subRes = $selStmt->get_result();
+        while ($row = $subRes->fetch_assoc()) {
+            $subtaskIds[] = (int)$row['id'];
+        }
+        if (!empty($subtaskIds)) {
+            $placeholders = implode(',', array_fill(0, count($subtaskIds), '?'));
+            $types = str_repeat('i', count($subtaskIds));
+            $delProgStmt = $mysqli->prepare("DELETE FROM user_goal_progress WHERE subtask_id IN ($placeholders)");
+            $delProgStmt->bind_param($types, ...$subtaskIds);
+            $delProgStmt->execute();
+        }
         
+        // Alte Unterziele löschen und neue erstellen
+        $delStmt = $mysqli->prepare("DELETE FROM goal_template_subtasks WHERE template_id = ?");
+        $delStmt->bind_param('i', $templateId);
+        $delStmt->execute();
+        
+        $newSubtaskIds = [];
         if (!empty($subtasks)) {
             $subtaskStmt = $mysqli->prepare("INSERT INTO goal_template_subtasks (template_id, definition, sort_order) VALUES (?, ?, ?)");
             $sortOrder = 1;
@@ -271,7 +291,24 @@ if ($method === 'POST') {
                 if ($def) {
                     $subtaskStmt->bind_param('isi', $templateId, $def, $sortOrder);
                     $subtaskStmt->execute();
+                    $newSubtaskIds[] = $mysqli->insert_id;
                     $sortOrder++;
+                }
+            }
+        }
+        
+        // Fortschritt-Einträge für bestehende User-Ziele mit diesem Template neu anlegen
+        if (!empty($newSubtaskIds)) {
+            $ugStmt = $mysqli->prepare("SELECT id FROM user_goals WHERE template_id = ?");
+            $ugStmt->bind_param('i', $templateId);
+            $ugStmt->execute();
+            $ugRes = $ugStmt->get_result();
+            $insertProg = $mysqli->prepare("INSERT INTO user_goal_progress (user_goal_id, subtask_id, completed) VALUES (?, ?, 0)");
+            while ($ugRow = $ugRes->fetch_assoc()) {
+                $userGoalId = (int)$ugRow['id'];
+                foreach ($newSubtaskIds as $stId) {
+                    $insertProg->bind_param('ii', $userGoalId, $stId);
+                    $insertProg->execute();
                 }
             }
         }

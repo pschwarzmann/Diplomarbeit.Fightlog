@@ -7,15 +7,15 @@ export const adminTemplate = `
                 <div v-else-if="currentPage === 'admin' && currentUser && currentUser.role === 'admin'">
                     <div class="page-content">
                         <div class="container">
-                            <div class="page-header flex-between flex-wrap gap-md">
-                                <div class="flex ai-center gap-md">
+                            <div class="page-header page-header-with-action">
+                                <div class="page-header-main">
                                     <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
                                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                         Zurück
                                     </button>
                                     <h1 class="m-0"><i class="fas fa-user-shield" aria-hidden="true"></i> {{ t('adminPanel') }}</h1>
                                 </div>
-                                <button @click="showCreateUserModal = true" class="btn btn-primary btn-auto" aria-label="Neuen Benutzer anlegen">
+                                <button @click="showCreateUserModal = true" class="btn btn-primary page-header-action" aria-label="Neuen Benutzer anlegen">
                                     <i class="fas fa-user-plus" aria-hidden="true"></i> Benutzer anlegen
                                 </button>
                             </div>

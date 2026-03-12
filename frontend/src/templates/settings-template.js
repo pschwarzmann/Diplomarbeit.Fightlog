@@ -8,11 +8,13 @@ export const settingsTemplate = `
                     <div class="page-content">
                         <div class="container">
                             <div class="page-header">
-                                <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                                    Zurück
-                                </button>
-                                <h1><i class="fas fa-sliders" aria-hidden="true"></i> Settings</h1>
+                                <div class="page-header-main">
+                                    <button @click="goToDashboard" class="back-btn" aria-label="Zurück zum Dashboard">
+                                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                        Zurück
+                                    </button>
+                                    <h1 class="m-0"><i class="fas fa-sliders" aria-hidden="true"></i> Settings</h1>
+                                </div>
                             </div>
 
                             <!-- Tab-Switcher -->
@@ -130,7 +132,7 @@ export const settingsTemplate = `
                                 </form>
                                 
                                 <!-- Vorschau -->
-                                <div class="mt-xl" style="padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                                <div class="form-section-divider">
                                     <h3>Vorschau</h3>
                                     <div class="text-center p-xl" style="background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;" role="region" aria-label="Urkunden-Vorschau">
                                         <h4 class="text-muted mb-sm" style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">{{ certificateSettings.certificate_school_name || 'Kampfsport Akademie' }}</h4>
@@ -181,23 +183,24 @@ export const settingsTemplate = `
 
                                 <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">Vorhandene Gruppen</h3>
                                 <div v-if="studentGroups.length === 0" style="color:#64748b;">Noch keine Gruppen erstellt.</div>
-                                <div class="certificates-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                                    <div v-for="g in studentGroups" :key="g.id" class="nav-card preset-card" style="text-align:left;">
-                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                            <div>
-                                                <h4 style="margin:0;">{{ g.name }}</h4>
-                                                <p v-if="g.description" style="color:#475569; margin:.15rem 0; font-size:.9rem;">{{ g.description }}</p>
-                                                <p style="color:#64748b; margin:.25rem 0;">{{ g.member_count || g.userIds.length }} Mitglieder</p>
-                                            </div>
-                                            <div style="display:flex; gap:.35rem;">
-                                                <button class="icon-btn" @click="showGroupMembers(g)" title="Mitglieder anzeigen"><i class="fas fa-users" aria-hidden="true"></i></button>
-                                                <button class="icon-btn" @click="editGroup(g)" title="Bearbeiten"><i class="fas fa-pen" aria-hidden="true"></i></button>
-                                                <button class="icon-btn" @click="removeGroup(g)" title="Löschen"><i class="fas fa-trash" aria-hidden="true"></i></button>
-                                            </div>
+                                <div class="groups-grid">
+                                    <div v-for="g in studentGroups" :key="g.id" class="group-card">
+                                        <div class="group-card-content">
+                                            <h4 class="group-card-title">{{ g.name }}</h4>
+                                            <p v-if="g.description" class="group-card-description">{{ g.description }}</p>
+                                            <p class="group-card-members">{{ g.member_count || g.userIds.length }} Mitglieder</p>
                                         </div>
-                                        <div v-if="g._showMembers" style="margin-top:.5rem; padding:.5rem; background:#f8fafc; border-radius:6px; max-height:150px; overflow:auto;">
-                                            <div v-if="getGroupMemberNames(g).length === 0" style="color:#64748b; font-size:.85rem;">Keine Mitglieder</div>
-                                            <div v-for="name in getGroupMemberNames(g)" :key="name" style="font-size:.85rem; padding:.15rem 0;">• {{ name }}</div>
+                                        <div class="group-card-actions">
+                                            <button class="course-action-btn course-action-btn--primary" @click="showGroupMembers(g)" title="Mitglieder anzeigen">
+                                                <i class="fas fa-users" aria-hidden="true"></i>
+                                                <span>Mitglieder</span>
+                                            </button>
+                                            <button class="course-action-btn course-action-btn--edit" @click="editGroup(g)" title="Bearbeiten">
+                                                <i class="fas fa-pen" aria-hidden="true"></i>
+                                            </button>
+                                            <button class="course-action-btn course-action-btn--delete" @click="removeGroup(g)" title="Löschen">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -205,10 +208,10 @@ export const settingsTemplate = `
                             
                             <!-- Tab: Ziele (Goal Templates) -->
                             <div v-show="currentSettingsTab === 'goals'" id="tab-goals" class="form-container" role="tabpanel">
-                                <h2><i class="fas fa-bullseye" style="color:#10b981;"></i> Ziel-Vorlagen</h2>
+                                <h2>Ziel-Vorlagen</h2>
                                 
-                                <!-- Formular für neues Ziel -->
-                                <form @submit.prevent="saveGoalTemplate">
+                                <h3 class="settings-section-title">Neue Ziel-Vorlage erstellen</h3>
+                                <form @submit.prevent="saveGoalTemplate" class="mb-lg">
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Titel *</label>
@@ -224,7 +227,7 @@ export const settingsTemplate = `
                                     </div>
                                     <div class="form-group">
                                         <label>Beschreibung</label>
-                                        <textarea v-model="goalTemplateForm.definition" class="form-control" rows="2" placeholder="Optionale Beschreibung des Ziels"></textarea>
+                                        <textarea v-model="goalTemplateForm.definition" class="form-control form-control--no-resize" rows="3" placeholder="Optionale Beschreibung des Ziels"></textarea>
                                     </div>
                                     
                                     <!-- Unterziele -->
@@ -246,45 +249,49 @@ export const settingsTemplate = `
                                     
                                     <div style="margin-top:1rem; display:flex; gap:0.5rem;">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save" aria-hidden="true"></i> {{ goalTemplateForm.id ? 'Aktualisieren' : 'Erstellen' }}
-                                        </button>
-                                        <button type="button" class="btn btn-secondary" @click="resetGoalTemplateForm" v-if="goalTemplateForm.id">
-                                            Abbrechen
+                                            <i class="fas fa-save" aria-hidden="true"></i> Erstellen
                                         </button>
                                     </div>
                                 </form>
                                 
-                                <!-- Vorhandene Ziel-Vorlagen als kompakte Tags -->
-                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">
+                                <!-- Vorhandene Ziel-Vorlagen -->
+                                <h3 class="settings-section-title">
                                     Vorhandene Ziel-Vorlagen 
-                                    <span style="color:#64748b; font-weight:normal; font-size:0.9rem;">({{ goalTemplates.length }})</span>
+                                    <span class="settings-section-count">({{ goalTemplates.length }})</span>
                                 </h3>
-                                <div v-if="goalTemplates.length === 0" style="color:#64748b;">Noch keine Ziel-Vorlagen erstellt.</div>
-                                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                                <div v-if="goalTemplates.length === 0" class="text-muted">Noch keine Ziel-Vorlagen erstellt.</div>
+                                <div class="goal-templates-grid">
                                     <div 
                                         v-for="t in goalTemplates" 
                                         :key="t.id" 
-                                        style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:0.9rem;"
-                                        :style="{ background: goalTemplateForm.id === t.id ? '#dcfce7' : '#f0fdf4', borderColor: goalTemplateForm.id === t.id ? '#22c55e' : '#bbf7d0' }"
+                                        class="goal-template-card"
                                     >
-                                        <div style="flex:1; min-width:0;">
-                                            <span style="font-weight:600; color:#166534;">{{ t.title }}</span>
-                                            <span v-if="t.category" style="color:#64748b; margin-left:0.35rem; font-size:0.8rem;">({{ t.category }})</span>
-                                            <span style="color:#94a3b8; margin-left:0.25rem; font-size:0.75rem;">
-                                                <i class="fas fa-list-check" aria-hidden="true"></i> {{ t.subtask_count || 0 }}
-                                            </span>
+                                        <div class="goal-template-card-content">
+                                            <h4 class="goal-template-card-title">{{ t.title }}</h4>
+                                            <p v-if="t.category" class="goal-template-card-category">{{ t.category }}</p>
+                                            <p class="goal-template-card-meta">
+                                                <i class="fas fa-list-check" aria-hidden="true"></i>
+                                                {{ t.subtask_count || 0 }} Unterziele
+                                            </p>
                                         </div>
-                                        <button class="icon-btn" @click="editGoalTemplate(t)" title="Bearbeiten" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-pen" aria-hidden="true"></i></button>
-                                        <button class="icon-btn" @click="deleteGoalTemplate(t)" title="Löschen" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                                        <div class="goal-template-card-actions">
+                                            <button class="course-action-btn course-action-btn--edit" @click="editGoalTemplate(t)" title="Bearbeiten">
+                                                <i class="fas fa-pen" aria-hidden="true"></i>
+                                            </button>
+                                            <button class="course-action-btn course-action-btn--delete" @click="deleteGoalTemplate(t)" title="Löschen">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Tab: Grade -->
                             <div v-show="currentSettingsTab === 'grades'" id="tab-grades" class="form-container" role="tabpanel">
-                                <h2><i class="fas fa-medal" style="color:#f59e0b;"></i> Grade verwalten</h2>
+                                <h2>Grade verwalten</h2>
                                 <p style="color:#64748b; margin-bottom:1rem;">Grade (Gürtelgrade) werden in Prüfungen, Urkunden und Benutzerprofilen verwendet.</p>
                                 
+                                <h3 class="settings-section-title">Neuen Grad erstellen</h3>
                                 <!-- Formular für neuen Grad -->
                                 <form @submit.prevent="saveGrade" v-if="currentUser && currentUser.role === 'admin'">
                                     <div class="form-row">
@@ -299,37 +306,43 @@ export const settingsTemplate = `
                                     </div>
                                     <div class="form-group">
                                         <label>Farbe (optional)</label>
-                                        <input type="color" v-model="gradeForm.color" class="form-control" style="width: 100px; height: 40px; padding: 2px;">
+                                        <div class="grade-color-picker">
+                                            <input type="color" v-model="gradeForm.color" id="grade-color-input" class="grade-color-input" title="Farbe wählen">
+                                            <span class="grade-color-preview" :style="{ backgroundColor: gradeForm.color || '#FFEB3B' }"></span>
+                                        </div>
                                     </div>
                                     <div style="margin-top:1rem; display:flex; gap:0.5rem;">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save" aria-hidden="true"></i> {{ gradeForm.id ? 'Aktualisieren' : 'Erstellen' }}
-                                        </button>
-                                        <button type="button" class="btn btn-secondary" @click="resetGradeForm" v-if="gradeForm.id">
-                                            Abbrechen
+                                            <i class="fas fa-save" aria-hidden="true"></i> Erstellen
                                         </button>
                                     </div>
                                 </form>
                                 
                                 <!-- Vorhandene Grade -->
-                                <h3 style="margin:1.5rem 0 .5rem; color:#1e293b;">
+                                <h3 class="settings-section-title">
                                     Vorhandene Grade 
-                                    <span style="color:#64748b; font-weight:normal; font-size:0.9rem;">({{ grades.length }})</span>
+                                    <span class="settings-section-count">({{ grades.length }})</span>
                                 </h3>
-                                <div v-if="grades.length === 0" style="color:#64748b;">Keine Grade vorhanden.</div>
-                                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                                <div v-if="grades.length === 0" class="text-muted">Keine Grade vorhanden.</div>
+                                <div class="grades-grid">
                                     <div 
                                         v-for="g in grades" 
                                         :key="g.id" 
-                                        style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:0.9rem;"
-                                        :style="{ borderLeftColor: g.color || '#fcd34d', borderLeftWidth: '4px' }"
+                                        class="grade-card"
+                                        :class="{ 'grade-card--light': isLightGradeColor(g.color) }"
+                                        :style="{ '--grade-accent': g.color || '#fcd34d' }"
                                     >
-                                        <div style="flex:1; min-width:0;">
-                                            <span style="font-weight:600; color:#92400e;">{{ g.name }}</span>
-                                            <span style="color:#94a3b8; margin-left:0.35rem; font-size:0.75rem;">#{{ g.sort_order }}</span>
+                                        <div class="grade-card-content">
+                                            <h4 class="grade-card-title">{{ g.name }}&nbsp;&nbsp;<span class="grade-card-sort">#{{ g.sort_order }}</span></h4>
                                         </div>
-                                        <button v-if="currentUser && currentUser.role === 'admin'" class="icon-btn" @click="editGrade(g)" title="Bearbeiten" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-pen" aria-hidden="true"></i></button>
-                                        <button v-if="currentUser && currentUser.role === 'admin'" class="icon-btn" @click="deleteGrade(g)" title="Löschen" style="padding:0.15rem 0.35rem; font-size:0.75rem;"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                                        <div v-if="currentUser && currentUser.role === 'admin'" class="grade-card-actions">
+                                            <button class="course-action-btn course-action-btn--edit" @click="editGrade(g)" title="Bearbeiten">
+                                                <i class="fas fa-pen" aria-hidden="true"></i>
+                                            </button>
+                                            <button class="course-action-btn course-action-btn--delete" @click="deleteGrade(g)" title="Löschen">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
